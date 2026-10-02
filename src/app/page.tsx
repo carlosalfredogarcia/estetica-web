@@ -1,3 +1,5 @@
+import DimuxApp from "@/components/DimuxApp";
+
 export default function Home() {
-  return <h1>DIMUX - Test</h1>;
+  return <DimuxApp />;
 }
