@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import Image from "next/image";
+
 import Lotus from "./Lotus";
 import Particles from "./Particles";
 import {
@@ -823,12 +823,11 @@ export default function DimuxApp() {
                       style={{ background: TAB_GRADIENTS[tab] }}
                     >
                       {svc.img ? (
-                        <Image
+                        <img
                           src={svc.img}
                           alt={svc.name}
-                          fill
-                          className="object-cover"
-                          sizes="(max-width: 640px) 100vw, 280px"
+                          className="absolute inset-0 w-full h-full object-cover"
+                          loading="lazy"
                         />
                       ) : (
                         <div className="absolute inset-0 flex items-center justify-center">
