@@ -1,69 +1,177 @@
-@import "tailwindcss";
+@import 'tailwindcss';
+@import 'tw-animate-css';
 
-:root {
-  --gold: #C9A96E;
-  --gold-light: #E8D5A3;
-  --rose: #D4929A;
-  --dark-red: #8B2252;
-  --bg: #FDF6F0;
-  --bg2: #F0E4DC;
-  --dark: #0F0D0C;
-  --dark2: #1A1614;
-  --charcoal: #2C2C2C;
-  --muted: #8A7070;
-}
+@custom-variant dark (&:is(.dark *));
 
 @theme inline {
-  --font-serif: 'Cormorant Garamond', 'Georgia', serif;
-  --font-sans: 'DM Sans', 'Helvetica Neue', 'Helvetica', sans-serif;
+  --font-sans: var(--font-dm-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-serif: var(--font-cormorant), ui-serif, Georgia, serif;
+  --color-ring: var(--ring);
+  --color-input: var(--input);
+  --color-border: var(--border);
+  --color-destructive: var(--destructive);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent: var(--accent);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-muted: var(--muted);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary: var(--secondary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary: var(--primary);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-popover: var(--popover);
+  --color-card-foreground: var(--card-foreground);
+  --color-card: var(--card);
+  --color-foreground: var(--foreground);
+  --color-background: var(--background);
+  --color-beige: var(--beige);
+  --color-cream: var(--cream);
+  --color-gold: var(--gold);
+  --radius-sm: calc(var(--radius) * 0.6);
+  --radius-md: calc(var(--radius) * 0.8);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) * 1.4);
 }
 
-@keyframes fadeUp {
-  from { opacity: 0; transform: translateY(20px); }
-  to { opacity: 1; transform: translateY(0); }
+:root {
+  color-scheme: light;
+  --background: #F0E8E0;
+  --foreground: #1A1A1A;
+  --card: #F0E8E0;
+  --card-foreground: #1A1A1A;
+  --popover: #F0E8E0;
+  --popover-foreground: #1A1A1A;
+  --primary: #1A1A1A;
+  --primary-foreground: #F0E8E0;
+  --secondary: #E8DDD4;
+  --secondary-foreground: #1A1A1A;
+  --muted: #E8DDD4;
+  --muted-foreground: #6b645b;
+  --accent: #E8DDD4;
+  --accent-foreground: #1A1A1A;
+  --destructive: #b42318;
+  --border: #D4C9BE;
+  --input: #D4C9BE;
+  --ring: #C9A96E;
+  --beige: #E8DDD4;
+  --cream: #F0E8E0;
+  --gold: #C9A96E;
+  --radius: 0.25rem;
 }
 
-@keyframes floatY {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-10px); }
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  html {
+    scroll-behavior: smooth;
+  }
+  body {
+    @apply bg-background text-foreground font-sans;
+  }
 }
 
-@keyframes glow {
-  0%, 100% { opacity: 0.5; }
-  50% { opacity: 1; }
+@layer components {
+  .reveal {
+    opacity: 0;
+    transform: translateY(28px);
+    transition:
+      opacity 900ms cubic-bezier(0.22, 1, 0.36, 1),
+      transform 900ms cubic-bezier(0.22, 1, 0.36, 1);
+    transition-delay: var(--reveal-delay, 0ms);
+  }
+  .reveal[data-visible='true'] {
+    opacity: 1;
+    transform: none;
+  }
+
+  .tab-enter {
+    animation: tab-enter 700ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+
+  .btn-elegant {
+    position: relative;
+    isolation: isolate;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    color: var(--foreground);
+    transition:
+      color 500ms cubic-bezier(0.22, 1, 0.36, 1),
+      letter-spacing 500ms cubic-bezier(0.22, 1, 0.36, 1);
+  }
+  .btn-elegant::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    background: var(--foreground);
+    transform: scaleX(0);
+    transform-origin: right;
+    transition: transform 500ms cubic-bezier(0.22, 1, 0.36, 1);
+  }
+  .btn-elegant:hover,
+  .btn-elegant:focus-visible {
+    color: var(--background);
+  }
+  .btn-elegant:hover::before,
+  .btn-elegant:focus-visible::before {
+    transform: scaleX(1);
+    transform-origin: left;
+  }
+
+  .btn-elegant-dark {
+    color: var(--background);
+    background: var(--foreground);
+  }
+  .btn-elegant-dark::before {
+    background: #8a7b66;
+  }
+  .btn-elegant-dark:hover,
+  .btn-elegant-dark:focus-visible {
+    color: var(--background);
+    letter-spacing: 0.3em;
+  }
+
+  .btn-arrow {
+    transition: transform 500ms cubic-bezier(0.22, 1, 0.36, 1);
+  }
+  .btn-elegant:hover .btn-arrow,
+  .btn-elegant:focus-visible .btn-arrow {
+    transform: translate(2px, -2px);
+  }
+
+  .btn-gold {
+    background: var(--gold);
+    color: #fff;
+    transition: opacity 200ms;
+  }
+  .btn-gold:hover {
+    opacity: 0.88;
+  }
 }
 
-.fu { animation: fadeUp 0.8s ease both; }
-.fu2 { animation: fadeUp 0.8s 0.15s ease both; }
-.fu3 { animation: fadeUp 0.8s 0.3s ease both; }
-.float { animation: floatY 5s ease-in-out infinite; }
-.dot { animation: glow 3s ease-in-out infinite; }
-
-.svc-card:hover .svc-bg { transform: scale(1.04); }
-.svc-card:hover .svc-arrow { transform: translateX(6px); }
-.trt-card { transition: box-shadow 0.3s, transform 0.3s; }
-.trt-card:hover { box-shadow: 0 8px 32px rgba(201,169,110,0.18); transform: translateY(-2px); }
-.slot-btn:hover:not(:disabled) { background: var(--gold) !important; color: var(--dark) !important; border-color: var(--gold) !important; }
-.nav-link:hover { color: var(--gold) !important; }
-.why-card:hover { transform: translateY(-6px); }
-.tc:hover { transform: translateY(-4px); }
-
-input:focus, select:focus {
-  border-color: var(--gold) !important;
-  box-shadow: 0 0 0 3px rgba(201,169,110,0.15);
-  outline: none;
+@keyframes tab-enter {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
 }
 
-::-webkit-scrollbar { width: 5px; }
-::-webkit-scrollbar-thumb { background: rgba(201,169,110,0.33); border-radius: 3px; }
-
-a { text-decoration: none; }
-
-body {
-  font-family: 'DM Sans', 'Helvetica Neue', 'Helvetica', sans-serif;
-  background: var(--bg);
-  color: var(--charcoal);
-  margin: 0;
-  padding: 0;
-  min-height: 100vh;
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  .reveal,
+  .tab-enter {
+    opacity: 1;
+    transform: none;
+    transition: none;
+    animation: none;
+  }
 }
