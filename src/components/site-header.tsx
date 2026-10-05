@@ -36,26 +36,26 @@ export function SiteHeader() {
         {/* Logo */}
         <a
           href="#inicio"
-          className="font-serif text-xl tracking-[0.15em] uppercase font-light"
+          className="font-serif text-xl tracking-[0.15em] uppercase font-light flex-shrink-0"
         >
           DIMUX
         </a>
 
-        {/* Desktop nav */}
-        <nav className="hidden lg:flex items-center gap-8">
+        {/* Desktop nav — visible from md breakpoint */}
+        <nav className="hidden md:flex items-center gap-6 lg:gap-8">
           {NAV_LINKS.map((link) => (
             <a
               key={link.href}
               href={link.href}
-              className="text-xs font-sans tracking-[0.15em] uppercase text-muted-foreground hover:text-foreground transition-colors duration-300"
+              className="text-xs font-sans tracking-[0.12em] uppercase text-foreground/70 hover:text-foreground transition-colors duration-300 whitespace-nowrap"
             >
               {link.label}
             </a>
           ))}
         </nav>
 
-        {/* Actions */}
-        <div className="hidden lg:flex items-center gap-4">
+        {/* Desktop actions */}
+        <div className="hidden md:flex items-center gap-4 flex-shrink-0">
           <a
             href={`https://instagram.com/${INSTAGRAM}`}
             target="_blank"
@@ -67,27 +67,42 @@ export function SiteHeader() {
           </a>
           <a
             href="#reservar"
-            className="btn-elegant border border-foreground px-6 py-2 text-xs font-sans tracking-[0.15em] uppercase"
+            className="btn-elegant border border-foreground px-5 py-2 text-xs font-sans tracking-[0.15em] uppercase"
           >
             Reservar
           </a>
         </div>
 
-        {/* Mobile menu toggle */}
+        {/* Mobile menu toggle — only on small screens */}
         <button
-          className="lg:hidden p-2 text-foreground"
+          className="md:hidden p-2 text-foreground"
           onClick={() => setMenuOpen(!menuOpen)}
           aria-label="Menú"
         >
-          <span className="block w-5 h-0.5 bg-current mb-1.5 transition-all" />
-          <span className="block w-5 h-0.5 bg-current mb-1.5 transition-all" />
-          <span className="block w-3.5 h-0.5 bg-current transition-all" />
+          <span
+            className={cn(
+              "block w-5 h-0.5 bg-current transition-all mb-1.5",
+              menuOpen && "rotate-45 translate-y-2"
+            )}
+          />
+          <span
+            className={cn(
+              "block w-5 h-0.5 bg-current transition-all mb-1.5",
+              menuOpen && "opacity-0"
+            )}
+          />
+          <span
+            className={cn(
+              "block w-3.5 h-0.5 bg-current transition-all",
+              menuOpen && "-rotate-45 -translate-y-2 w-5"
+            )}
+          />
         </button>
       </div>
 
-      {/* Mobile menu */}
+      {/* Mobile dropdown menu */}
       {menuOpen && (
-        <div className="lg:hidden bg-[var(--background)] border-t border-border px-6 py-6 space-y-4">
+        <div className="md:hidden bg-[var(--background)] border-t border-border px-6 py-6 space-y-4">
           {NAV_LINKS.map((link) => (
             <a
               key={link.href}
@@ -117,7 +132,7 @@ export function SiteHeader() {
             </a>
             <a
               href="#reservar"
-              className="ml-auto btn-elegant border border-foreground px-6 py-2 text-xs font-sans tracking-[0.15em] uppercase"
+              className="ml-auto btn-elegant border border-foreground px-5 py-2 text-xs font-sans tracking-[0.15em] uppercase"
               onClick={() => setMenuOpen(false)}
             >
               Reservar

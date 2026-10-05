@@ -19,10 +19,10 @@ const dmSans = DM_Sans({
 export const metadata: Metadata = {
   title: "DIMUX Estética · Lucía",
   description:
-    "Centro de estética avanzada en Murcia. Tratamientos faciales, corporales y depilación láser de alta gama.",
+    "Centro de estética avanzada en Málaga. Tratamientos faciales, corporales y depilación láser de alta gama.",
   openGraph: {
     title: "DIMUX Estética",
-    description: "Centro de estética avanzada en Murcia.",
+    description: "Centro de estética avanzada en Málaga.",
     locale: "es_ES",
     type: "website",
   },

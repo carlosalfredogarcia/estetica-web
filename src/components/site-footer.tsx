@@ -34,7 +34,7 @@ export function SiteFooter() {
           </div>
 
           <p className="text-xs font-sans text-muted-foreground">
-            © {year} DIMUX Estética · Murcia
+            © {year} DIMUX Estética · Málaga
           </p>
         </div>
       </footer>

@@ -24,7 +24,7 @@ export function Intro() {
                 Centro DIMUX Estética
               </p>
               <p className="text-sm font-light text-foreground/80 mt-1">
-                Murcia
+                Málaga
               </p>
             </div>
           </div>
