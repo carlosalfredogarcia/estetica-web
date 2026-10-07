@@ -106,7 +106,7 @@ const INIT_BLOCKED=[
 ];
 
 const CSS=`
-  @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=DM+Sans:wght@300;400;500;700&display=swap');
+  @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap');
   *{box-sizing:border-box;margin:0;padding:0;}
   @keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
   @keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
@@ -144,8 +144,8 @@ export default function AdminPage(){
   const [calM,setCalM]=useState(new Date(2026,6,1));
   const [toast,setToast]=useState("");
 
-  const serif={fontFamily:"'Cormorant Garamond',Georgia,serif"};
-  const sans={fontFamily:"'DM Sans',Helvetica,sans-serif"};
+  const serif={fontFamily:"'Roboto',Helvetica,sans-serif"};
+  const sans={fontFamily:"'Roboto',Helvetica,sans-serif"};
 
   const showToast=(m:string)=>{setToast(m);setTimeout(()=>setToast(""),2600);};
 
@@ -234,7 +234,7 @@ export default function AdminPage(){
       )}
 
       {/* HEADER */}
-      <header style={{background:"#3D2B1F",borderBottom:`1px solid ${G}22`,
+      <header style={{background:"#8B6B55",borderBottom:`1px solid ${G}22`,
         padding:"0 28px",height:64,display:"flex",alignItems:"center",
         justifyContent:"space-between",position:"sticky",top:0,zIndex:200}}>
         <div style={{display:"flex",alignItems:"center",gap:10}}>
@@ -264,7 +264,7 @@ export default function AdminPage(){
       </header>
 
       {/* TABS */}
-      <div style={{background:"#4A3728",borderBottom:`1px solid ${G}18`,
+      <div style={{background:"#A07C65",borderBottom:`1px solid ${G}18`,
         padding:"0 28px",display:"flex",gap:4,position:"sticky",top:64,zIndex:190}}>
         {[["dia","Hoy / Por día"],["semana","Vista semanal"],["mes","Calendario"],["todas","Todas las citas"]].map(([id,l])=>(
           <button key={id} className="navbtn" onClick={()=>setView(id)}
