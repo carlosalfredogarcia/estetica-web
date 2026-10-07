@@ -200,7 +200,7 @@ export default function AdminPage(){
   };
 
   const bP={...sans,background:G,color:DARK,border:"none",padding:"11px 22px",
-    borderRadius:2,fontSize:10,letterSpacing:"2px",cursor:"pointer",
+    borderRadius:24,fontSize:10,letterSpacing:"2px",cursor:"pointer",
     textTransform:"uppercase" as const,fontWeight:500};
   const bO={...bP,background:"transparent",color:G,border:`1px solid ${G}`};
   const bDanger={...bP,background:"transparent",color:RED,border:`1px solid ${RED}55`};
@@ -234,7 +234,7 @@ export default function AdminPage(){
       )}
 
       {/* HEADER */}
-      <header style={{background:DARK,borderBottom:`1px solid ${G}22`,
+      <header style={{background:"#2C2422",borderBottom:`1px solid ${G}22`,
         padding:"0 28px",height:64,display:"flex",alignItems:"center",
         justifyContent:"space-between",position:"sticky",top:0,zIndex:200}}>
         <div style={{display:"flex",alignItems:"center",gap:10}}>
@@ -264,7 +264,7 @@ export default function AdminPage(){
       </header>
 
       {/* TABS */}
-      <div style={{background:DARK2,borderBottom:`1px solid ${G}18`,
+      <div style={{background:"#3A2E2A",borderBottom:`1px solid ${G}18`,
         padding:"0 28px",display:"flex",gap:4,position:"sticky",top:64,zIndex:190}}>
         {[["dia","Hoy / Por día"],["semana","Vista semanal"],["mes","Calendario"],["todas","Todas las citas"]].map(([id,l])=>(
           <button key={id} className="navbtn" onClick={()=>setView(id)}
