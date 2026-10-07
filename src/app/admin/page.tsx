@@ -234,14 +234,14 @@ export default function AdminPage(){
       )}
 
       {/* HEADER */}
-      <header style={{background:"#D4C4B5",borderBottom:`1px solid ${G}22`,
+      <header style={{background:"#8B7355",borderBottom:`1px solid ${G}22`,
         padding:"0 28px",height:64,display:"flex",alignItems:"center",
         justifyContent:"space-between",position:"sticky",top:0,zIndex:200}}>
         <div style={{display:"flex",alignItems:"center",gap:10}}>
           <div className="float"><Lotus size={24}/></div>
           <div>
-            <div style={{...serif,fontSize:15,letterSpacing:"6px",color:"#1A1A1A",lineHeight:1}}>DIMUX</div>
-            <div style={{...sans,fontSize:7,letterSpacing:"3px",color:G,marginTop:2}}>PANEL DE GESTIÓN</div>
+            <div style={{...serif,fontSize:15,letterSpacing:"6px",color:"#F0E8E0",lineHeight:1}}>DIMUX</div>
+            <div style={{...sans,fontSize:7,letterSpacing:"3px",color:"#F0E8E0",marginTop:2}}>PANEL DE GESTIÓN</div>
           </div>
         </div>
         <div style={{display:"flex",alignItems:"center",gap:20}}>
@@ -264,13 +264,13 @@ export default function AdminPage(){
       </header>
 
       {/* TABS */}
-      <div style={{background:"#C8B8A8",borderBottom:`1px solid ${G}18`,
+      <div style={{background:"#A08060",borderBottom:`1px solid ${G}18`,
         padding:"0 28px",display:"flex",gap:4,position:"sticky",top:64,zIndex:190}}>
         {[["dia","Hoy / Por día"],["semana","Vista semanal"],["mes","Calendario"],["todas","Todas las citas"]].map(([id,l])=>(
           <button key={id} className="navbtn" onClick={()=>setView(id)}
             style={{...sans,padding:"14px 20px",border:"none",background:"none",
               cursor:"pointer",fontSize:11,letterSpacing:"1.5px",
-              color:view===id?G:"#1A1A1A66",
+              color:view===id?G:"#F0E8E044",
               borderBottom:`2px solid ${view===id?G:"transparent"}`,
               marginBottom:-1,fontWeight:view===id?500:400,transition:"color .2s"}}>
             {l.toUpperCase()}
