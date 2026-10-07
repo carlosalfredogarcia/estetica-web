@@ -3,8 +3,8 @@
 import { useState } from "react";
 
 const G="#C9A96E", DR="#8B2252", ROSE="#D4929A";
-const BG="#FDF6F0", BG2="#F0E4DC", DARK="#0F0D0C", DARK2="#1A1614";
-const CH="#2C2C2C", MT="#8A7070";
+const BG="#F0E8E0", BG2="#E8DDD4", DARK="#1A1A1A", DARK2="#2C2C2C";
+const CH="#1A1A1A", MT="#8A7A70";
 const GREEN="#4A7A64", RED="#B54A4A", AMBER="#C98A3E";
 
 const SCHED={
@@ -240,7 +240,7 @@ export default function AdminPage(){
         <div style={{display:"flex",alignItems:"center",gap:10}}>
           <div className="float"><Lotus size={24}/></div>
           <div>
-            <div style={{...serif,fontSize:15,letterSpacing:"6px",color:"#fff",lineHeight:1}}>DIMUX</div>
+            <div style={{...serif,fontSize:15,letterSpacing:"6px",color:"#F0E8E0",lineHeight:1}}>DIMUX</div>
             <div style={{...sans,fontSize:7,letterSpacing:"3px",color:G,marginTop:2}}>PANEL DE GESTIÓN</div>
           </div>
         </div>
