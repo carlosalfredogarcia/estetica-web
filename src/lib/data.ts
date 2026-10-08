@@ -1,5 +1,5 @@
 export const COLORS = {
-  gold: "#C9A96E",
+  gold: "#B8922A",
   goldLight: "#E8D5A3",
   rose: "#D4929A",
   darkRed: "#8B2252",

@@ -15,7 +15,7 @@ export function Intro() {
         <Reveal>
           <div className="relative aspect-[4/5] overflow-hidden">
             <img
-              src="/images/salon.jpg"
+              src="https://images.unsplash.com/photo-1519823551278-64ac92734fb1?w=800&q=80"
               alt="Sala de tratamientos DIMUX Estética"
               className="w-full h-full object-cover"
             />

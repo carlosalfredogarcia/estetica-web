@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 
-const G="#C9A96E", DR="#8B2252", ROSE="#D4929A";
+const G="#B8922A", DR="#8B2252", ROSE="#D4929A";
 const BG="#F0E8E0", BG2="#E8DDD4", DARK="#1A1A1A", DARK2="#2C2C2C";
 const CH="#1A1A1A", MT="#8A7A70";
 const GREEN="#4A7A64", RED="#B54A4A", AMBER="#C98A3E";
@@ -234,7 +234,7 @@ export default function AdminPage(){
       )}
 
       {/* HEADER */}
-      <header style={{background:"#FFFFFF",borderBottom:"2px solid #C9A96E",
+      <header style={{background:"#FFFFFF",borderBottom:"2px solid #B8922A",
         padding:"0 28px",height:64,display:"flex",alignItems:"center",
         justifyContent:"space-between",position:"sticky",top:0,zIndex:200}}>
         <div style={{display:"flex",alignItems:"center",gap:10}}>
@@ -264,7 +264,7 @@ export default function AdminPage(){
       </header>
 
       {/* TABS */}
-      <div style={{background:"#F5EDE4",borderBottom:"1px solid #C9A96E33",
+      <div style={{background:"#F5EDE4",borderBottom:"1px solid #B8922A33",
         padding:"0 28px",display:"flex",gap:4,position:"sticky",top:64,zIndex:190}}>
         {[["dia","Hoy / Por día"],["semana","Vista semanal"],["mes","Calendario"],["todas","Todas las citas"]].map(([id,l])=>(
           <button key={id} className="navbtn" onClick={()=>setView(id)}
