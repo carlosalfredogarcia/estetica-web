@@ -90,11 +90,11 @@ export function Booking() {
     const yearNum = selectedDay.getFullYear();
     const dayName = DAYS[selectedDay.getDay()];
     const msg = `Hola! Me gustaría reservar:\n\n*Tratamiento:* ${selectedService}\n*Fecha:* ${dayName} ${dayNum} de ${monthName} de ${yearNum}\n*Hora:* ${selectedTime}h\n*Nombre:* ${name}${phone ? `\n*Teléfono:* ${phone}` : ""}`;
-    window.open(
-      `https://wa.me/${WHATSAPP}?text=${encodeURIComponent(msg)}`,
-      "_blank",
-      "noopener,noreferrer"
-    );
+    // window.open(
+    //   `https://wa.me/${WHATSAPP}?text=${encodeURIComponent(msg)}`,
+    //   "_blank",
+    //   "noopener,noreferrer"
+    // );
     setConfirmed(true);
   }
 
