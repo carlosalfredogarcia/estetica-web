@@ -39,6 +39,7 @@ export function Booking() {
   const [selectedTime, setSelectedTime] = useState("");
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
+  const [confirmed, setConfirmed] = useState(false);
 
   /* --- Pre-select service from card click --- */
   useEffect(() => {
@@ -94,6 +95,17 @@ export function Booking() {
       "_blank",
       "noopener,noreferrer"
     );
+    setConfirmed(true);
+  }
+
+  function handleNewBooking() {
+    setConfirmed(false);
+    setStep(1);
+    setSelectedService("");
+    setSelectedDay(null);
+    setSelectedTime("");
+    setName("");
+    setPhone("");
   }
 
   const filteredServices = SERVICES.filter((s) => s.cat === catTab);
@@ -110,7 +122,47 @@ export function Booking() {
           />
         </Reveal>
 
-        {/* Step indicator */}
+        {/* Confirmation screen */}
+        {confirmed && selectedDay && (
+          <Reveal>
+            <div className="border border-[var(--gold)]/40 bg-[var(--gold)]/5 p-10 text-center space-y-6">
+              <div className="w-14 h-14 rounded-full bg-[var(--gold)] flex items-center justify-center mx-auto">
+                <Check className="w-7 h-7 text-white" />
+              </div>
+              <div className="space-y-2">
+                <h3 className="font-serif text-2xl font-light">¡Reserva recibida!</h3>
+                <p className="text-sm font-sans text-muted-foreground max-w-md mx-auto">
+                  En breve nos pondremos en contacto contigo para confirmar tu cita.
+                </p>
+              </div>
+              <div className="border-t border-[var(--gold)]/20 pt-6 grid sm:grid-cols-3 gap-4 text-sm">
+                <div className="space-y-1">
+                  <p className="text-xs font-sans tracking-[0.15em] uppercase text-[var(--gold)]">Tratamiento</p>
+                  <p className="font-serif font-light">{selectedService}</p>
+                </div>
+                <div className="space-y-1">
+                  <p className="text-xs font-sans tracking-[0.15em] uppercase text-[var(--gold)]">Fecha</p>
+                  <p className="font-serif font-light">
+                    {DAYS[selectedDay.getDay()]} {selectedDay.getDate()} de {MONTHS[selectedDay.getMonth()]}
+                  </p>
+                </div>
+                <div className="space-y-1">
+                  <p className="text-xs font-sans tracking-[0.15em] uppercase text-[var(--gold)]">Hora</p>
+                  <p className="font-serif font-light">{selectedTime}h</p>
+                </div>
+              </div>
+              <button
+                onClick={handleNewBooking}
+                className="btn-elegant border border-foreground/40 px-8 py-3 text-xs font-sans tracking-[0.2em] uppercase mt-2"
+              >
+                Hacer otra reserva
+              </button>
+            </div>
+          </Reveal>
+        )}
+
+        {/* Step indicator + form (hidden when confirmed) */}
+        {!confirmed && (<>
         <Reveal delay={80}>
           <div className="flex items-center gap-3 mb-10">
             {([1, 2, 3] as Step[]).map((s) => (
@@ -431,17 +483,17 @@ export function Booking() {
                     !name.trim() && "opacity-40 pointer-events-none"
                   )}
                 >
-                  Confirmar por WhatsApp →
+                  Confirmar reserva →
                 </button>
               </div>
 
               <p className="text-xs font-sans text-muted-foreground">
-                Al confirmar se abrirá WhatsApp con los datos de tu reserva. La
-                cita quedará confirmada cuando recibas respuesta de Lucía.
+                Al confirmar recibirás un mensaje de Lucía para validar tu cita.
               </p>
             </div>
           </Reveal>
         )}
+        </>)}
       </div>
     </section>
   );
