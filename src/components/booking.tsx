@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { ChevronLeft, ChevronRight, Check } from "lucide-react";
 import { SERVICES, SCHEDULE_MAP, DAYS, MONTHS, WHATSAPP } from "@/lib/data";
 import { Reveal } from "@/components/reveal";
@@ -39,6 +39,18 @@ export function Booking() {
   const [selectedTime, setSelectedTime] = useState("");
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
+
+  /* --- Pre-select service from card click --- */
+  useEffect(() => {
+    function handleSelect(e: Event) {
+      const { name, cat } = (e as CustomEvent<{ name: string; cat: Category }>).detail;
+      setStep(1);
+      setCatTab(cat);
+      setSelectedService(name);
+    }
+    window.addEventListener("dimux:select-service", handleSelect);
+    return () => window.removeEventListener("dimux:select-service", handleSelect);
+  }, []);
 
   /* --- Calendar logic --- */
   const calYear = calendarDate.getFullYear();

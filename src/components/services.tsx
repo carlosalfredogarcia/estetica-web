@@ -169,15 +169,18 @@ export function Services() {
                       {service.price}
                     </p>
                     <div className="flex gap-2">
-                      <a
-                        href="#reservar"
+                      <button
+                        onClick={() => {
+                          document.getElementById("reservar")?.scrollIntoView({ behavior: "smooth" });
+                          window.dispatchEvent(new CustomEvent("dimux:select-service", { detail: { name: service.name, cat: service.cat } }));
+                        }}
                         className="inline-flex items-center justify-center px-4 py-2 text-[10px] font-sans tracking-[0.15em] uppercase text-white font-medium"
                         style={{ background: "#B8922A", borderRadius: 20 }}
                       >
                         Reservar
-                      </a>
+                      </button>
                       <a
-                        href="https://wa.me/34644376744"
+                        href={`https://wa.me/34644376744?text=${encodeURIComponent(`Hola, me gustaría consultar sobre: ${service.name}.`)}`}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="inline-flex items-center justify-center px-4 py-2 text-[10px] font-sans tracking-[0.15em] uppercase font-medium"
