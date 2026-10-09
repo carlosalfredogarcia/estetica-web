@@ -57,7 +57,7 @@ const SERVICE_IMAGES: Record<string, string> = {
   Labio:
     "https://images.unsplash.com/photo-1522337360788-8b13dee7a37e?w=600&q=80&auto=format&fit=crop",
   "Piernas Completas":
-    "https://images.unsplash.com/photo-1520334363174-ed6b96b8a80a?w=600&q=80&auto=format&fit=crop",
+    "https://images.unsplash.com/photo-1535743686920-55e4145369b9?w=600&q=80&auto=format&fit=crop",
   "Piernas + Axilas":
     "https://images.unsplash.com/photo-1505944357431-27579db47558?w=600&q=80&auto=format&fit=crop",
   Pubis:
