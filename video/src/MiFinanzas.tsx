@@ -6,6 +6,7 @@ import { Phone } from "./Phone";
 import { Screen } from "./Screen";
 import { Spotlight } from "./Spotlight";
 import { Subs } from "./Subs";
+import { YearTotals } from "./YearTotals";
 import { C, PHONE_X, PHONE_Y } from "./theme";
 import { DURS, EDIT, FPS, STARTS, TRAMOS } from "./timeline";
 
@@ -53,6 +54,7 @@ export const MiFinanzas = () => {
           <AbsoluteFill>
             <Spotlight />
             <Callouts />
+            <YearTotals />
           </AbsoluteFill>
         </Phone>
       </div>

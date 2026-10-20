@@ -17,42 +17,39 @@
     }
   ],
   "words": [],
-  "callouts": [
-    {
-      "at": 88.4,
-      "until": 95.6,
-      "text": "−61%",
-      "label": "Gasolina",
-      "x": 0.74,
-      "y": 0.47,
-      "tone": "good"
-    },
-    {
-      "at": 99.4,
-      "until": 108.2,
-      "text": "−38%",
-      "label": "Salidas",
-      "x": 0.74,
-      "y": 0.47,
-      "tone": "good"
-    }
-  ],
+  "callouts": [],
   "spots": [
     {
-      "at": 87.6,
-      "until": 95.8,
-      "x": 0.035,
-      "y": 0.56,
-      "w": 0.93,
-      "h": 0.29
-    },
-    {
-      "at": 98.6,
-      "until": 108.4,
-      "x": 0.035,
-      "y": 0.56,
-      "w": 0.93,
-      "h": 0.29
+      "at": 33.45,
+      "until": 35.05,
+      "x": 0.055,
+      "y": 0.222,
+      "w": 0.89,
+      "h": 0.132
     }
-  ]
+  ],
+  "totals": {
+    "at": 34.85,
+    "until": 43.0,
+    "items": [
+      {
+        "label": "Ingresos",
+        "value": 14965,
+        "sign": "",
+        "tone": "green"
+      },
+      {
+        "label": "Gastos",
+        "value": 13800,
+        "sign": "",
+        "tone": "red"
+      },
+      {
+        "label": "Ahorro",
+        "value": 1165,
+        "sign": "+",
+        "tone": "teal"
+      }
+    ]
+  }
 }

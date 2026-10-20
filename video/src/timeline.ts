@@ -25,6 +25,11 @@ export const EDIT = edit as {
   words: Word[];
   spots: Spot[];
   callouts: Callout[];
+  totals: {
+    at: number;
+    until: number;
+    items: { label: string; value: number; sign: string; tone: "green" | "red" | "teal" }[];
+  };
 };
 
 // Los focos, rótulos y palabras van en segundos de la grabación original.
