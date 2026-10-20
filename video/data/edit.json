@@ -1,0 +1,58 @@
+{
+  "source": "clips/app.mp4",
+  "sourceDur": 108.98,
+  "hook": [
+    "Por fin entiendes",
+    "a dónde va tu dinero",
+    "cada mes"
+  ],
+  "hookAccent": 1,
+  "hookDur": 3.2,
+  "tramos": [
+    {
+      "id": "A",
+      "from": 0,
+      "to": 108.9,
+      "mode": "full"
+    }
+  ],
+  "words": [],
+  "callouts": [
+    {
+      "at": 88.4,
+      "until": 95.6,
+      "text": "−61%",
+      "label": "Gasolina",
+      "x": 0.74,
+      "y": 0.47,
+      "tone": "good"
+    },
+    {
+      "at": 99.4,
+      "until": 108.2,
+      "text": "−38%",
+      "label": "Salidas",
+      "x": 0.74,
+      "y": 0.47,
+      "tone": "good"
+    }
+  ],
+  "spots": [
+    {
+      "at": 87.6,
+      "until": 95.8,
+      "x": 0.035,
+      "y": 0.56,
+      "w": 0.93,
+      "h": 0.29
+    },
+    {
+      "at": 98.6,
+      "until": 108.4,
+      "x": 0.035,
+      "y": 0.56,
+      "w": 0.93,
+      "h": 0.29
+    }
+  ]
+}

@@ -1,0 +1,5 @@
+node_modules
+out
+# Grabaciones y audio: pesan y llevan datos personales.
+public/clips
+work
