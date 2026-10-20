@@ -5,10 +5,16 @@ Escribe work/words.json (tiempos en segundos de la grabación original).
 """
 import json
 import sys
+import wave
+
+import numpy as np
 
 from faster_whisper import WhisperModel
 
-audio = sys.argv[1]
+# El WAV (mono, 16 kHz) se lee aquí: el lector de faster-whisper depende de PyAV
+# y falla con algunas versiones.
+w = wave.open(sys.argv[1])
+audio = np.frombuffer(w.readframes(w.getnframes()), dtype=np.int16).astype(np.float32) / 32768
 model = WhisperModel("large-v3", device="cpu", compute_type="int8")
 segments, _ = model.transcribe(audio, language="es", word_timestamps=True, vad_filter=False)
 words = [

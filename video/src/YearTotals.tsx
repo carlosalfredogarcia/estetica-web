@@ -7,7 +7,8 @@ const TOP = 70;
 // Distancia hasta la fila de totales de la app (la misma zona que enmarca el foco).
 const FROM_Y = 0.236 * SCREEN_H - TOP;
 
-const fmt = (n: number) => "$" + Math.round(n).toLocaleString("en-US");
+// Formato español con punto de miles también en 4 cifras: 14.965 €, 1.165 €.
+const fmt = (n: number) => Math.round(n).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".") + " €";
 
 // Totales del año: se despegan de la pantalla donde los marca el foco y suben
 // a quedarse fijados arriba mientras la lista baja.

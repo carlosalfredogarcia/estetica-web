@@ -35,7 +35,6 @@ const chunks: Chunk[] = (() => {
 export const Subs = () => {
   const frame = useCurrentFrame();
   const t = frame / FPS;
-  if (t < EDIT.hookDur) return null;
   const c = chunks.find((x) => t >= x.start && t < x.end);
   if (!c) return null;
   const text = c.words.map((w) => w.text).join(" ");
