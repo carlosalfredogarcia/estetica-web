@@ -7,8 +7,9 @@ import { WhatsAppIcon, InstagramIcon } from "@/components/brand-icons";
 
 const NAV_LINKS = [
   { label: "Inicio", href: "#inicio" },
+  { label: "Diagnóstico", href: "#diagnostico" },
   { label: "Servicios", href: "#servicios" },
-  { label: "Testimonios", href: "#testimonios" },
+  { label: "Cuidados", href: "#cuidados" },
   { label: "Horario", href: "#horario" },
   { label: "Contacto", href: "#contacto" },
 ];
@@ -28,7 +29,7 @@ export function SiteHeader() {
       className={cn(
         "fixed top-0 left-0 right-0 z-50 transition-all duration-500",
         scrolled
-          ? "bg-[var(--background)]/95 backdrop-blur-sm border-b border-border"
+          ? "bg-[var(--background)]/80 backdrop-blur-md border-b border-border"
           : "bg-transparent"
       )}
     >
@@ -67,7 +68,7 @@ export function SiteHeader() {
           </a>
           <a
             href="#reservar"
-            className="btn-elegant border border-foreground px-5 py-2 text-xs font-sans tracking-[0.15em] uppercase"
+            className="btn-gold px-5 py-2 text-xs font-sans tracking-[0.15em] uppercase"
           >
             Reservar
           </a>

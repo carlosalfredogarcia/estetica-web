@@ -1,6 +1,7 @@
 import { SCHEDULE } from "@/lib/data";
 import { Reveal } from "@/components/reveal";
 import { SectionHeading } from "@/components/section-heading";
+import { OpenNow } from "@/components/open-now";
 
 export function Schedule() {
   return (
@@ -11,8 +12,9 @@ export function Schedule() {
             eyebrow="Horario"
             title="Cuándo encontrarnos"
             description="Reserva tu cita con antelación para asegurar disponibilidad. También puedes escribirnos por WhatsApp."
-            className="mb-12"
+            className="mb-6"
           />
+          <OpenNow className="mb-12 text-xs font-sans tracking-[0.15em] uppercase text-foreground/80" />
         </Reveal>
 
         <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-px bg-border">

@@ -1,33 +1,43 @@
 import { Reveal } from "@/components/reveal";
 import { SectionHeading } from "@/components/section-heading";
+import { Tilt } from "@/components/tilt";
+import { SERVICES } from "@/lib/data";
 
+const count = (cat: string) => String(SERVICES.filter((s) => s.cat === cat).length);
 const STATS = [
-  { value: "8", label: "Tratamientos Faciales" },
-  { value: "5", label: "Tratamientos Corporales" },
-  { value: "9", label: "Zonas Láser" },
+  { value: count("Facial"), label: "Tratamientos Faciales" },
+  { value: count("Corporal"), label: "Tratamientos Corporales" },
+  { value: count("Láser"), label: "Zonas Láser" },
 ];
 
 export function Intro() {
   return (
-    <section className="py-20 lg:py-28 px-6 lg:px-8 bg-[var(--secondary)]">
+    <section className="py-20 lg:py-28 px-6 lg:px-8 bg-[var(--secondary)] overflow-hidden">
       <div className="max-w-7xl mx-auto grid lg:grid-cols-2 gap-12 lg:gap-20 items-center">
-        {/* Image */}
+        {/* Fotos en capas con profundidad */}
         <Reveal>
-          <div className="relative aspect-[4/5] overflow-hidden">
+          <Tilt max={6} className="relative aspect-[4/5]">
             <img
-              src="https://images.unsplash.com/photo-1519823551278-64ac92734fb1?w=800&q=80"
+              src="images/tratamientos/serum.webp"
               alt="Sala de tratamientos DIMUX Estética"
-              className="w-full h-full object-cover"
+              className="absolute inset-0 w-[85%] h-[85%] object-cover border border-border"
             />
-            <div className="absolute bottom-4 left-4 right-4 bg-[var(--background)]/90 backdrop-blur-sm px-6 py-4">
+            <img
+              src="images/tratamientos/radiofrecuencia.webp"
+              alt="Radiofrecuencia en DIMUX"
+              className="pop-z absolute right-0 bottom-0 w-[55%] aspect-square object-cover border border-[var(--gold)]/40 shadow-[0_30px_60px_-15px_rgba(0,0,0,0.9)]"
+              style={{ transform: "translateZ(70px)" }}
+            />
+            <div
+              className="absolute left-4 bottom-[18%] bg-black/70 backdrop-blur-md px-6 py-4 border-l-2 border-[var(--gold)]"
+              style={{ transform: "translateZ(110px)" }}
+            >
               <p className="text-xs font-sans tracking-[0.15em] uppercase text-[var(--gold)]">
                 Centro DIMUX Estética
               </p>
-              <p className="text-sm font-light text-foreground/80 mt-1">
-                Málaga
-              </p>
+              <p className="text-sm font-light text-foreground/80 mt-1">Málaga</p>
             </div>
-          </div>
+          </Tilt>
         </Reveal>
 
         {/* Content */}

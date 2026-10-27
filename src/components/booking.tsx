@@ -83,19 +83,61 @@ export function Booking() {
   }
 
   /* --- WhatsApp confirm --- */
-  function handleConfirm() {
-    if (!selectedService || !selectedDay || !selectedTime || !name) return;
+  function bookingMessage() {
+    if (!selectedDay) return "";
     const dayNum = selectedDay.getDate();
     const monthName = MONTHS[selectedDay.getMonth()];
     const yearNum = selectedDay.getFullYear();
     const dayName = DAYS[selectedDay.getDay()];
-    const msg = `Hola! Me gustaría reservar:\n\n*Tratamiento:* ${selectedService}\n*Fecha:* ${dayName} ${dayNum} de ${monthName} de ${yearNum}\n*Hora:* ${selectedTime}h\n*Nombre:* ${name}${phone ? `\n*Teléfono:* ${phone}` : ""}`;
-    // window.open(
-    //   `https://wa.me/${WHATSAPP}?text=${encodeURIComponent(msg)}`,
-    //   "_blank",
-    //   "noopener,noreferrer"
-    // );
+    return `Hola! Me gustaría reservar:\n\n*Tratamiento:* ${selectedService}\n*Fecha:* ${dayName} ${dayNum} de ${monthName} de ${yearNum}\n*Hora:* ${selectedTime}h\n*Nombre:* ${name}${phone ? `\n*Teléfono:* ${phone}` : ""}`;
+  }
+
+  function bookingWhatsappUrl() {
+    return `https://wa.me/${WHATSAPP}?text=${encodeURIComponent(bookingMessage())}`;
+  }
+
+  function handleConfirm() {
+    if (!selectedService || !selectedDay || !selectedTime || !name) return;
+    window.open(bookingWhatsappUrl(), "_blank", "noopener,noreferrer");
     setConfirmed(true);
+  }
+
+  /* --- Archivo .ics para guardar la cita en el calendario del móvil --- */
+  function downloadIcs() {
+    if (!selectedDay) return;
+    const [h, m] = selectedTime.split(":").map(Number);
+    const start = new Date(selectedDay);
+    start.setHours(h, m || 0, 0, 0);
+    const mins = parseInt(SERVICES.find((s) => s.name === selectedService)?.dur ?? "60") || 60;
+    const end = new Date(start.getTime() + mins * 60000);
+    const f = (d: Date) =>
+      `${d.getFullYear()}${String(d.getMonth() + 1).padStart(2, "0")}${String(d.getDate()).padStart(2, "0")}T${String(d.getHours()).padStart(2, "0")}${String(d.getMinutes()).padStart(2, "0")}00`;
+    const ics = [
+      "BEGIN:VCALENDAR",
+      "VERSION:2.0",
+      "PRODID:-//DIMUX Estetica//Reservas//ES",
+      "BEGIN:VEVENT",
+      `UID:${Date.now()}@dimux`,
+      `DTSTAMP:${new Date().toISOString().replace(/[-:]/g, "").slice(0, 15)}Z`,
+      `DTSTART;TZID=Europe/Madrid:${f(start)}`,
+      `DTEND;TZID=Europe/Madrid:${f(end)}`,
+      `SUMMARY:${selectedService} · DIMUX Estética`,
+      "LOCATION:DIMUX Estética\\, Málaga",
+      "DESCRIPTION:Pendiente de confirmar por WhatsApp. Si no puedes venir\\, avísanos con 24 h.",
+      "BEGIN:VALARM",
+      "TRIGGER:-P1D",
+      "ACTION:DISPLAY",
+      "DESCRIPTION:Mañana tienes cita en DIMUX",
+      "END:VALARM",
+      "END:VEVENT",
+      "END:VCALENDAR",
+    ].join("\r\n");
+    const url = URL.createObjectURL(new Blob([ics], { type: "text/calendar" }));
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "cita-dimux.ics";
+    a.click();
+    URL.revokeObjectURL(url);
   }
 
   function handleNewBooking() {
@@ -132,7 +174,7 @@ export function Booking() {
               <div className="space-y-2">
                 <h3 className="font-serif text-2xl font-light">¡Reserva recibida!</h3>
                 <p className="text-sm font-sans text-muted-foreground max-w-md mx-auto">
-                  En breve nos pondremos en contacto contigo para confirmar tu cita.
+                  Te hemos abierto WhatsApp con tu reserva: pulsa enviar y Lucía te la confirma enseguida.
                 </p>
               </div>
               <div className="border-t border-[var(--gold)]/20 pt-6 grid sm:grid-cols-3 gap-4 text-sm">
@@ -150,6 +192,22 @@ export function Booking() {
                   <p className="text-xs font-sans tracking-[0.15em] uppercase text-[var(--gold)]">Hora</p>
                   <p className="font-serif font-light">{selectedTime}h</p>
                 </div>
+              </div>
+              <div className="flex flex-col sm:flex-row gap-3 justify-center">
+                <a
+                  href={bookingWhatsappUrl()}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="btn-gold px-8 py-3 text-xs font-sans tracking-[0.2em] uppercase"
+                >
+                  ¿No se abrió? Enviar por WhatsApp
+                </a>
+                <button
+                  onClick={downloadIcs}
+                  className="btn-elegant border border-[var(--gold)] text-[var(--gold)] hover:text-black px-8 py-3 text-xs font-sans tracking-[0.2em] uppercase"
+                >
+                  Añadir a mi calendario
+                </button>
               </div>
               <button
                 onClick={handleNewBooking}
