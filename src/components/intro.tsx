@@ -1,7 +1,8 @@
 import { Reveal } from "@/components/reveal";
 import { SectionHeading } from "@/components/section-heading";
 import { Tilt } from "@/components/tilt";
-import { SERVICES, NEGOCIO } from "@/lib/data";
+import { SERVICES } from "@/lib/data";
+import { NegocioTexto } from "@/components/negocio";
 
 const count = (cat: string) => String(SERVICES.filter((s) => s.cat === cat).length);
 const STATS = [
@@ -33,9 +34,9 @@ export function Intro() {
               style={{ transform: "translateZ(110px)" }}
             >
               <p className="text-xs font-sans tracking-[0.15em] uppercase text-[var(--gold)]">
-                {NEGOCIO.nombre}
+                <NegocioTexto campo="nombre" />
               </p>
-              <p className="text-sm font-light text-foreground/80 mt-1">{NEGOCIO.ciudad}</p>
+              <p className="text-sm font-light text-foreground/80 mt-1"><NegocioTexto campo="ciudad" /></p>
             </div>
           </Tilt>
         </Reveal>

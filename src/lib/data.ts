@@ -200,6 +200,11 @@ export const NEGOCIO = {
   instagram: "",
 };
 
+// Tu marca (página /alfrega y página de captación)
+export const ALFREGA = {
+  whatsapp: "34640309239",
+};
+
 export const WHATSAPP = NEGOCIO.whatsapp;
 export const INSTAGRAM = NEGOCIO.instagram;
 

@@ -2,7 +2,8 @@
 
 import { useState, useMemo, useEffect } from "react";
 import { ChevronLeft, ChevronRight, Check } from "lucide-react";
-import { SERVICES, SCHEDULE_MAP, DAYS, MONTHS, WHATSAPP, NEGOCIO } from "@/lib/data";
+import { SERVICES, SCHEDULE_MAP, DAYS, MONTHS, WHATSAPP } from "@/lib/data";
+import { useNegocio } from "@/components/negocio";
 import { Reveal } from "@/components/reveal";
 import { SectionHeading } from "@/components/section-heading";
 import { cn } from "@/lib/utils";
@@ -40,6 +41,7 @@ export function Booking() {
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
   const [confirmed, setConfirmed] = useState(false);
+  const NEGOCIO = useNegocio();
 
   /* --- Pre-select service from card click --- */
   useEffect(() => {

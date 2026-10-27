@@ -2,8 +2,9 @@
 
 import { useEffect, useRef } from "react";
 import { ArrowUpRight } from "lucide-react";
-import { WHATSAPP, NEGOCIO } from "@/lib/data";
+import { WHATSAPP } from "@/lib/data";
 import { OpenNow } from "@/components/open-now";
+import { NegocioTexto } from "@/components/negocio";
 
 function whatsappUrl(msg?: string) {
   const text = msg ? encodeURIComponent(msg) : "";
@@ -109,7 +110,7 @@ export function Hero() {
       <div className="relative z-10 max-w-7xl mx-auto w-full">
         <div className="max-w-2xl">
           <p className="text-xs font-sans font-medium tracking-[0.4em] uppercase text-[var(--gold)] mb-6 tab-enter" style={{ animationDelay: "200ms" }}>
-            Estética avanzada · {NEGOCIO.ciudad}
+            Estética avanzada · <NegocioTexto campo="ciudad" />
           </p>
 
           <h1 className="font-serif text-6xl sm:text-7xl lg:text-8xl xl:text-9xl font-light leading-[0.95] tracking-wide mb-8 tab-enter" style={{ animationDelay: "350ms" }}>

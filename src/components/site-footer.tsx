@@ -1,5 +1,6 @@
-import { WHATSAPP, INSTAGRAM, NEGOCIO } from "@/lib/data";
+import { WHATSAPP, INSTAGRAM } from "@/lib/data";
 import { WhatsAppIcon, InstagramIcon } from "@/components/brand-icons";
+import { NegocioTexto } from "@/components/negocio";
 
 export function SiteFooter() {
   const year = new Date().getFullYear();
@@ -9,7 +10,7 @@ export function SiteFooter() {
       <footer className="border-t border-border py-10 px-6 lg:px-8">
         <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
           <p className="font-serif text-lg tracking-[0.15em] uppercase font-light">
-            {NEGOCIO.nombre}
+            <NegocioTexto campo="nombre" />
           </p>
 
           <div className="flex items-center gap-5">
@@ -34,7 +35,7 @@ export function SiteFooter() {
           </div>
 
           <p className="text-xs font-sans text-muted-foreground">
-            © {year} {NEGOCIO.nombre} · {NEGOCIO.ciudad}
+            © {year} <NegocioTexto campo="nombre" /> · <NegocioTexto campo="ciudad" />
           </p>
         </div>
       </footer>

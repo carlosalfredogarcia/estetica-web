@@ -1,7 +1,8 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { SERVICES, NEGOCIO } from "@/lib/data";
+import { SERVICES } from "@/lib/data";
+import { useNegocio } from "@/components/negocio";
 
 const G="#B8922A", DR="#8B2252", ROSE="#D4929A";
 const BG="#F0E8E0", BG2="#E8DDD4", DARK="#1A1A1A", DARK2="#2C2C2C";
@@ -149,6 +150,7 @@ function Lotus({size=32,color=G}:{size?:number,color?:string}){
 
 export default function AdminPage(){
   const [view,setView]=useState("dia");
+  const NEGOCIO=useNegocio();
   const [ready,setReady]=useState(false);
   const [today,setToday]=useState("");
   const [bookings,setBookings]=useState<any[]>([]);

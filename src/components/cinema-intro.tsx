@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { NEGOCIO } from "@/lib/data";
+import { NegocioTexto } from "@/components/negocio";
 
 // Apertura de cine: dos franjas negras que se abren dejando ver la web.
 // Solo la primera vez de cada visita; un toque la salta.
@@ -43,13 +43,13 @@ export function CinemaIntro() {
         style={{ opacity: open ? 0 : 1 }}
       >
         <p className="text-[10px] font-sans tracking-[0.6em] uppercase text-[#6b645b] tab-enter">
-          Estética avanzada · {NEGOCIO.ciudad}
+          Estética avanzada · <NegocioTexto campo="ciudad" />
         </p>
         <p
           className="font-serif text-4xl sm:text-6xl font-light tracking-[0.3em] uppercase gold-shine text-center px-6 tab-enter"
           style={{ animationDelay: "300ms" }}
         >
-          {NEGOCIO.nombre}
+          <NegocioTexto campo="nombre" />
         </p>
         <div className="h-px w-24 bg-[#B8922A]/60 tab-enter" style={{ animationDelay: "600ms" }} />
       </div>

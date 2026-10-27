@@ -2,8 +2,9 @@
 
 import { useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
-import { WHATSAPP, INSTAGRAM, NEGOCIO } from "@/lib/data";
+import { WHATSAPP, INSTAGRAM } from "@/lib/data";
 import { WhatsAppIcon, InstagramIcon } from "@/components/brand-icons";
+import { NegocioTexto } from "@/components/negocio";
 
 const NAV_LINKS = [
   { label: "Inicio", href: "#inicio" },
@@ -38,7 +39,7 @@ export function SiteHeader() {
           href="#inicio"
           className="font-serif text-xl tracking-[0.15em] uppercase font-light flex-shrink-0"
         >
-          {NEGOCIO.nombre}
+          <NegocioTexto campo="nombre" />
         </a>
 
         {/* Desktop nav — visible from md breakpoint */}
