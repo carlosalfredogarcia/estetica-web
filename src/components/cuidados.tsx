@@ -87,7 +87,7 @@ export function Cuidados() {
                 className={cn(
                   "px-4 py-2 text-[10px] font-sans tracking-[0.15em] uppercase rounded-full border transition-colors",
                   guide === x.id
-                    ? "border-[var(--gold)] bg-[var(--gold)] text-black"
+                    ? "border-[var(--gold)] bg-[var(--gold)] text-white"
                     : "border-border text-muted-foreground hover:text-foreground"
                 )}
               >

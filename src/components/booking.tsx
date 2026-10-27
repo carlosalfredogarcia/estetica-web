@@ -204,7 +204,7 @@ export function Booking() {
                 </a>
                 <button
                   onClick={downloadIcs}
-                  className="btn-elegant border border-[var(--gold)] text-[var(--gold)] hover:text-black px-8 py-3 text-xs font-sans tracking-[0.2em] uppercase"
+                  className="btn-elegant border border-[var(--gold)] text-[var(--gold)] px-8 py-3 text-xs font-sans tracking-[0.2em] uppercase"
                 >
                   Añadir a mi calendario
                 </button>

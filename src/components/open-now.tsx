@@ -48,8 +48,8 @@ export function OpenNow({ className }: { className?: string }) {
   return (
     <p className={className}>
       <span className="relative inline-flex w-2 h-2 mr-2 align-middle">
-        {st.open && <span className="absolute inset-0 rounded-full bg-emerald-400 animate-ping opacity-70" />}
-        <span className={`relative w-2 h-2 rounded-full ${st.open ? "bg-emerald-400" : "bg-[#A89C90]"}`} />
+        {st.open && <span className="absolute inset-0 rounded-full bg-[#4A7A64] animate-ping opacity-70" />}
+        <span className={`relative w-2 h-2 rounded-full ${st.open ? "bg-[#4A7A64]" : "bg-[#8A7A70]"}`} />
       </span>
       {st.text}
     </p>

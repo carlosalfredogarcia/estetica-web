@@ -60,24 +60,25 @@ export function Hero() {
   return (
     <section
       id="inicio"
-      className="relative min-h-[100svh] flex flex-col justify-end pb-16 sm:pb-24 px-6 lg:px-8 overflow-hidden bg-black"
+      className="relative min-h-[100svh] flex flex-col justify-end pb-16 sm:pb-24 px-6 lg:px-8 overflow-hidden bg-[var(--background)]"
     >
       {/* Fondo: la sala, con movimiento lento de cámara */}
       <div ref={bgRef} className="absolute -inset-10 layer-3d" aria-hidden>
         <img
           src="images/salon.webp"
           alt=""
-          className="w-full h-full object-cover ken-burns opacity-55"
+          className="w-full h-full object-cover ken-burns"
         />
       </div>
       <div
         className="absolute inset-0"
         style={{
           background:
-            "linear-gradient(90deg, rgba(11,9,8,0.95) 0%, rgba(11,9,8,0.7) 45%, rgba(11,9,8,0.25) 100%), linear-gradient(to top, #0B0908 0%, transparent 40%)",
+            "linear-gradient(90deg, rgba(240,232,224,0.92) 0%, rgba(240,232,224,0.7) 45%, rgba(240,232,224,0.15) 100%), linear-gradient(to top, #F0E8E0 0%, transparent 35%)",
         }}
         aria-hidden
       />
+      <div className="absolute inset-0 bg-[var(--background)]/40 md:hidden" aria-hidden />
       <div className="absolute inset-0 light-beam" aria-hidden />
       <div className="absolute inset-0 vignette" aria-hidden />
 
@@ -94,7 +95,7 @@ export function Hero() {
                 <img
                   src={f.src}
                   alt={f.alt}
-                  className="w-full aspect-[4/5] object-cover rounded-sm border border-[var(--gold)]/30 shadow-[0_40px_80px_-20px_rgba(0,0,0,0.9)]"
+                  className="w-full aspect-[4/5] object-cover rounded-sm border border-[var(--gold)]/30 shadow-[0_40px_80px_-20px_rgba(26,26,26,0.45)]"
                 />
               </div>
             </div>
@@ -116,7 +117,7 @@ export function Hero() {
             <em className="italic gold-shine pr-2">redefinida</em>
           </h1>
 
-          <p className="text-sm sm:text-base font-sans font-light text-foreground/75 max-w-md leading-relaxed mb-10 tab-enter" style={{ animationDelay: "500ms" }}>
+          <p className="text-sm sm:text-base font-sans font-light text-foreground/80 max-w-md leading-relaxed mb-10 tab-enter" style={{ animationDelay: "500ms" }}>
             Tratamientos faciales, corporales y depilación láser de alta gama.
             Resultados visibles desde la primera sesión.
           </p>
@@ -131,7 +132,7 @@ export function Hero() {
             </a>
             <a
               href="#diagnostico"
-              className="btn-elegant border border-foreground/40 px-8 py-4 text-xs font-sans tracking-[0.25em] uppercase inline-flex items-center justify-center gap-3"
+              className="btn-elegant border border-foreground px-8 py-4 text-xs font-sans tracking-[0.25em] uppercase inline-flex items-center justify-center gap-3"
             >
               <Sparkles className="w-3.5 h-3.5" />
               ¿Qué necesita mi piel?

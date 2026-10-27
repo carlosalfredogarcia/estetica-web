@@ -89,11 +89,11 @@ export function Services() {
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-[var(--card)] via-transparent to-transparent" />
                     {service.promo && (
-                      <span className="pop-z absolute top-3 left-3 bg-[var(--gold)] text-black text-[10px] font-sans font-medium tracking-[0.1em] uppercase px-2 py-1">
+                      <span className="pop-z absolute top-3 left-3 bg-[var(--gold)] text-white text-[10px] font-sans font-medium tracking-[0.1em] uppercase px-2 py-1">
                         {service.promo}
                       </span>
                     )}
-                    <span className="pop-z absolute bottom-3 right-3 text-[10px] font-sans tracking-[0.15em] uppercase bg-black/60 backdrop-blur px-2 py-1 text-foreground/80">
+                    <span className="pop-z absolute bottom-3 right-3 text-[10px] font-sans tracking-[0.15em] uppercase bg-[var(--background)]/85 backdrop-blur px-2 py-1 text-foreground/80">
                       {service.dur}
                     </span>
                   </div>
@@ -114,7 +114,7 @@ export function Services() {
                           {service.price}
                         </p>
                         {saving && (
-                          <p className="text-[10px] font-sans tracking-[0.08em] uppercase text-emerald-400/90 text-right">
+                          <p className="text-[10px] font-sans tracking-[0.08em] uppercase text-[#4A7A64] text-right">
                             Con bono ahorras {saving.saving}€
                           </p>
                         )}
@@ -125,7 +125,7 @@ export function Services() {
                             document.getElementById("reservar")?.scrollIntoView({ behavior: "smooth" });
                             window.dispatchEvent(new CustomEvent("dimux:select-service", { detail: { name: service.name, cat: service.cat } }));
                           }}
-                          className="flex-1 inline-flex items-center justify-center gap-1.5 px-4 py-2.5 text-[10px] font-sans tracking-[0.15em] uppercase text-black font-medium bg-[var(--gold)] hover:brightness-110 transition rounded-full"
+                          className="flex-1 inline-flex items-center justify-center gap-1.5 px-4 py-2.5 text-[10px] font-sans tracking-[0.15em] uppercase text-white font-medium bg-[var(--gold)] hover:brightness-110 transition rounded-full"
                         >
                           Reservar <ArrowUpRight className="w-3 h-3" />
                         </button>

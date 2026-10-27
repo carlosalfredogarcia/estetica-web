@@ -41,7 +41,7 @@ export function CinemaIntro() {
         className="absolute inset-0 z-[101] flex flex-col items-center justify-center gap-4 transition-opacity duration-700"
         style={{ opacity: open ? 0 : 1 }}
       >
-        <p className="text-[10px] font-sans tracking-[0.6em] uppercase text-[#A89C90] tab-enter">
+        <p className="text-[10px] font-sans tracking-[0.6em] uppercase text-[#6b645b] tab-enter">
           Lucía presenta
         </p>
         <p
@@ -50,7 +50,7 @@ export function CinemaIntro() {
         >
           Dimux
         </p>
-        <div className="h-px w-24 bg-[#C9A23A]/60 tab-enter" style={{ animationDelay: "600ms" }} />
+        <div className="h-px w-24 bg-[#B8922A]/60 tab-enter" style={{ animationDelay: "600ms" }} />
       </div>
     </div>
   );

@@ -25,11 +25,11 @@ export function Intro() {
             <img
               src="images/tratamientos/radiofrecuencia.webp"
               alt="Radiofrecuencia en DIMUX"
-              className="pop-z absolute right-0 bottom-0 w-[55%] aspect-square object-cover border border-[var(--gold)]/40 shadow-[0_30px_60px_-15px_rgba(0,0,0,0.9)]"
+              className="pop-z absolute right-0 bottom-0 w-[55%] aspect-square object-cover border border-[var(--gold)]/40 shadow-[0_30px_60px_-15px_rgba(26,26,26,0.4)]"
               style={{ transform: "translateZ(70px)" }}
             />
             <div
-              className="absolute left-4 bottom-[18%] bg-black/70 backdrop-blur-md px-6 py-4 border-l-2 border-[var(--gold)]"
+              className="absolute left-4 bottom-[18%] bg-[var(--background)]/90 backdrop-blur-md px-6 py-4 border-l-2 border-[var(--gold)]"
               style={{ transform: "translateZ(110px)" }}
             >
               <p className="text-xs font-sans tracking-[0.15em] uppercase text-[var(--gold)]">
