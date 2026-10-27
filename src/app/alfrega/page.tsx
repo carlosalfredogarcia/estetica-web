@@ -178,7 +178,7 @@ export default function Alfrega() {
               <h2 className="font-serif text-4xl sm:text-5xl font-light mb-6">Soy Carlos</h2>
               <div className="space-y-4 text-base font-sans font-light text-foreground/80 leading-relaxed">
                 <p>
-                  Programo aplicaciones: tengo una app de finanzas personales publicada en Google Play.
+                  Programo webs y aplicaciones: ahora mismo estoy terminando una app de finanzas personales para Android.
                 </p>
                 <p>
                   Ahora ayudo a las estéticas de la zona a tener su web y su agenda en orden, para que dediquen el
