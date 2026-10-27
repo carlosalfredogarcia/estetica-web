@@ -2,7 +2,7 @@
 
 import { useState, useMemo, useEffect } from "react";
 import { ChevronLeft, ChevronRight, Check } from "lucide-react";
-import { SERVICES, SCHEDULE_MAP, DAYS, MONTHS, WHATSAPP } from "@/lib/data";
+import { SERVICES, SCHEDULE_MAP, DAYS, MONTHS, WHATSAPP, NEGOCIO } from "@/lib/data";
 import { Reveal } from "@/components/reveal";
 import { SectionHeading } from "@/components/section-heading";
 import { cn } from "@/lib/utils";
@@ -49,8 +49,8 @@ export function Booking() {
       setCatTab(cat);
       setSelectedService(name);
     }
-    window.addEventListener("dimux:select-service", handleSelect);
-    return () => window.removeEventListener("dimux:select-service", handleSelect);
+    window.addEventListener("estetica:select-service", handleSelect);
+    return () => window.removeEventListener("estetica:select-service", handleSelect);
   }, []);
 
   /* --- Calendar logic --- */
@@ -115,19 +115,19 @@ export function Booking() {
     const ics = [
       "BEGIN:VCALENDAR",
       "VERSION:2.0",
-      "PRODID:-//DIMUX Estetica//Reservas//ES",
+      "PRODID:-//Estetica//Reservas//ES",
       "BEGIN:VEVENT",
-      `UID:${Date.now()}@dimux`,
+      `UID:${Date.now()}@estetica`,
       `DTSTAMP:${new Date().toISOString().replace(/[-:]/g, "").slice(0, 15)}Z`,
       `DTSTART;TZID=Europe/Madrid:${f(start)}`,
       `DTEND;TZID=Europe/Madrid:${f(end)}`,
-      `SUMMARY:${selectedService} · DIMUX Estética`,
-      "LOCATION:DIMUX Estética\\, Málaga",
+      `SUMMARY:${selectedService} · ${NEGOCIO.nombre}`,
+      `LOCATION:${NEGOCIO.nombre}\\, ${NEGOCIO.ciudad}`,
       "DESCRIPTION:Pendiente de confirmar por WhatsApp. Si no puedes venir\\, avísanos con 24 h.",
       "BEGIN:VALARM",
       "TRIGGER:-P1D",
       "ACTION:DISPLAY",
-      "DESCRIPTION:Mañana tienes cita en DIMUX",
+      `DESCRIPTION:Mañana tienes cita en ${NEGOCIO.nombre}`,
       "END:VALARM",
       "END:VEVENT",
       "END:VCALENDAR",
@@ -135,7 +135,7 @@ export function Booking() {
     const url = URL.createObjectURL(new Blob([ics], { type: "text/calendar" }));
     const a = document.createElement("a");
     a.href = url;
-    a.download = "cita-dimux.ics";
+    a.download = "mi-cita.ics";
     a.click();
     URL.revokeObjectURL(url);
   }
@@ -174,7 +174,7 @@ export function Booking() {
               <div className="space-y-2">
                 <h3 className="font-serif text-2xl font-light">¡Reserva recibida!</h3>
                 <p className="text-sm font-sans text-muted-foreground max-w-md mx-auto">
-                  Te hemos abierto WhatsApp con tu reserva: pulsa enviar y Lucía te la confirma enseguida.
+                  Te hemos abierto WhatsApp con tu reserva: pulsa enviar y te la confirmamos enseguida.
                 </p>
               </div>
               <div className="border-t border-[var(--gold)]/20 pt-6 grid sm:grid-cols-3 gap-4 text-sm">
@@ -546,7 +546,7 @@ export function Booking() {
               </div>
 
               <p className="text-xs font-sans text-muted-foreground">
-                Al confirmar recibirás un mensaje de Lucía para validar tu cita.
+                Al confirmar se abrirá WhatsApp con tu reserva para que nos la envíes.
               </p>
             </div>
           </Reveal>

@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { NEGOCIO } from "@/lib/data";
 import { Cormorant_Garamond, DM_Sans } from "next/font/google";
 import "./globals.css";
 
@@ -17,12 +18,12 @@ const dmSans = DM_Sans({
 });
 
 export const metadata: Metadata = {
-  title: "DIMUX Estética · Lucía",
+  title: `${NEGOCIO.nombre} · Estética avanzada en ${NEGOCIO.ciudad}`,
   description:
-    "Centro de estética avanzada en Málaga. Tratamientos faciales, corporales y depilación láser de alta gama.",
+    `Centro de estética avanzada en ${NEGOCIO.ciudad}. Tratamientos faciales, corporales y depilación láser de alta gama.`,
   openGraph: {
-    title: "DIMUX Estética",
-    description: "Centro de estética avanzada en Málaga.",
+    title: NEGOCIO.nombre,
+    description: `Centro de estética avanzada en ${NEGOCIO.ciudad}.`,
     locale: "es_ES",
     type: "website",
   },

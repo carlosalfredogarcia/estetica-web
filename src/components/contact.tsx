@@ -1,4 +1,4 @@
-import { WHATSAPP, INSTAGRAM } from "@/lib/data";
+import { WHATSAPP, INSTAGRAM, telefonoBonito } from "@/lib/data";
 import { WhatsAppIcon, InstagramIcon } from "@/components/brand-icons";
 import { Reveal } from "@/components/reveal";
 import { SectionHeading } from "@/components/section-heading";
@@ -14,13 +14,13 @@ export function Contact() {
           <SectionHeading
             eyebrow="Contacto"
             title="Estamos aquí para ti"
-            description="Escríbenos por WhatsApp o síguenos en Instagram para novedades, promociones y consejos de belleza."
+            description={INSTAGRAM ? "Escríbenos por WhatsApp o síguenos en Instagram para novedades, promociones y consejos de belleza." : "Escríbenos por WhatsApp: te respondemos dudas, precios y disponibilidad."}
             center
-            className="mb-12"
+            className="mb-12 [&>p:last-child]:mx-auto"
           />
         </Reveal>
 
-        <div className="grid sm:grid-cols-2 gap-px bg-border max-w-2xl mx-auto">
+        <div className={`grid gap-px bg-border mx-auto ${INSTAGRAM ? "sm:grid-cols-2 max-w-2xl" : "max-w-sm"}`}>
           {/* WhatsApp */}
           <Reveal>
             <a
@@ -35,7 +35,7 @@ export function Contact() {
               <div>
                 <p className="font-serif text-lg font-light mb-1">WhatsApp</p>
                 <p className="text-xs font-sans text-muted-foreground tracking-wide">
-                  +34 644 376 744
+                  {telefonoBonito()}
                 </p>
               </div>
               <span className="text-xs font-sans tracking-[0.15em] uppercase text-[var(--gold)] group-hover:underline">
@@ -45,7 +45,7 @@ export function Contact() {
           </Reveal>
 
           {/* Instagram */}
-          <Reveal delay={100}>
+          {INSTAGRAM && <Reveal delay={100}>
             <a
               href={`https://instagram.com/${INSTAGRAM}`}
               target="_blank"
@@ -65,7 +65,7 @@ export function Contact() {
                 Seguir →
               </span>
             </a>
-          </Reveal>
+          </Reveal>}
         </div>
       </div>
     </section>

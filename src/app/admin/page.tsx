@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { SERVICES, NEGOCIO } from "@/lib/data";
 
 const G="#B8922A", DR="#8B2252", ROSE="#D4929A";
 const BG="#F0E8E0", BG2="#E8DDD4", DARK="#1A1A1A", DARK2="#2C2C2C";
@@ -30,7 +31,7 @@ const NAMES=[
   ["Yolanda Gil","644 887 110"],["Paula Herrero","688 445 003"],["Lidia Cano","622 770 118"],
   ["Rocío Amaya","655 112 990"],["Miriam Duarte","633 220 447"],["Sandra Peña","611 445 228"],
   ["Natalia Ibáñez","677 003 991"],["Gema Escudero","622 887 445"],["Ángela Ríos","644 220 118"],
-  ["Carla Méndez","688 991 003"],["Lucía Ferrer","677 001 553"],["Susana Torres","611 220 887"],
+  ["Carla Méndez","688 991 003"],["Laura Ferrer","677 001 553"],["Susana Torres","611 220 887"],
   ["Amaia Etxebarria","644 445 003"],["Olga Barrios","699 118 220"],["Emma Rivas","677 445 991"],
   ["Diana Solé","611 887 003"],["Tania Villar","644 991 228"],["Sonia Aguilar","688 220 447"],
   ["Javier Nieto","622 003 118"],["Marta Coll","677 118 990"],["Irene Bravo","633 771 004"],
@@ -62,27 +63,30 @@ const NOTE_POOL=[
   "Repite tratamiento del mes pasado","Prefiere aviso por WhatsApp el día antes",
 ];
 
-// Genera todas las citas de julio 2026 respetando el horario real de DIMUX.
-// La ocupación crece a lo largo del mes: el centro abrió el 18 de julio.
-function generarJulio(){
+const toDS=(dt:Date)=>`${dt.getFullYear()}-${String(dt.getMonth()+1).padStart(2,"0")}-${String(dt.getDate()).padStart(2,"0")}`;
+
+// Citas de ejemplo alrededor de hoy (desde el mes pasado hasta dentro de 3 semanas),
+// respetando el horario. Sirven para enseñar el panel; se pueden borrar en «Resumen».
+function generarDemo(hoy:Date){
   let seed=987654321;
   const rnd=()=>{seed=(seed*1103515245+12345)&0x7fffffff;return seed/0x7fffffff;};
-  const out=[];
+  const out:any[]=[];
   let id=1;
-  for(let d=1;d<=31;d++){
-    const dt=new Date(2026,6,d);
-    const sc=SCHED[dt.getDay()];
+  const start=new Date(hoy.getFullYear(),hoy.getMonth()-1,1);
+  const end=new Date(hoy);end.setDate(end.getDate()+21);
+  for(const dt=new Date(start);dt<=end;dt.setDate(dt.getDate()+1)){
+    const sc=(SCHED as any)[dt.getDay()];
     if(!sc)continue;
-    const ds=`2026-07-${String(d).padStart(2,"0")}`;
-    // Probabilidad de que la hora esté reservada
-    const fill = d<=10 ? 0.55 : d<=17 ? 0.72 : d<=24 ? 0.90 : 0.82;
+    const ds=toDS(dt);
+    const ahead=Math.round((dt.getTime()-hoy.getTime())/86400000);
+    // Ocupación: alta en el pasado y los próximos días, más baja cuanto más lejos
+    const fill=ahead<0?0.78:ahead<=3?0.8:ahead<=10?0.55:0.3;
     for(const{s,e}of sc){
       for(let h=s;h<e;h++){
         if(rnd()>fill)continue;
         const n=NAMES[Math.floor(rnd()*NAMES.length)];
         const sv=POOL[Math.floor(rnd()*POOL.length)];
-        const r=rnd();
-        const status=(d>=24&&r>0.80)?"pendiente":"confirmada";
+        const status=(ahead>=0&&rnd()>0.75)?"pendiente":"confirmada";
         const notes=rnd()>0.86?NOTE_POOL[Math.floor(rnd()*NOTE_POOL.length)]:"";
         out.push({id:id++,date:ds,time:h,client:n[0],phone:n[1],
           service:sv.s,price:sv.p+"€",status,notes});
@@ -92,18 +96,27 @@ function generarJulio(){
   return out;
 }
 
-const INIT_BOOKINGS=generarJulio();
+function demoBlocked(hoy:Date){
+  const at=(d:number)=>{const x=new Date(hoy);x.setDate(x.getDate()+d);return toDS(x);};
+  return [
+    {date:at(-12),time:13,reason:"Entrega de material"},
+    {date:at(-5),time:19,reason:"Cita con proveedor"},
+    {date:at(2),time:13,reason:"Comida familiar"},
+    {date:at(6),time:9,reason:"Formación láser"},
+    {date:at(6),time:10,reason:"Formación láser"},
+  ];
+}
 
-const INIT_BLOCKED=[
-  {date:"2026-07-07",time:14,reason:"Montaje del local"},
-  {date:"2026-07-14",time:13,reason:"Entrega de material"},
-  {date:"2026-07-16",time:19,reason:"Preparar inauguración"},
-  {date:"2026-07-22",time:19,reason:"Cita con proveedor"},
-  {date:"2026-07-25",time:13,reason:"Comida familiar"},
-  {date:"2026-07-29",time:9,reason:"Formación láser"},
-  {date:"2026-07-29",time:10,reason:"Formación láser"},
-  {date:"2026-07-30",time:14,reason:"Descanso"},
-];
+const STORE="estetica-panel-v1";
+
+// Teléfono de la clienta → enlace de WhatsApp (añade el 34 si es un móvil español)
+const waTo=(phone:string,msg:string)=>{
+  let n=(phone||"").replace(/\D/g,"");
+  if(n.length===9)n="34"+n;
+  return `https://wa.me/${n}?text=${encodeURIComponent(msg)}`;
+};
+const firstName=(c:string)=>(c||"").split(" ")[0];
+const hhmm=(h:number)=>`${String(h).padStart(2,"0")}:00`;
 
 const CSS=`
   @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap');
@@ -122,6 +135,7 @@ const CSS=`
   ::-webkit-scrollbar{width:5px;height:5px}
   ::-webkit-scrollbar-thumb{background:${G}55;border-radius:3px}
   a{text-decoration:none}
+  @media(max-width:640px){.hide-sm{display:none!important}}
 `;
 
 function Lotus({size=32,color=G}:{size?:number,color?:string}){
@@ -135,14 +149,46 @@ function Lotus({size=32,color=G}:{size?:number,color?:string}){
 
 export default function AdminPage(){
   const [view,setView]=useState("dia");
-  const [bookings,setBookings]=useState(INIT_BOOKINGS);
-  const [blocked,setBlocked]=useState(INIT_BLOCKED);
-  const [selDate,setSelDate]=useState("2026-07-24");
+  const [ready,setReady]=useState(false);
+  const [today,setToday]=useState("");
+  const [bookings,setBookings]=useState<any[]>([]);
+  const [blocked,setBlocked]=useState<any[]>([]);
+  const [selDate,setSelDate]=useState("");
+  const [newBk,setNewBk]=useState<any>(null);
+  const [noteDraft,setNoteDraft]=useState("");
+  const [search,setSearch]=useState("");
+  const [sent,setSent]=useState<Record<string,boolean>>({});
   const [detail,setDetail]=useState<any>(null);
   const [blockModal,setBlockModal]=useState<any>(null);
   const [blockReason,setBlockReason]=useState("");
-  const [calM,setCalM]=useState(new Date(2026,6,1));
+  const [calM,setCalM]=useState(new Date());
   const [toast,setToast]=useState("");
+
+  // Al abrir: fecha real de hoy y los datos guardados en este dispositivo
+  useEffect(()=>{
+    const hoy=new Date();hoy.setHours(0,0,0,0);
+    let saved:any=null;
+    try{saved=JSON.parse(localStorage.getItem(STORE)||"null");}catch{}
+    const t=setTimeout(()=>{
+      setToday(toDS(hoy));setSelDate(toDS(hoy));
+      setCalM(new Date(hoy.getFullYear(),hoy.getMonth(),1));
+      setBookings(saved?.bookings??generarDemo(hoy));
+      setBlocked(saved?.blocked??demoBlocked(hoy));
+      setSent(saved?.sent??{});
+      setReady(true);
+    },0);
+    return()=>clearTimeout(t);
+  },[]);
+  useEffect(()=>{
+    if(!ready)return;
+    try{localStorage.setItem(STORE,JSON.stringify({bookings,blocked,sent}));}catch{}
+  },[ready,bookings,blocked,sent]);
+  const detailId=detail?.id;
+  useEffect(()=>{
+    const t=setTimeout(()=>setNoteDraft(detail?.notes||""),0);
+    return()=>clearTimeout(t);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  },[detailId]);
 
   const serif={fontFamily:"'Roboto',Helvetica,sans-serif"};
   const sans={fontFamily:"'Roboto',Helvetica,sans-serif"};
@@ -151,8 +197,6 @@ export default function AdminPage(){
 
   const parseD=(ds:string)=>{const[y,m,d]=ds.split("-").map(Number);return new Date(y,m-1,d);};
   const fmtD=(ds:string)=>{const dt=parseD(ds);return `${DAYS_FULL[dt.getDay()]}, ${dt.getDate()} de ${MONTHS[dt.getMonth()]}`;};
-  const toDS=(dt:Date)=>`${dt.getFullYear()}-${String(dt.getMonth()+1).padStart(2,"0")}-${String(dt.getDate()).padStart(2,"0")}`;
-
   const getSlots=(ds:string)=>{
     const sc=(SCHED as any)[parseD(ds).getDay()];
     if(!sc)return[];
@@ -199,6 +243,61 @@ export default function AdminPage(){
     showToast("Hora liberada ✓");
   };
 
+  const saveNote=(id:number)=>{
+    setBookings((p:any[])=>p.map(b=>b.id===id?{...b,notes:noteDraft}:b));
+    setDetail((d:any)=>d&&{...d,notes:noteDraft});
+    showToast("Nota guardada ✓");
+  };
+  const openNew=(date?:string,h?:number)=>{
+    setBlockModal(null);setBlockReason("");
+    setNewBk({client:"",phone:"",service:SERVICES[0].name,date:date||selDate,time:h??"",notes:""});
+  };
+  const saveNew=()=>{
+    if(!newBk.client.trim()||newBk.time===""){showToast("Falta el nombre o la hora");return;}
+    const sv=SERVICES.find(x=>x.name===newBk.service);
+    const id=Math.max(0,...bookings.map((b:any)=>b.id))+1;
+    setBookings((p:any[])=>[...p,{id,date:newBk.date,time:Number(newBk.time),client:newBk.client.trim(),
+      phone:newBk.phone.trim(),service:newBk.service,price:`${parseInt(sv?.price||"0")||0}€`,
+      status:"confirmada",notes:newBk.notes.trim()}]);
+    setSelDate(newBk.date);setNewBk(null);
+    showToast("Cita apuntada ✓");
+  };
+  const markSent=(key:string)=>setSent(p=>({...p,[key]:true}));
+
+  // Mensajes de WhatsApp listos para enviar
+  const msgConfirm=(b:any)=>`Hola ${firstName(b.client)}! Te confirmo tu cita en ${NEGOCIO.nombre}: ${b.service}, el ${fmtD(b.date).toLowerCase()} a las ${hhmm(b.time)}. ¡Te esperamos!`;
+  const msgReminder=(b:any)=>`Hola ${firstName(b.client)}! Te recuerdo que mañana tienes cita a las ${hhmm(b.time)} para ${b.service}. Si no puedes venir, avísame por aquí. ¡Gracias!`;
+  const msgReview=(b:any)=>`Hola ${firstName(b.client)}! Gracias por venir a ${NEGOCIO.nombre}. Si te gustó, me ayudaría mucho que dejaras una reseña en Google. ¡Un abrazo!`;
+  const msgMiss=(c:any)=>`Hola ${firstName(c.client)}! Hace tiempo que no te vemos por ${NEGOCIO.nombre}. ¿Te reservo un hueco esta semana?`;
+
+  // Clientas: se calculan solas a partir de las citas
+  const clients=(()=>{
+    const m:Record<string,any>={};
+    for(const b of bookings){
+      const k=b.client.toLowerCase();
+      const c=m[k]||(m[k]={client:b.client,phone:b.phone,visits:0,spent:0,last:"",next:"",first:"",services:{} as Record<string,number>});
+      if(b.phone)c.phone=b.phone;
+      if(b.date<today){
+        c.visits++;c.spent+=parseInt(b.price)||0;
+        if(b.date>c.last)c.last=b.date;
+        if(!c.first||b.date<c.first)c.first=b.date;
+        c.services[b.service]=(c.services[b.service]||0)+1;
+      }else if(!c.next||b.date<c.next)c.next=b.date;
+    }
+    return Object.values(m).map((c:any)=>({...c,
+      fav:Object.entries(c.services).sort((a:any,b:any)=>b[1]-a[1])[0]?.[0]||"",
+      daysAway:c.last?Math.round((parseD(today).getTime()-parseD(c.last).getTime())/86400000):null,
+    }));
+  })();
+
+  const exportCSV=(rows:any[],name:string)=>{
+    const head="Fecha;Hora;Clienta;Teléfono;Tratamiento;Precio;Estado;Notas";
+    const esc=(v:any)=>`"${String(v??"").replace(/"/g,'""')}"`;
+    const body=rows.map(b=>[b.date,hhmm(b.time),b.client,b.phone,b.service,parseInt(b.price)||0,b.status,b.notes].map(esc).join(";"));
+    const url=URL.createObjectURL(new Blob(["\ufeff"+[head,...body].join("\n")],{type:"text/csv"}));
+    const a=document.createElement("a");a.href=url;a.download=name;a.click();URL.revokeObjectURL(url);
+  };
+
   const bP={...sans,background:G,color:DARK,border:"none",padding:"11px 22px",
     borderRadius:24,fontSize:10,letterSpacing:"2px",cursor:"pointer",
     textTransform:"uppercase" as const,fontWeight:500};
@@ -218,6 +317,8 @@ export default function AdminPage(){
     ?{bg:`${GREEN}18`,color:GREEN,label:"CONFIRMADA"}
     :{bg:`${AMBER}20`,color:AMBER,label:"PENDIENTE"};
 
+  if(!ready)return <div style={{background:BG,minHeight:"100vh"}}/>;
+
   return(
     <div style={{...sans,background:BG,minHeight:"100vh",color:CH}}>
       <style dangerouslySetInnerHTML={{__html:CSS}}/>
@@ -235,18 +336,18 @@ export default function AdminPage(){
 
       {/* HEADER */}
       <header style={{background:"#FFFFFF",borderBottom:"2px solid #B8922A",
-        padding:"0 28px",height:64,display:"flex",alignItems:"center",
+        padding:"0 20px",height:64,display:"flex",alignItems:"center",gap:12,
         justifyContent:"space-between",position:"sticky",top:0,zIndex:200}}>
         <div style={{display:"flex",alignItems:"center",gap:10}}>
           <div className="float"><Lotus size={24}/></div>
           <div>
-            <div style={{...serif,fontSize:15,letterSpacing:"6px",color:"#1A1A1A",lineHeight:1}}>DIMUX</div>
+            <div style={{...serif,fontSize:15,letterSpacing:"6px",color:"#1A1A1A",lineHeight:1,textTransform:"uppercase",whiteSpace:"nowrap"}}>{NEGOCIO.nombre}</div>
             <div style={{...sans,fontSize:7,letterSpacing:"3px",color:G,marginTop:2}}>PANEL DE GESTIÓN</div>
           </div>
         </div>
         <div style={{display:"flex",alignItems:"center",gap:20}}>
           {pending.length>0&&(
-            <div style={{display:"flex",alignItems:"center",gap:7,
+            <div className="hide-sm" onClick={()=>setView("avisos")} style={{display:"flex",alignItems:"center",gap:7,cursor:"pointer",
               background:`${AMBER}20`,padding:"6px 14px",borderRadius:20}}>
               <div className="pulse" style={{width:6,height:6,borderRadius:"50%",background:AMBER}}/>
               <span style={{...sans,fontSize:11,color:AMBER}}>
@@ -254,25 +355,20 @@ export default function AdminPage(){
               </span>
             </div>
           )}
-          <div style={{display:"flex",alignItems:"center",gap:9}}>
-            <div style={{width:30,height:30,borderRadius:"50%",background:G,
-              display:"flex",alignItems:"center",justifyContent:"center",
-              ...serif,fontSize:14,color:DARK,fontWeight:600}}>L</div>
-            <div style={{...sans,fontSize:12,color:"#ffffffAA"}}>Lucía</div>
-          </div>
+          <button style={{...bP,padding:"9px 16px",whiteSpace:"nowrap"}} onClick={()=>openNew()}>+ Nueva cita</button>
         </div>
       </header>
 
       {/* TABS */}
       <div style={{background:"#F5EDE4",borderBottom:"1px solid #B8922A33",
-        padding:"0 28px",display:"flex",gap:4,position:"sticky",top:64,zIndex:190}}>
-        {[["dia","Hoy / Por día"],["semana","Vista semanal"],["mes","Calendario"],["todas","Todas las citas"]].map(([id,l])=>(
+        padding:"0 28px",display:"flex",gap:4,position:"sticky",top:64,zIndex:190,overflowX:"auto"}}>
+        {[["dia","Hoy / Por día"],["semana","Vista semanal"],["mes","Calendario"],["todas","Todas las citas"],["avisos","Avisos"],["clientas","Clientas"],["resumen","Resumen"]].map(([id,l])=>(
           <button key={id} className="navbtn" onClick={()=>setView(id)}
             style={{...sans,padding:"14px 20px",border:"none",background:"none",
               cursor:"pointer",fontSize:11,letterSpacing:"1.5px",
               color:view===id?G:"#1A1A1A55",
               borderBottom:`2px solid ${view===id?G:"transparent"}`,
-              marginBottom:-1,fontWeight:view===id?500:400,transition:"color .2s"}}>
+              marginBottom:-1,fontWeight:view===id?500:400,transition:"color .2s",whiteSpace:"nowrap"}}>
             {l.toUpperCase()}
           </button>
         ))}
@@ -294,7 +390,7 @@ export default function AdminPage(){
               <button style={{...bO,padding:"9px 15px"}}
                 onClick={()=>{const d=parseD(selDate);d.setDate(d.getDate()-1);setSelDate(toDS(d));}}>‹ Anterior</button>
               <button style={{...bO,padding:"9px 15px"}}
-                onClick={()=>setSelDate("2026-07-24")}>Hoy</button>
+                onClick={()=>setSelDate(today)}>Hoy</button>
               <button style={{...bO,padding:"9px 15px"}}
                 onClick={()=>{const d=parseD(selDate);d.setDate(d.getDate()+1);setSelDate(toDS(d));}}>Siguiente ›</button>
             </div>
@@ -324,12 +420,12 @@ export default function AdminPage(){
             <div style={{textAlign:"center",padding:"64px 24px",background:BG2,border:`1px dashed ${G}44`}}>
               <div style={{...serif,fontSize:44,color:`${MT}44`,marginBottom:12}}>—</div>
               <div style={{...serif,fontSize:22,fontWeight:300,marginBottom:8}}>Centro cerrado</div>
-              <div style={{...sans,fontSize:13,color:MT}}>Los domingos DIMUX no abre. Disfruta el descanso.</div>
+              <div style={{...sans,fontSize:13,color:MT}}>Hoy no se abre. Disfruta el descanso.</div>
             </div>
           ):(
           <div>
             <div style={{...sans,fontSize:9,letterSpacing:"3px",color:MT,marginBottom:14}}>
-              LÍNEA DE TIEMPO · TOCA UN HUECO LIBRE PARA BLOQUEARLO
+              LÍNEA DE TIEMPO · TOCA UN HUECO LIBRE PARA APUNTAR UNA CITA O BLOQUEARLO
             </div>
             <div style={{display:"grid",gap:2,background:`${G}18`}}>
               {slots.map(({h,booking,block}:any)=>{
@@ -388,7 +484,7 @@ export default function AdminPage(){
                       <div style={{flex:1,display:"flex",justifyContent:"space-between",alignItems:"center"}}>
                         <div style={{...sans,fontSize:14,color:GREEN}}>Hueco libre · visible en la web</div>
                         <div style={{...sans,fontSize:10,color:`${MT}88`,letterSpacing:"1px"}}>
-                          BLOQUEAR +
+                          APUNTAR O BLOQUEAR +
                         </div>
                       </div>
                     )}
@@ -416,7 +512,7 @@ export default function AdminPage(){
               <button style={{...bO,padding:"9px 15px"}}
                 onClick={()=>{const d=parseD(selDate);d.setDate(d.getDate()-7);setSelDate(toDS(d));}}>‹ Semana</button>
               <button style={{...bO,padding:"9px 15px"}}
-                onClick={()=>setSelDate("2026-07-24")}>Actual</button>
+                onClick={()=>setSelDate(today)}>Actual</button>
               <button style={{...bO,padding:"9px 15px"}}
                 onClick={()=>{const d=parseD(selDate);d.setDate(d.getDate()+7);setSelDate(toDS(d));}}>Semana ›</button>
             </div>
@@ -456,7 +552,7 @@ export default function AdminPage(){
                 const ds=toDS(d);
                 const sl=getSlots(ds);
                 const bks=bookings.filter((b:any)=>b.date===ds).sort((a:any,b:any)=>a.time-b.time);
-                const isToday=ds==="2026-07-24";
+                const isToday=ds===today;
                 const closed=sl.length===0;
                 const occ=sl.length?Math.round(((sl.length-sl.filter((s:any)=>!s.booking&&!s.block).length)/sl.length)*100):0;
                 return(
@@ -524,7 +620,7 @@ export default function AdminPage(){
             ...sans,fontSize:11,color:MT}}>
             <span style={{color:GREEN}}>■ Confirmada</span>
             <span style={{color:AMBER}}>■ Pendiente</span>
-            <span style={{color:RED}}>■ Bloqueado por Lucía</span>
+            <span style={{color:RED}}>■ Bloqueado por ti</span>
             <span>Toca un día para ver el detalle</span>
           </div>
         </div>
@@ -585,7 +681,7 @@ export default function AdminPage(){
               const bks=bookings.filter((b:any)=>b.date===ds);
               const bls=blocked.filter((b:any)=>b.date===ds);
               const closed=sl.length===0;
-              const isToday=ds==="2026-07-24";
+              const isToday=ds===today;
               const occ=sl.length?((sl.length-sl.filter((s:any)=>!s.booking&&!s.block).length)/sl.length):0;
               return(
                 <div key={d} onClick={()=>{setSelDate(ds);setView("dia");}}
@@ -702,7 +798,269 @@ export default function AdminPage(){
         </div>
         )}
 
+        {/* ═════ AVISOS ═════ */}
+        {view==="avisos"&&(()=>{
+          const t=parseD(today);t.setDate(t.getDate()+1);const tomorrow=toDS(t);
+          const tmr=bookings.filter((b:any)=>b.date===tomorrow).sort((a:any,b:any)=>a.time-b.time);
+          const pend=[...pending].sort((a:any,b:any)=>a.date===b.date?a.time-b.time:a.date.localeCompare(b.date));
+          const yest=new Date(parseD(today));yest.setDate(yest.getDate()-1);const ystr=toDS(yest);
+          const done=bookings.filter((b:any)=>b.date===ystr||(b.date===today&&b.time<new Date().getHours()));
+          const away=clients.filter((c:any)=>!c.next&&c.daysAway!==null&&c.daysAway>=30)
+            .sort((a:any,b:any)=>b.spent-a.spent).slice(0,8);
+          const Section=({title,hint,items,render}:any)=>(
+            <div style={{marginBottom:30}}>
+              <div style={{...sans,fontSize:9,letterSpacing:"3px",color:G,marginBottom:4}}>{title}</div>
+              <div style={{...sans,fontSize:12,color:MT,marginBottom:12}}>{hint}</div>
+              {items.length===0
+                ?<div style={{...sans,fontSize:13,color:MT,padding:"18px 20px",background:"white"}}>Nada pendiente aquí ✓</div>
+                :<div style={{display:"grid",gap:1,background:`${G}18`}}>{items.map(render)}</div>}
+            </div>
+          );
+          const Row=({b,label,msg,k,sub,onDone}:any)=>(
+            <div style={{background:"white",padding:"14px 20px",display:"flex",alignItems:"center",gap:14,flexWrap:"wrap"}}>
+              <div style={{flex:1,minWidth:180}}>
+                <div style={{...sans,fontSize:14,fontWeight:500}}>{b.client}</div>
+                <div style={{...sans,fontSize:12,color:MT}}>{sub}</div>
+              </div>
+              {sent[k]&&<span style={{...sans,fontSize:10,color:GREEN,letterSpacing:"1px"}}>✓ ENVIADO</span>}
+              <a href={waTo(b.phone,msg)} target="_blank" rel="noreferrer"
+                onClick={()=>{markSent(k);onDone?.();}}>
+                <button style={{...bP,padding:"9px 16px",background:sent[k]?"transparent":GREEN,
+                  color:sent[k]?GREEN:"#fff",border:`1px solid ${GREEN}`}}>{label}</button>
+              </a>
+            </div>
+          );
+          return(
+          <div className="fu">
+            <div style={{marginBottom:24}}>
+              <div style={{...sans,fontSize:9,letterSpacing:"3px",color:G,marginBottom:6}}>TU LISTA DE HOY</div>
+              <div style={{...serif,fontSize:30,fontWeight:300}}>Avisos por WhatsApp</div>
+              <div style={{...sans,fontSize:13,color:MT,marginTop:6}}>
+                Cada botón abre WhatsApp con el mensaje ya escrito. Solo tienes que pulsar enviar.
+              </div>
+            </div>
+            <Section title="RECORDATORIOS PARA MAÑANA" hint="Un recordatorio el día antes reduce mucho las citas a las que no vienen."
+              items={tmr} render={(b:any)=>(
+                <Row key={b.id} b={b} k={`rec-${b.id}`} label="Recordar" msg={msgReminder(b)}
+                  sub={`${hhmm(b.time)} · ${b.service}`}/>
+              )}/>
+            <Section title="RESERVAS SIN CONFIRMAR" hint="Al pulsar «Confirmar» se marca como confirmada y se le envía el mensaje."
+              items={pend} render={(b:any)=>(
+                <Row key={b.id} b={b} k={`conf-${b.id}`} label="Confirmar" msg={msgConfirm(b)}
+                  sub={`${fmtD(b.date)} · ${hhmm(b.time)} · ${b.service}`}
+                  onDone={()=>setBookings((p:any[])=>p.map(x=>x.id===b.id?{...x,status:"confirmada"}:x))}/>
+              )}/>
+            <Section title="PEDIR RESEÑA" hint="Clientas que vinieron ayer u hoy. Las reseñas en Google traen clientas nuevas."
+              items={done} render={(b:any)=>(
+                <Row key={b.id} b={b} k={`res-${b.id}`} label="Pedir reseña" msg={msgReview(b)}
+                  sub={`${fmtD(b.date)} · ${b.service}`}/>
+              )}/>
+            <Section title="HACE TIEMPO QUE NO VIENEN" hint="Más de 30 días sin venir y sin cita pendiente. Primero las que más gastan."
+              items={away} render={(c:any)=>(
+                <Row key={c.client} b={c} k={`miss-${c.client}-${c.last}`} label="Escribir" msg={msgMiss(c)}
+                  sub={`${c.daysAway} días sin venir · ${c.visits} visitas · ${c.spent}€`}/>
+              )}/>
+          </div>);
+        })()}
+
+        {/* ═════ CLIENTAS ═════ */}
+        {view==="clientas"&&(()=>{
+          const q=search.trim().toLowerCase();
+          const list=clients.filter((c:any)=>!q||c.client.toLowerCase().includes(q)||(c.phone||"").includes(q))
+            .sort((a:any,b:any)=>b.spent-a.spent);
+          return(
+          <div className="fu">
+            <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-end",flexWrap:"wrap",gap:12,marginBottom:20}}>
+              <div>
+                <div style={{...sans,fontSize:9,letterSpacing:"3px",color:G,marginBottom:6}}>FICHAS</div>
+                <div style={{...serif,fontSize:30,fontWeight:300}}>Clientas</div>
+                <div style={{...sans,fontSize:13,color:MT,marginTop:6}}>
+                  {clients.length} clientas · se crean solas al apuntar citas
+                </div>
+              </div>
+              <input style={{...inp,maxWidth:280}} placeholder="Buscar por nombre o teléfono"
+                value={search} onChange={(e:React.ChangeEvent<HTMLInputElement>)=>setSearch(e.target.value)}/>
+            </div>
+            <div style={{display:"grid",gap:1,background:`${G}18`}}>
+              {list.map((c:any)=>(
+                <div key={c.client} style={{background:"white",padding:"14px 20px",display:"flex",
+                  alignItems:"center",gap:16,flexWrap:"wrap"}}>
+                  <div style={{width:38,height:38,borderRadius:"50%",background:`${G}22`,color:G,
+                    display:"flex",alignItems:"center",justifyContent:"center",...serif,fontSize:15,flexShrink:0}}>
+                    {c.client.split(" ").map((w:string)=>w[0]).slice(0,2).join("")}
+                  </div>
+                  <div style={{flex:1,minWidth:160}}>
+                    <div style={{...sans,fontSize:14,fontWeight:500}}>{c.client}</div>
+                    <div style={{...sans,fontSize:12,color:MT}}>{c.phone}{c.fav?` · suele hacerse ${c.fav}`:""}</div>
+                  </div>
+                  <div style={{...sans,fontSize:12,color:MT,minWidth:150}}>
+                    {c.visits} visita{c.visits===1?"":"s"} · <span style={{color:DR}}>{c.spent}€</span>
+                    <div style={{fontSize:11}}>
+                      {c.next?<span style={{color:GREEN}}>Próxima: {fmtD(c.next)}</span>
+                        :c.last?`Última: hace ${c.daysAway} días`:"Aún no ha venido"}
+                    </div>
+                  </div>
+                  <a href={waTo(c.phone,"")} target="_blank" rel="noreferrer">
+                    <button style={{...bO,padding:"8px 14px"}}>WhatsApp</button>
+                  </a>
+                  <button style={{...bP,padding:"8px 14px"}}
+                    onClick={()=>{openNew(today);setNewBk((n:any)=>({...n,client:c.client,phone:c.phone,service:c.fav||n.service}));}}>
+                    + Cita
+                  </button>
+                </div>
+              ))}
+            </div>
+          </div>);
+        })()}
+
+        {/* ═════ RESUMEN ═════ */}
+        {view==="resumen"&&(()=>{
+          const pre=`${yr}-${String(mo+1).padStart(2,"0")}-`;
+          const mBks=bookings.filter((b:any)=>b.date.startsWith(pre));
+          const past=mBks.filter((b:any)=>b.date<today);
+          const fut=mBks.filter((b:any)=>b.date>=today);
+          const sum=(a:any[])=>a.reduce((s:number,b:any)=>s+(parseInt(b.price)||0),0);
+          const names=new Set(mBks.map((b:any)=>b.client.toLowerCase()));
+          const nuevas=clients.filter((c:any)=>c.first&&c.first.startsWith(pre)).length;
+          const bySv:Record<string,{n:number,e:number}>={};
+          for(const b of mBks){const x=bySv[b.service]||(bySv[b.service]={n:0,e:0});x.n++;x.e+=parseInt(b.price)||0;}
+          const top=Object.entries(bySv).sort((a,b)=>b[1].e-a[1].e).slice(0,6);
+          const maxE=top[0]?.[1].e||1;
+          const byCat:Record<string,number>={};
+          for(const b of mBks){const c=SERVICES.find(x=>x.name===b.service)?.cat||"Otros";byCat[c]=(byCat[c]||0)+(parseInt(b.price)||0);}
+          const tot=sum(mBks)||1;
+          return(
+          <div className="fu">
+            <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:24,flexWrap:"wrap",gap:12}}>
+              <div>
+                <div style={{...sans,fontSize:9,letterSpacing:"3px",color:G,marginBottom:6}}>CÓMO VA EL NEGOCIO</div>
+                <div style={{...serif,fontSize:30,fontWeight:300}}>{MONTHS[mo]} {yr}</div>
+              </div>
+              <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>
+                <button style={{...bO,padding:"9px 16px"}} onClick={()=>setCalM(new Date(yr,mo-1,1))}>‹</button>
+                <button style={{...bO,padding:"9px 16px"}} onClick={()=>setCalM(new Date(yr,mo+1,1))}>›</button>
+                <button style={{...bP,padding:"9px 16px"}} onClick={()=>exportCSV(mBks,`citas-${yr}-${String(mo+1).padStart(2,"0")}.csv`)}>
+                  Descargar Excel (CSV)
+                </button>
+              </div>
+            </div>
+            <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(150px,1fr))",gap:2,background:`${G}22`,marginBottom:26}}>
+              {[
+                {n:`${sum(past)}€`,l:"Facturado",c:DR},
+                {n:`${sum(fut)}€`,l:"Por cobrar este mes",c:AMBER},
+                {n:`${past.length?Math.round(sum(past)/past.length):0}€`,l:"Ticket medio",c:CH},
+                {n:names.size,l:"Clientas distintas",c:CH},
+                {n:nuevas,l:"Clientas nuevas",c:GREEN},
+              ].map(x=>(
+                <div key={x.l} className="card" style={{background:"white",padding:"20px 18px",textAlign:"center",transition:"all .25s"}}>
+                  <div style={{...serif,fontSize:31,color:x.c,lineHeight:1}}>{x.n}</div>
+                  <div style={{...sans,fontSize:9,letterSpacing:"1.5px",color:MT,marginTop:7}}>{x.l.toUpperCase()}</div>
+                </div>
+              ))}
+            </div>
+            <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(300px,1fr))",gap:24}}>
+              <div style={{background:"white",padding:22}}>
+                <div style={{...sans,fontSize:9,letterSpacing:"3px",color:G,marginBottom:16}}>TRATAMIENTOS QUE MÁS FACTURAN</div>
+                {top.length===0&&<div style={{...sans,fontSize:13,color:MT}}>Sin citas este mes</div>}
+                {top.map(([n,v])=>(
+                  <div key={n} style={{marginBottom:12}}>
+                    <div style={{display:"flex",justifyContent:"space-between",...sans,fontSize:13,marginBottom:4}}>
+                      <span>{n} <span style={{color:MT,fontSize:11}}>· {v.n}</span></span><span style={{color:DR}}>{v.e}€</span>
+                    </div>
+                    <div style={{height:4,background:`${G}18`}}><div style={{height:4,width:`${(v.e/maxE)*100}%`,background:G}}/></div>
+                  </div>
+                ))}
+              </div>
+              <div style={{background:"white",padding:22}}>
+                <div style={{...sans,fontSize:9,letterSpacing:"3px",color:G,marginBottom:16}}>POR TIPO DE TRATAMIENTO</div>
+                {Object.entries(byCat).sort((a,b)=>b[1]-a[1]).map(([c,e])=>(
+                  <div key={c} style={{display:"flex",justifyContent:"space-between",alignItems:"baseline",
+                    padding:"10px 0",borderBottom:`1px solid ${G}18`,...sans,fontSize:14}}>
+                    <span>{c==="Láser"?"Depilación láser":c==="Facial"?"Faciales":c==="Corporal"?"Corporales":c}</span>
+                    <span><span style={{color:MT,fontSize:12,marginRight:10}}>{Math.round((e/tot)*100)}%</span><span style={{color:DR}}>{e}€</span></span>
+                  </div>
+                ))}
+              </div>
+            </div>
+            <div style={{marginTop:36,padding:"18px 20px",border:`1px dashed ${G}55`,display:"flex",gap:10,flexWrap:"wrap",alignItems:"center"}}>
+              <div style={{...sans,fontSize:12,color:MT,flex:1,minWidth:220,lineHeight:1.6}}>
+                Los datos se guardan en este dispositivo. Ahora hay citas de ejemplo: cuando empieces de verdad, bórralas.
+              </div>
+              <button style={{...bO,padding:"9px 14px"}} onClick={()=>{
+                const h=parseD(today);setBookings(generarDemo(h));setBlocked(demoBlocked(h));setSent({});showToast("Datos de ejemplo cargados");}}>
+                Cargar ejemplo
+              </button>
+              <button style={{...bDanger,padding:"9px 14px"}} onClick={()=>{
+                if(!confirm("¿Borrar todas las citas y empezar de cero?"))return;
+                setBookings([]);setBlocked([]);setSent({});showToast("Panel vacío. ¡A por las primeras citas!");}}>
+                Empezar de cero
+              </button>
+            </div>
+          </div>);
+        })()}
+
       </div>
+
+      {/* ═════ MODAL NUEVA CITA ═════ */}
+      {newBk&&(()=>{
+        const free=getSlots(newBk.date).filter((x:any)=>!x.booking&&!x.block).map((x:any)=>x.h);
+        const lbl={...sans,display:"block",fontSize:10,letterSpacing:"2px",color:MT,marginBottom:6,marginTop:14} as const;
+        return(
+        <div onClick={()=>setNewBk(null)}
+          style={{position:"fixed",inset:0,background:"rgba(15,13,12,.7)",backdropFilter:"blur(4px)",
+            zIndex:500,display:"flex",alignItems:"center",justifyContent:"center",padding:20}}>
+          <div className="fu" onClick={(e:React.MouseEvent)=>e.stopPropagation()}
+            style={{background:BG,maxWidth:440,width:"100%",maxHeight:"90vh",overflowY:"auto",boxShadow:"0 24px 60px rgba(0,0,0,.4)"}}>
+            <div style={{background:DARK,padding:"22px 26px",borderBottom:`2px solid ${G}`}}>
+              <div style={{...sans,fontSize:9,letterSpacing:"3px",color:G,marginBottom:8}}>NUEVA CITA</div>
+              <div style={{...serif,fontSize:24,color:"#fff",fontWeight:300}}>Apuntar a mano</div>
+              <div style={{...sans,fontSize:12,color:"#ffffff66",marginTop:4}}>Para citas por teléfono, WhatsApp o en persona</div>
+            </div>
+            <div style={{padding:"12px 26px 26px"}}>
+              <label style={lbl}>NOMBRE</label>
+              <input style={inp} list="clientas" value={newBk.client} placeholder="Nombre de la clienta"
+                onChange={(e:React.ChangeEvent<HTMLInputElement>)=>{
+                  const v=e.target.value;const c=clients.find((x:any)=>x.client.toLowerCase()===v.toLowerCase());
+                  setNewBk((n:any)=>({...n,client:v,phone:c?c.phone:n.phone}));}}/>
+              <datalist id="clientas">{clients.map((c:any)=><option key={c.client} value={c.client}/>)}</datalist>
+              <label style={lbl}>TELÉFONO</label>
+              <input style={inp} value={newBk.phone} placeholder="600 000 000" inputMode="tel"
+                onChange={(e:React.ChangeEvent<HTMLInputElement>)=>setNewBk((n:any)=>({...n,phone:e.target.value}))}/>
+              <label style={lbl}>TRATAMIENTO</label>
+              <select style={inp} value={newBk.service}
+                onChange={(e:React.ChangeEvent<HTMLSelectElement>)=>setNewBk((n:any)=>({...n,service:e.target.value}))}>
+                {["Facial","Corporal","Láser"].map(cat=>(
+                  <optgroup key={cat} label={cat}>
+                    {SERVICES.filter(x=>x.cat===cat).map(x=><option key={x.name} value={x.name}>{x.name} · {x.price}</option>)}
+                  </optgroup>
+                ))}
+              </select>
+              <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}>
+                <div>
+                  <label style={lbl}>DÍA</label>
+                  <input type="date" style={inp} value={newBk.date}
+                    onChange={(e:React.ChangeEvent<HTMLInputElement>)=>setNewBk((n:any)=>({...n,date:e.target.value,time:""}))}/>
+                </div>
+                <div>
+                  <label style={lbl}>HORA</label>
+                  <select style={inp} value={newBk.time}
+                    onChange={(e:React.ChangeEvent<HTMLSelectElement>)=>setNewBk((n:any)=>({...n,time:e.target.value}))}>
+                    <option value="">{free.length?"Elige":"Sin huecos"}</option>
+                    {free.map((h:number)=><option key={h} value={h}>{hhmm(h)}</option>)}
+                  </select>
+                </div>
+              </div>
+              <label style={lbl}>NOTAS</label>
+              <input style={inp} value={newBk.notes} placeholder="Alergias, bono, preferencias…"
+                onChange={(e:React.ChangeEvent<HTMLInputElement>)=>setNewBk((n:any)=>({...n,notes:e.target.value}))}/>
+              <div style={{display:"flex",gap:10,marginTop:22}}>
+                <button style={{...bO,flex:1}} onClick={()=>setNewBk(null)}>Cancelar</button>
+                <button style={{...bP,flex:1}} onClick={saveNew}>Guardar cita</button>
+              </div>
+            </div>
+          </div>
+        </div>);
+      })()}
 
       {/* ═════ MODAL DETALLE ═════ */}
       {detail&&(
@@ -746,17 +1104,33 @@ export default function AdminPage(){
               </div>
             ))}
 
-            {detail.notes&&(
-              <div style={{marginTop:18,padding:"13px 16px",
-                background:`${AMBER}12`,borderLeft:`2px solid ${AMBER}`}}>
-                <div style={{...sans,fontSize:9,letterSpacing:"2px",
-                  color:AMBER,marginBottom:5}}>NOTAS</div>
-                <div style={{...sans,fontSize:13,color:CH,lineHeight:1.7}}>{detail.notes}</div>
+            <div style={{marginTop:18}}>
+              <div style={{...sans,fontSize:9,letterSpacing:"2px",color:AMBER,marginBottom:6}}>
+                NOTAS (ALERGIAS, BONO, PREFERENCIAS…)
               </div>
-            )}
+              <textarea style={{...inp,minHeight:64,resize:"vertical"}} value={noteDraft}
+                onChange={(e:React.ChangeEvent<HTMLTextAreaElement>)=>setNoteDraft(e.target.value)}
+                placeholder="Solo lo ves tú"/>
+              {noteDraft!==(detail.notes||"")&&(
+                <button style={{...bO,marginTop:8,padding:"8px 14px"}} onClick={()=>saveNote(detail.id)}>Guardar nota</button>
+              )}
+            </div>
 
-            <div style={{display:"flex",flexDirection:"column",gap:10,marginTop:26}}>
-              <a href={`https://wa.me/34${detail.phone.replace(/\s/g,"")}`}
+            <div style={{...sans,fontSize:9,letterSpacing:"2px",color:MT,marginTop:24,marginBottom:8}}>
+              MENSAJES LISTOS PARA WHATSAPP
+            </div>
+            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:6}}>
+              {[["Confirmar",msgConfirm(detail)],["Recordar",msgReminder(detail)],["Pedir reseña",msgReview(detail)]].map(([l,m])=>(
+                <a key={l} href={waTo(detail.phone,m)} target="_blank" rel="noreferrer"
+                  style={{...sans,fontSize:10,letterSpacing:"1px",textAlign:"center",padding:"10px 6px",
+                    border:`1px solid ${GREEN}55`,color:GREEN,borderRadius:20,textTransform:"uppercase"}}>
+                  {l}
+                </a>
+              ))}
+            </div>
+
+            <div style={{display:"flex",flexDirection:"column",gap:10,marginTop:18}}>
+              <a href={waTo(detail.phone,"")}
                 target="_blank" rel="noreferrer">
                 <button style={{...bP,width:"100%"}}>📱 Escribir por WhatsApp</button>
               </a>
@@ -789,7 +1163,7 @@ export default function AdminPage(){
             boxShadow:"0 24px 60px rgba(0,0,0,.4)"}}>
           <div style={{background:DARK,padding:"22px 26px",borderBottom:`2px solid ${G}`}}>
             <div style={{...sans,fontSize:9,letterSpacing:"3px",color:G,marginBottom:8}}>
-              BLOQUEAR HORARIO
+              HUECO LIBRE
             </div>
             <div style={{...serif,fontSize:24,color:"#fff",fontWeight:300}}>
               {String(blockModal.h).padStart(2,"0")}:00h
@@ -799,8 +1173,10 @@ export default function AdminPage(){
             </div>
           </div>
           <div style={{padding:26}}>
+            <button style={{...bP,width:"100%",marginBottom:22}}
+              onClick={()=>openNew(blockModal.date,blockModal.h)}>+ Apuntar una cita a esta hora</button>
             <div style={{...sans,fontSize:13,color:MT,lineHeight:1.8,marginBottom:20}}>
-              Al bloquear esta hora dejará de aparecer como disponible en la web.
+              O bloquéala: al bloquear esta hora dejará de aparecer como disponible en la web.
               Los clientes no podrán reservarla.
             </div>
             <label style={{...sans,display:"block",fontSize:10,letterSpacing:"2px",

@@ -3,7 +3,6 @@ import { CinemaIntro } from "@/components/cinema-intro";
 import { Hero } from "@/components/hero";
 import { Marquee } from "@/components/marquee";
 import { Intro } from "@/components/intro";
-import { Diagnostico } from "@/components/diagnostico";
 import { Services } from "@/components/services";
 import { Testimonials } from "@/components/testimonials";
 import { Booking } from "@/components/booking";
@@ -11,7 +10,7 @@ import { Cuidados } from "@/components/cuidados";
 import { Schedule } from "@/components/schedule";
 import { Contact } from "@/components/contact";
 import { SiteFooter } from "@/components/site-footer";
-import { SERVICES, SCHEDULE_MAP, WHATSAPP, INSTAGRAM } from "@/lib/data";
+import { SERVICES, SCHEDULE_MAP, WHATSAPP, INSTAGRAM, NEGOCIO } from "@/lib/data";
 
 // Ficha del negocio para Google (horario, servicios y precios en los resultados)
 const DOW = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
@@ -19,11 +18,11 @@ const hh = (h: number) => `${String(h).padStart(2, "0")}:00`;
 const jsonLd = {
   "@context": "https://schema.org",
   "@type": "BeautySalon",
-  name: "DIMUX Estética",
-  description: "Centro de estética avanzada en Málaga: tratamientos faciales, corporales y depilación láser.",
+  name: NEGOCIO.nombre,
+  description: `Centro de estética avanzada en ${NEGOCIO.ciudad}: tratamientos faciales, corporales y depilación láser.`,
   telephone: `+${WHATSAPP}`,
-  address: { "@type": "PostalAddress", addressLocality: "Málaga", addressCountry: "ES" },
-  sameAs: [`https://instagram.com/${INSTAGRAM}`],
+  address: { "@type": "PostalAddress", addressLocality: NEGOCIO.ciudad, addressCountry: "ES" },
+  sameAs: INSTAGRAM ? [`https://instagram.com/${INSTAGRAM}`] : [],
   priceRange: "6€ - 89€",
   openingHoursSpecification: Object.entries(SCHEDULE_MAP).flatMap(([d, slots]) =>
     (slots ?? []).map((s) => ({
@@ -58,7 +57,6 @@ export default function Home() {
         <Hero />
         <Marquee />
         <Intro />
-        <Diagnostico />
         <Services />
         <Testimonials />
         <Booking />

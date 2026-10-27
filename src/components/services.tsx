@@ -123,7 +123,7 @@ export function Services() {
                         <button
                           onClick={() => {
                             document.getElementById("reservar")?.scrollIntoView({ behavior: "smooth" });
-                            window.dispatchEvent(new CustomEvent("dimux:select-service", { detail: { name: service.name, cat: service.cat } }));
+                            window.dispatchEvent(new CustomEvent("estetica:select-service", { detail: { name: service.name, cat: service.cat } }));
                           }}
                           className="flex-1 inline-flex items-center justify-center gap-1.5 px-4 py-2.5 text-[10px] font-sans tracking-[0.15em] uppercase text-white font-medium bg-[var(--gold)] hover:brightness-110 transition rounded-full"
                         >

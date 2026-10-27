@@ -1,8 +1,9 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import { ArrowUpRight, Sparkles } from "lucide-react";
-import { WHATSAPP } from "@/lib/data";
+import { ArrowUpRight } from "lucide-react";
+import { WHATSAPP, NEGOCIO } from "@/lib/data";
+import { OpenNow } from "@/components/open-now";
 
 function whatsappUrl(msg?: string) {
   const text = msg ? encodeURIComponent(msg) : "";
@@ -108,7 +109,7 @@ export function Hero() {
       <div className="relative z-10 max-w-7xl mx-auto w-full">
         <div className="max-w-2xl">
           <p className="text-xs font-sans font-medium tracking-[0.4em] uppercase text-[var(--gold)] mb-6 tab-enter" style={{ animationDelay: "200ms" }}>
-            Estética avanzada · Málaga
+            Estética avanzada · {NEGOCIO.ciudad}
           </p>
 
           <h1 className="font-serif text-6xl sm:text-7xl lg:text-8xl xl:text-9xl font-light leading-[0.95] tracking-wide mb-8 tab-enter" style={{ animationDelay: "350ms" }}>
@@ -131,11 +132,10 @@ export function Hero() {
               <ArrowUpRight className="w-3.5 h-3.5" />
             </a>
             <a
-              href="#diagnostico"
+              href="#servicios"
               className="btn-elegant border border-foreground px-8 py-4 text-xs font-sans tracking-[0.25em] uppercase inline-flex items-center justify-center gap-3"
             >
-              <Sparkles className="w-3.5 h-3.5" />
-              ¿Qué necesita mi piel?
+              Ver tratamientos
             </a>
           </div>
           <a
@@ -146,6 +146,7 @@ export function Hero() {
           >
             o escríbenos por WhatsApp →
           </a>
+          <OpenNow className="mt-8 text-xs font-sans tracking-[0.15em] uppercase text-foreground/80" />
         </div>
       </div>
 

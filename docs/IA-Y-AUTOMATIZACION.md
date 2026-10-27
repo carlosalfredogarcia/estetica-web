@@ -1,12 +1,12 @@
-# DIMUX · Qué más se puede automatizar (y con qué IA)
+# Qué más se puede automatizar (y con qué IA)
 
-Plan por orden de impacto para un centro de estética como DIMUX. Lo marcado ✅ ya está en la web.
+Plan por orden de impacto para un centro de estética. Lo marcado ✅ ya está en la web.
 
 ## Ya hecho en la web (sin coste)
 
 - ✅ **Reserva directa por WhatsApp**: la reserva abre WhatsApp con el mensaje listo (tratamiento, día, hora, nombre, teléfono). Antes la web decía «¡Reserva recibida!» pero no enviaba nada.
 - ✅ **Cita en el calendario de la clienta** (.ics con aviso el día antes): menos olvidos y menos plantones.
-- ✅ **Diagnóstico en 30 segundos**: 3 preguntas → 3 tratamientos recomendados con su motivo, y el resultado se envía a Lucía por WhatsApp. Funciona con reglas, sin IA y sin coste.
+- ⏸ **Diagnóstico en 30 segundos**: hecho pero quitado de la web por ahora (ver PENDIENTES.md).
 - ✅ **Ahorro de cada bono** calculado solo a partir de los precios de `src/lib/data.ts`.
 - ✅ **Guía antes/después** de cada tipo de tratamiento y **preguntas frecuentes**: responde antes de que pregunten.
 - ✅ **«Abierto ahora · cerramos a las…»** con la hora de Málaga.
@@ -31,7 +31,7 @@ Plan por orden de impacto para un centro de estética como DIMUX. Lo marcado ✅
 Ahora el panel enseña **citas de ejemplo**: no guarda nada. Para que sea real:
 - **Base de datos** (Supabase, gratis para empezar): las reservas de la web entran solas en el panel, sin copiar de WhatsApp.
 - **Huecos reales**: el calendario de la web deja de ofrecer las horas ya ocupadas.
-- **Recordatorios automáticos** 24 h antes, y si no confirma, se avisa a Lucía para llenar el hueco.
+- **Recordatorios automáticos** 24 h antes, y si no confirma, se avisa a la dueña para llenar el hueco.
 - **Ficha de clienta**: historial, alergias, sesiones que le quedan del bono, fotos antes/después (con consentimiento).
 - **Reactivar clientas**: aviso automático a quien no viene desde hace 2 meses, o cuando toca la siguiente sesión de láser (cada 6–8 semanas).
 - **Reseñas**: mensaje automático tras la cita con el enlace a Google.

@@ -1,7 +1,7 @@
 import { Reveal } from "@/components/reveal";
 import { SectionHeading } from "@/components/section-heading";
 import { Tilt } from "@/components/tilt";
-import { SERVICES } from "@/lib/data";
+import { SERVICES, NEGOCIO } from "@/lib/data";
 
 const count = (cat: string) => String(SERVICES.filter((s) => s.cat === cat).length);
 const STATS = [
@@ -19,12 +19,12 @@ export function Intro() {
           <Tilt max={6} className="relative aspect-[4/5]">
             <img
               src="images/tratamientos/serum.webp"
-              alt="Sala de tratamientos DIMUX Estética"
+              alt="Sala de tratamientos"
               className="absolute inset-0 w-[85%] h-[85%] object-cover border border-border"
             />
             <img
               src="images/tratamientos/radiofrecuencia.webp"
-              alt="Radiofrecuencia en DIMUX"
+              alt="Radiofrecuencia facial"
               className="pop-z absolute right-0 bottom-0 w-[55%] aspect-square object-cover border border-[var(--gold)]/40 shadow-[0_30px_60px_-15px_rgba(26,26,26,0.4)]"
               style={{ transform: "translateZ(70px)" }}
             />
@@ -33,9 +33,9 @@ export function Intro() {
               style={{ transform: "translateZ(110px)" }}
             >
               <p className="text-xs font-sans tracking-[0.15em] uppercase text-[var(--gold)]">
-                Centro DIMUX Estética
+                {NEGOCIO.nombre}
               </p>
-              <p className="text-sm font-light text-foreground/80 mt-1">Málaga</p>
+              <p className="text-sm font-light text-foreground/80 mt-1">{NEGOCIO.ciudad}</p>
             </div>
           </Tilt>
         </Reveal>
@@ -46,7 +46,7 @@ export function Intro() {
             <SectionHeading
               eyebrow="Sobre nosotros"
               title="La estética como arte"
-              description="En DIMUX combinamos tecnología de vanguardia con un trato cercano y personalizado. Cada tratamiento está diseñado para realzar tu belleza natural con resultados reales y duraderos."
+              description="Combinamos tecnología de vanguardia con un trato cercano y personalizado. Cada tratamiento está diseñado para realzar tu belleza natural con resultados reales y duraderos."
             />
           </Reveal>
 

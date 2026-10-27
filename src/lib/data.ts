@@ -173,7 +173,7 @@ export const SCHEDULE_MAP: Record<number, { s: number; e: number }[] | null> = {
 export const TESTIMONIALS = [
   {
     name: "Ana M.",
-    text: "Llevaba años buscando un sitio de confianza para el láser. Lucía es increíble, muy profesional, y los resultados son espectaculares desde la primera sesión.",
+    text: "Llevaba años buscando un sitio de confianza para el láser. El trato es increíble, muy profesional, y los resultados son espectaculares desde la primera sesión.",
   },
   {
     name: "Laura G.",
@@ -191,5 +191,20 @@ export const MONTHS = [
   "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre",
 ];
 
-export const WHATSAPP = "34644376744";
-export const INSTAGRAM = "lucia_dimux_";
+// Datos del negocio: cambiar aquí para usar la web con otra estética.
+// Si instagram queda vacío, no se muestra en ningún sitio.
+export const NEGOCIO = {
+  nombre: "Tu Estética",
+  ciudad: "Málaga",
+  whatsapp: "34640309239",
+  instagram: "",
+};
+
+export const WHATSAPP = NEGOCIO.whatsapp;
+export const INSTAGRAM = NEGOCIO.instagram;
+
+// +34 640 309 239
+export function telefonoBonito(n: string = NEGOCIO.whatsapp) {
+  const m = n.match(/^(\d{2})(\d{3})(\d{3})(\d{3})$/);
+  return m ? `+${m[1]} ${m[2]} ${m[3]} ${m[4]}` : `+${n}`;
+}

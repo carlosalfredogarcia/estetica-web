@@ -1,4 +1,4 @@
-import { WHATSAPP, INSTAGRAM } from "@/lib/data";
+import { WHATSAPP, INSTAGRAM, NEGOCIO } from "@/lib/data";
 import { WhatsAppIcon, InstagramIcon } from "@/components/brand-icons";
 
 export function SiteFooter() {
@@ -9,7 +9,7 @@ export function SiteFooter() {
       <footer className="border-t border-border py-10 px-6 lg:px-8">
         <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
           <p className="font-serif text-lg tracking-[0.15em] uppercase font-light">
-            DIMUX Estética
+            {NEGOCIO.nombre}
           </p>
 
           <div className="flex items-center gap-5">
@@ -22,7 +22,7 @@ export function SiteFooter() {
             >
               <WhatsAppIcon className="w-4 h-4" />
             </a>
-            <a
+            {INSTAGRAM && <a
               href={`https://instagram.com/${INSTAGRAM}`}
               target="_blank"
               rel="noopener noreferrer"
@@ -30,11 +30,11 @@ export function SiteFooter() {
               className="text-muted-foreground hover:text-foreground transition-colors"
             >
               <InstagramIcon className="w-4 h-4" />
-            </a>
+            </a>}
           </div>
 
           <p className="text-xs font-sans text-muted-foreground">
-            © {year} DIMUX Estética · Málaga
+            © {year} {NEGOCIO.nombre} · {NEGOCIO.ciudad}
           </p>
         </div>
       </footer>

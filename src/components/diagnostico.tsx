@@ -137,12 +137,12 @@ export function Diagnostico() {
 
   function book(s: Service) {
     document.getElementById("reservar")?.scrollIntoView({ behavior: "smooth" });
-    window.dispatchEvent(new CustomEvent("dimux:select-service", { detail: { name: s.name, cat: s.cat } }));
+    window.dispatchEvent(new CustomEvent("estetica:select-service", { detail: { name: s.name, cat: s.cat } }));
   }
 
   const waText =
     concern && results.length
-      ? `Hola Lucía, he hecho el diagnóstico de la web.\n\n*Quiero mejorar:* ${concern.label}\n*Me recomienda:* ${results.map((r) => r.service.name).join(", ")}\n\n¿Me ayudas a elegir?`
+      ? `Hola, he hecho el diagnóstico de la web.\n\n*Quiero mejorar:* ${concern.label}\n*Me recomienda:* ${results.map((r) => r.service.name).join(", ")}\n\n¿Me ayudas a elegir?`
       : "";
 
   const choiceCls =
@@ -156,7 +156,7 @@ export function Diagnostico() {
           <SectionHeading
             eyebrow="Diagnóstico en 30 segundos"
             title="¿Qué necesita tu piel?"
-            description="Responde tres preguntas y te decimos qué tratamientos encajan contigo. Es orientativo: Lucía lo confirma en tu primera visita."
+            description="Responde tres preguntas y te decimos qué tratamientos encajan contigo. Es orientativo: lo confirmamos en tu primera visita."
             center
             className="mb-12 [&>p:last-child]:mx-auto"
           />
@@ -269,7 +269,7 @@ export function Diagnostico() {
                 rel="noopener noreferrer"
                 className="btn-elegant border border-[var(--gold)] text-[var(--gold)] px-8 py-3 text-xs font-sans tracking-[0.2em] uppercase"
               >
-                Enviar mi diagnóstico a Lucía
+                Enviar mi diagnóstico
               </a>
               <button
                 onClick={reset}

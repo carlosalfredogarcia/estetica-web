@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { NEGOCIO } from "@/lib/data";
 
 // Apertura de cine: dos franjas negras que se abren dejando ver la web.
 // Solo la primera vez de cada visita; un toque la salta.
@@ -10,8 +11,8 @@ export function CinemaIntro() {
   useEffect(() => {
     let seen = false;
     try {
-      seen = sessionStorage.getItem("dimux-intro") === "1";
-      sessionStorage.setItem("dimux-intro", "1");
+      seen = sessionStorage.getItem("estetica-intro") === "1";
+      sessionStorage.setItem("estetica-intro", "1");
     } catch {}
     const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     if (seen || reduce) {
@@ -42,13 +43,13 @@ export function CinemaIntro() {
         style={{ opacity: open ? 0 : 1 }}
       >
         <p className="text-[10px] font-sans tracking-[0.6em] uppercase text-[#6b645b] tab-enter">
-          Lucía presenta
+          Estética avanzada · {NEGOCIO.ciudad}
         </p>
         <p
-          className="font-serif text-5xl sm:text-7xl font-light tracking-[0.35em] uppercase gold-shine tab-enter"
+          className="font-serif text-4xl sm:text-6xl font-light tracking-[0.3em] uppercase gold-shine text-center px-6 tab-enter"
           style={{ animationDelay: "300ms" }}
         >
-          Dimux
+          {NEGOCIO.nombre}
         </p>
         <div className="h-px w-24 bg-[#B8922A]/60 tab-enter" style={{ animationDelay: "600ms" }} />
       </div>

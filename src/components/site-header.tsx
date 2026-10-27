@@ -2,12 +2,11 @@
 
 import { useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
-import { WHATSAPP, INSTAGRAM } from "@/lib/data";
+import { WHATSAPP, INSTAGRAM, NEGOCIO } from "@/lib/data";
 import { WhatsAppIcon, InstagramIcon } from "@/components/brand-icons";
 
 const NAV_LINKS = [
   { label: "Inicio", href: "#inicio" },
-  { label: "Diagnóstico", href: "#diagnostico" },
   { label: "Servicios", href: "#servicios" },
   { label: "Cuidados", href: "#cuidados" },
   { label: "Horario", href: "#horario" },
@@ -39,7 +38,7 @@ export function SiteHeader() {
           href="#inicio"
           className="font-serif text-xl tracking-[0.15em] uppercase font-light flex-shrink-0"
         >
-          DIMUX
+          {NEGOCIO.nombre}
         </a>
 
         {/* Desktop nav — visible from md breakpoint */}
@@ -57,7 +56,7 @@ export function SiteHeader() {
 
         {/* Desktop actions */}
         <div className="hidden md:flex items-center gap-4 flex-shrink-0">
-          <a
+          {INSTAGRAM && <a
             href={`https://instagram.com/${INSTAGRAM}`}
             target="_blank"
             rel="noopener noreferrer"
@@ -65,7 +64,7 @@ export function SiteHeader() {
             className="text-muted-foreground hover:text-foreground transition-colors"
           >
             <InstagramIcon className="w-4 h-4" />
-          </a>
+          </a>}
           <a
             href="#reservar"
             className="btn-gold px-5 py-2 text-xs font-sans tracking-[0.15em] uppercase"
@@ -123,14 +122,14 @@ export function SiteHeader() {
             >
               <WhatsAppIcon className="w-5 h-5" />
             </a>
-            <a
+            {INSTAGRAM && <a
               href={`https://instagram.com/${INSTAGRAM}`}
               target="_blank"
               rel="noopener noreferrer"
               className="text-muted-foreground hover:text-foreground transition-colors"
             >
               <InstagramIcon className="w-5 h-5" />
-            </a>
+            </a>}
             <a
               href="#reservar"
               className="ml-auto btn-elegant border border-foreground px-5 py-2 text-xs font-sans tracking-[0.15em] uppercase"
