@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { SERVICES, type Service } from "@/lib/data";
-import { useNegocio, categorias, type Horario } from "@/components/negocio";
+import { useNegocio, categorias, huecosLibres, duracion, type Horario } from "@/components/negocio";
 import { db } from "@/lib/supabase";
 
 // Estética real (desde /panel, con la dueña ya dentro). Sin esto, el panel es la demo con datos inventados.
@@ -16,7 +16,8 @@ export interface PanelReal {
 }
 
 // Fila de la base de datos → la forma que usa el panel
-const deCita=(c:any)=>({id:c.id,date:c.fecha,time:c.hora,client:c.nombre,phone:c.telefono||"",
+// time = hora de inicio en horas (10.5 = 10:30); dur = minutos que dura
+const deCita=(c:any)=>({id:c.id,date:c.fecha,time:c.hora+(c.minuto||0)/60,dur:c.duracion_min||60,client:c.nombre,phone:c.telefono||"",
   service:c.tratamiento,price:`${Number(c.precio||0)}€`,status:c.estado,notes:c.notas||"",origen:c.origen});
 const deBloqueo=(b:any)=>({id:b.id,date:b.fecha,time:b.hora,reason:b.motivo||"No disponible"});
 
@@ -105,7 +106,7 @@ function generarDemo(hoy:Date){
         const sv=POOL[Math.floor(rnd()*POOL.length)];
         const status=(ahead>=0&&rnd()>0.75)?"pendiente":"confirmada";
         const notes=rnd()>0.86?NOTE_POOL[Math.floor(rnd()*NOTE_POOL.length)]:"";
-        out.push({id:id++,date:ds,time:h,client:n[0],phone:n[1],
+        out.push({id:id++,date:ds,time:h,dur:60,client:n[0],phone:n[1],
           service:sv.s,price:sv.p+"€",status,notes});
       }
     }
@@ -133,7 +134,7 @@ const waTo=(phone:string,msg:string)=>{
   return `https://wa.me/${n}?text=${encodeURIComponent(msg)}`;
 };
 const firstName=(c:string)=>(c||"").split(" ")[0];
-const hhmm=(h:number)=>`${String(h).padStart(2,"0")}:00`;
+const hhmm=(h:number)=>{const m=Math.round(h*60);return `${String(Math.floor(m/60)).padStart(2,"0")}:${String(m%60).padStart(2,"0")}`;};
 
 const CSS=`
   @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap');
@@ -257,7 +258,7 @@ export function Panel({real}:{real?:PanelReal}){
     if(!sc)return[];
     const out:any[]=[];
     for(const{s,e}of sc)for(let h=s;h<e;h++){
-      const bk=bookings.find((b:any)=>b.date===ds&&b.time===h);
+      const bk=bookings.find((b:any)=>b.date===ds&&b.time<h+1&&b.time+(b.dur||60)/60>h);
       const bl=blocked.find((b:any)=>b.date===ds&&b.time===h);
       out.push({h,booking:bk,block:bl});
     }
@@ -266,7 +267,28 @@ export function Panel({real}:{real?:PanelReal}){
 
   const dayBookings=bookings.filter((b:any)=>b.date===selDate).sort((a:any,b:any)=>a.time-b.time);
   const slots=getSlots(selDate);
-  const freeCount=slots.filter((s:any)=>!s.booking&&!s.block).length;
+  // Minutos ocupados de un día (citas y bloqueos), para buscar huecos
+  const ocupadoDia=(ds:string)=>[
+    ...bookings.filter((b:any)=>b.date===ds).map((b:any)=>({ini:Math.round(b.time*60),fin:Math.round(b.time*60)+(b.dur||60)})),
+    ...blocked.filter((b:any)=>b.date===ds).map((b:any)=>({ini:b.time*60,fin:b.time*60+60})),
+  ];
+  // Agenda del día: citas, bloqueos y los ratos libres entre medias
+  const agenda=(ds:string)=>{
+    const tramos=HOR[parseD(ds).getDay()]||[];
+    const items:any[]=[
+      ...bookings.filter((b:any)=>b.date===ds).map((b:any)=>({tipo:"cita",ini:Math.round(b.time*60),fin:Math.round(b.time*60)+(b.dur||60),b})),
+      ...blocked.filter((b:any)=>b.date===ds).map((b:any)=>({tipo:"bloqueo",ini:b.time*60,fin:b.time*60+60,b})),
+    ];
+    for(const{s:ts,e:te}of tramos){
+      let t=ts*60;
+      const dentro=items.filter(x=>x.tipo!=="libre"&&x.fin>ts*60&&x.ini<te*60).sort((a,b)=>a.ini-b.ini);
+      for(const x of dentro){if(x.ini>t)items.push({tipo:"libre",ini:t,fin:x.ini});t=Math.max(t,x.fin);}
+      if(t<te*60)items.push({tipo:"libre",ini:t,fin:te*60});
+    }
+    return items.sort((a,b)=>a.ini-b.ini||(a.tipo==="libre"?1:-1));
+  };
+  const libresMin=agenda(selDate).filter(x=>x.tipo==="libre").reduce((n,x)=>n+x.fin-x.ini,0);
+  const freeCount=libresMin%60?`${(libresMin/60).toFixed(1).replace(".",",")} h`:`${libresMin/60} h`;
   const revenue=dayBookings.reduce((sum:number,b:any)=>sum+parseInt(b.price)||0,0);
   const pending=bookings.filter((b:any)=>b.status==="pendiente");
 
@@ -282,7 +304,7 @@ export function Panel({real}:{real?:PanelReal}){
   const guardar=async(q:PromiseLike<{error:any}>)=>{
     const {error}=await q;
     if(error){
-      showToast(/duplicate|unique/i.test(error.message)?"Esa hora ya está ocupada":"No se pudo guardar. Inténtalo de nuevo.");
+      showToast(/duplicate|unique|disponible/i.test(error.message)?"Esa hora ya está ocupada":"No se pudo guardar. Inténtalo de nuevo.");
       cargarDB();
       return false;
     }
@@ -322,22 +344,24 @@ export function Panel({real}:{real?:PanelReal}){
     if(salonId)guardar(db().from("citas").update({notas:noteDraft}).eq("id",id));
     showToast("Nota guardada ✓");
   };
-  const openNew=(date?:string,h?:number)=>{
+  // min = minutos del día en que empieza (opcional)
+  const openNew=(date?:string,min?:number)=>{
     setBlockModal(null);setBlockReason("");
-    setNewBk({client:"",phone:"",service:SV[0]?.name??"",date:date||selDate,time:h??"",notes:""});
+    setNewBk({client:"",phone:"",service:SV[0]?.name??"",date:date||selDate,time:min??"",notes:""});
   };
   const saveNew=async()=>{
     if(!newBk.client.trim()||newBk.time===""){showToast("Falta el nombre o la hora");return;}
     const sv=SV.find(x=>x.name===newBk.service);
-    const cita={date:newBk.date,time:Number(newBk.time),client:newBk.client.trim(),
+    const ini=Number(newBk.time);
+    const cita={date:newBk.date,time:ini/60,dur:duracion(sv?.dur),client:newBk.client.trim(),
       phone:newBk.phone.trim(),service:newBk.service,price:`${parseInt(sv?.price||"0")||0}€`,
       status:"confirmada",notes:newBk.notes.trim()};
     let id:any=Math.max(0,...bookings.map((b:any)=>typeof b.id==="number"?b.id:0))+1;
     if(salonId){
-      const {data,error}=await db().from("citas").insert({salon_id:salonId,fecha:cita.date,hora:cita.time,
+      const {data,error}=await db().from("citas").insert({salon_id:salonId,fecha:cita.date,hora:Math.floor(ini/60),minuto:ini%60,duracion_min:cita.dur,
         nombre:cita.client,telefono:cita.phone||null,tratamiento:cita.service,precio:parseInt(sv?.price||"0")||null,
         estado:"confirmada",origen:"panel",notas:cita.notes||null}).select("id").single();
-      if(error){showToast(/duplicate|unique/i.test(error.message)?"Esa hora ya está ocupada":"No se pudo guardar la cita");return;}
+      if(error){showToast(/duplicate|unique|disponible/i.test(error.message)?"Esa hora ya está ocupada":"No se pudo guardar la cita");return;}
       id=data.id;
     }
     setBookings((p:any[])=>[...p,{id,...cita}]);
@@ -381,7 +405,7 @@ export function Panel({real}:{real?:PanelReal}){
   };
 
   const bP={...sans,background:G,color:DARK,border:"none",padding:"11px 22px",
-    borderRadius:24,fontSize:10,letterSpacing:"2px",cursor:"pointer",
+    borderRadius:24,fontSize:11.5,letterSpacing:"2px",cursor:"pointer",
     textTransform:"uppercase" as const,fontWeight:500};
   const bO={...bP,background:"transparent",color:G,border:`1px solid ${G}`};
   const bDanger={...bP,background:"transparent",color:RED,border:`1px solid ${RED}55`};
@@ -424,7 +448,7 @@ export function Panel({real}:{real?:PanelReal}){
           <div className="float"><Lotus size={24}/></div>
           <div>
             <div style={{...serif,fontSize:15,letterSpacing:"6px",color:"#1A1A1A",lineHeight:1,textTransform:"uppercase",whiteSpace:"nowrap"}}>{NEGOCIO.nombre}</div>
-            <div style={{...sans,fontSize:7,letterSpacing:"3px",color:G,marginTop:2}}>PANEL DE GESTIÓN</div>
+            <div style={{...sans,fontSize:9,letterSpacing:"3px",color:G,marginTop:2}}>PANEL DE GESTIÓN</div>
           </div>
         </div>
         <div style={{display:"flex",alignItems:"center",gap:20}}>
@@ -432,7 +456,7 @@ export function Panel({real}:{real?:PanelReal}){
             <div className="hide-sm" onClick={()=>setView("avisos")} style={{display:"flex",alignItems:"center",gap:7,cursor:"pointer",
               background:`${AMBER}20`,padding:"6px 14px",borderRadius:20}}>
               <div className="pulse" style={{width:6,height:6,borderRadius:"50%",background:AMBER}}/>
-              <span style={{...sans,fontSize:11,color:AMBER}}>
+              <span style={{...sans,fontSize:12.5,color:AMBER}}>
                 {pending.length} nueva{pending.length>1?"s":""} sin confirmar
               </span>
             </div>
@@ -440,8 +464,8 @@ export function Panel({real}:{real?:PanelReal}){
           <button style={{...bP,padding:"9px 16px",whiteSpace:"nowrap"}} onClick={()=>openNew()}>+ Nueva cita</button>
           {real&&(
             <div style={{display:"flex",flexDirection:"column",alignItems:"flex-end",gap:2}}>
-              <a href={`/?s=${real.slug}`} target="_blank" rel="noreferrer" style={{...sans,fontSize:10,letterSpacing:"1px",color:G,whiteSpace:"nowrap"}}>VER MI WEB ↗</a>
-              <button onClick={real.onSalir} style={{...sans,fontSize:10,letterSpacing:"1px",color:MT,background:"none",border:"none",cursor:"pointer",padding:0}}>SALIR</button>
+              <a href={`/?s=${real.slug}`} target="_blank" rel="noreferrer" style={{...sans,fontSize:11.5,letterSpacing:"1px",color:G,whiteSpace:"nowrap"}}>VER MI WEB ↗</a>
+              <button onClick={real.onSalir} style={{...sans,fontSize:11.5,letterSpacing:"1px",color:MT,background:"none",border:"none",cursor:"pointer",padding:0}}>SALIR</button>
             </div>
           )}
         </div>
@@ -453,7 +477,7 @@ export function Panel({real}:{real?:PanelReal}){
         {[["dia","Hoy / Por día"],["semana","Vista semanal"],["mes","Calendario"],["todas","Todas las citas"],["avisos","Avisos"],["clientas","Clientas"],["resumen","Resumen"]].map(([id,l])=>(
           <button key={id} className="navbtn" onClick={()=>setView(id)}
             style={{...sans,padding:"14px 20px",border:"none",background:"none",
-              cursor:"pointer",fontSize:11,letterSpacing:"1.5px",
+              cursor:"pointer",fontSize:12.5,letterSpacing:"1.5px",
               color:view===id?G:"#1A1A1A55",
               borderBottom:`2px solid ${view===id?G:"transparent"}`,
               marginBottom:-1,fontWeight:view===id?500:400,transition:"color .2s",whiteSpace:"nowrap"}}>
@@ -471,7 +495,7 @@ export function Panel({real}:{real?:PanelReal}){
           <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",
             marginBottom:24,flexWrap:"wrap",gap:12}}>
             <div>
-              <div style={{...sans,fontSize:9,letterSpacing:"3px",color:G,marginBottom:6}}>AGENDA DEL DÍA</div>
+              <div style={{...sans,fontSize:12.5,letterSpacing:"3px",color:G,marginBottom:6}}>AGENDA DEL DÍA</div>
               <div style={{...serif,fontSize:30,fontWeight:300,lineHeight:1.1}}>{fmtD(selDate)}</div>
             </div>
             <div style={{display:"flex",gap:8}}>
@@ -489,93 +513,79 @@ export function Panel({real}:{real?:PanelReal}){
             gap:2,background:`${G}22`,marginBottom:28}}>
             {[
               {n:dayBookings.length,l:"Citas del día",c:CH},
-              {n:freeCount,l:"Huecos libres",c:GREEN},
+              {n:freeCount,l:"Tiempo libre",c:GREEN},
               {n:dayBookings.filter((b:any)=>b.status==="pendiente").length,l:"Sin confirmar",c:AMBER},
               {n:`${revenue}€`,l:"Ingresos previstos",c:DR},
             ].map(s=>(
               <div key={s.l} className="card" style={{background:"white",padding:"22px 20px",
                 textAlign:"center",transition:"all .25s"}}>
                 <div style={{...serif,fontSize:34,fontWeight:400,color:s.c,lineHeight:1}}>{s.n}</div>
-                <div style={{...sans,fontSize:9,letterSpacing:"1.5px",color:MT,marginTop:7}}>
+                <div style={{...sans,fontSize:12.5,letterSpacing:"1.5px",color:MT,marginTop:7}}>
                   {s.l.toUpperCase()}
                 </div>
               </div>
             ))}
           </div>
 
-          {/* Timeline */}
-          {slots.length===0?(
-            <div style={{textAlign:"center",padding:"64px 24px",background:BG2,border:`1px dashed ${G}44`}}>
-              <div style={{...serif,fontSize:44,color:`${MT}44`,marginBottom:12}}>—</div>
-              <div style={{...serif,fontSize:22,fontWeight:300,marginBottom:8}}>Centro cerrado</div>
-              <div style={{...sans,fontSize:13,color:MT}}>Hoy no se abre. Disfruta el descanso.</div>
+          {/* Agenda del día */}
+          {!(HOR[parseD(selDate).getDay()]||[]).length&&!dayBookings.length?(
+            <div style={{textAlign:"center",padding:"56px 24px",background:BG2,border:`1px dashed ${G}44`,borderRadius:16}}>
+              <div style={{...serif,fontSize:22,fontWeight:400,marginBottom:8}}>Cerrado</div>
+              <div style={{...sans,fontSize:14,color:MT}}>Este día no se abre. Disfruta el descanso.</div>
             </div>
           ):(
           <div>
-            <div style={{...sans,fontSize:9,letterSpacing:"3px",color:MT,marginBottom:14}}>
-              LÍNEA DE TIEMPO · TOCA UN HUECO LIBRE PARA APUNTAR UNA CITA O BLOQUEARLO
+            <div style={{...sans,fontSize:13.5,color:MT,marginBottom:12}}>
+              Toca una cita para ver el detalle, o un rato libre para apuntar una cita o bloquearlo.
             </div>
-            <div style={{display:"grid",gap:2,background:`${G}18`}}>
-              {slots.map(({h,booking,block}:any)=>{
-                const isFree=!booking&&!block;
-                const st=booking?statusStyle(booking.status):null;
-                return(
-                  <div key={h} className={isFree?"slot":"row"}
-                    onClick={()=>{
-                      if(booking)setDetail(booking);
-                      else if(block)unblock(selDate,h);
-                      else setBlockModal({date:selDate,h});
-                    }}
-                    style={{background:booking?"white":block?`${RED}0C`:BG,
-                      padding:"16px 20px",display:"flex",alignItems:"center",
-                      gap:18,cursor:"pointer",transition:"all .18s",
-                      borderLeft:`3px solid ${booking?st!.color:block?RED:GREEN}`}}>
-                    <div style={{...serif,fontSize:19,color:booking?CH:MT,
-                      minWidth:56,fontWeight:400}}>
-                      {String(h).padStart(2,"0")}:00
+            <div style={{display:"flex",flexDirection:"column",gap:8}}>
+              {agenda(selDate).map((x:any)=>{
+                const rango=`${hhmm(x.ini/60)} – ${hhmm(x.fin/60)}`;
+                if(x.tipo==="cita"){
+                  const b=x.b;const st=statusStyle(b.status);
+                  return(
+                    <div key={"c"+b.id} className="row" onClick={()=>setDetail(b)}
+                      style={{background:"white",borderRadius:14,padding:"14px 16px",cursor:"pointer",
+                        borderLeft:`4px solid ${st.color}`,boxShadow:"0 1px 2px rgba(0,0,0,.04)"}}>
+                      <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",gap:10}}>
+                        <div style={{...sans,fontSize:15,fontWeight:700,color:CH}}>{rango}</div>
+                        <span style={{...sans,fontSize:12.5,fontWeight:600,background:st.bg,color:st.color,
+                          padding:"4px 10px",borderRadius:20,whiteSpace:"nowrap"}}>{st.label}</span>
+                      </div>
+                      <div style={{...sans,fontSize:16,fontWeight:600,marginTop:6}}>{b.client}</div>
+                      <div style={{...sans,fontSize:14,color:MT,marginTop:2}}>
+                        {b.service} · <span style={{color:DR,fontWeight:600}}>{b.price}</span>
+                      </div>
+                      <div style={{...sans,fontSize:13,color:b.phone?MT:`${MT}99`,marginTop:2}}>{b.phone||"Sin teléfono"}</div>
+                      {b.notes&&<div style={{...sans,fontSize:13,color:AMBER,marginTop:6}}>⚠ {b.notes}</div>}
                     </div>
-                    {booking?(
-                      <>
-                        <div style={{flex:1,minWidth:0}}>
-                          <div style={{...sans,fontSize:15,marginBottom:3,fontWeight:500}}>
-                            {booking.client}
-                          </div>
-                          <div style={{...sans,fontSize:12,color:MT}}>
-                            {booking.service} · {booking.phone}
-                          </div>
-                          {booking.notes&&(
-                            <div style={{...sans,fontSize:11,color:AMBER,marginTop:4}}>
-                              ⚠ {booking.notes}
-                            </div>
-                          )}
-                        </div>
-                        <div style={{textAlign:"right",flexShrink:0}}>
-                          <div style={{...serif,fontSize:19,color:DR,marginBottom:5}}>{booking.price}</div>
-                          <div style={{...sans,fontSize:8,letterSpacing:"1.5px",
-                            background:st!.bg,color:st!.color,
-                            padding:"3px 9px",borderRadius:10,display:"inline-block"}}>
-                            {st!.label}
-                          </div>
-                        </div>
-                      </>
-                    ):block?(
-                      <div style={{flex:1,display:"flex",justifyContent:"space-between",alignItems:"center"}}>
-                        <div>
-                          <div style={{...sans,fontSize:14,color:RED,marginBottom:2}}>Bloqueado por ti</div>
-                          <div style={{...sans,fontSize:12,color:MT}}>{block.reason}</div>
-                        </div>
-                        <div style={{...sans,fontSize:10,color:`${RED}99`,letterSpacing:"1px"}}>
-                          TOCA PARA LIBERAR ✕
-                        </div>
+                  );
+                }
+                if(x.tipo==="bloqueo"){
+                  return(
+                    <div key={"b"+x.ini} onClick={()=>unblock(selDate,x.b.time)}
+                      style={{background:`${RED}0C`,borderRadius:14,padding:"12px 16px",cursor:"pointer",
+                        borderLeft:`4px solid ${RED}`,display:"flex",justifyContent:"space-between",alignItems:"center",gap:10}}>
+                      <div>
+                        <div style={{...sans,fontSize:14,fontWeight:700,color:RED}}>{rango} · Bloqueado</div>
+                        <div style={{...sans,fontSize:13,color:MT}}>{x.b.reason}</div>
                       </div>
-                    ):(
-                      <div style={{flex:1,display:"flex",justifyContent:"space-between",alignItems:"center"}}>
-                        <div style={{...sans,fontSize:14,color:GREEN}}>Hueco libre · visible en la web</div>
-                        <div style={{...sans,fontSize:10,color:`${MT}88`,letterSpacing:"1px"}}>
-                          APUNTAR O BLOQUEAR +
-                        </div>
-                      </div>
-                    )}
+                      <span style={{...sans,fontSize:13.5,color:RED,whiteSpace:"nowrap"}}>Liberar ✕</span>
+                    </div>
+                  );
+                }
+                return(
+                  <div key={"l"+x.ini} style={{border:`1.5px dashed ${GREEN}66`,borderRadius:14,padding:"10px 12px 10px 16px",
+                    display:"flex",justifyContent:"space-between",alignItems:"center",gap:10,background:`${GREEN}08`}}>
+                    <div style={{...sans,fontSize:14,color:GREEN,fontWeight:600}}>Libre · {rango}</div>
+                    <div style={{display:"flex",gap:6}}>
+                      <button onClick={()=>openNew(selDate,x.ini)}
+                        style={{...sans,fontSize:13,fontWeight:600,background:GREEN,color:"#fff",border:"none",
+                          borderRadius:20,padding:"8px 14px",cursor:"pointer"}}>+ Cita</button>
+                      <button onClick={()=>setBlockModal({date:selDate,h:Math.floor(x.ini/60)})}
+                        style={{...sans,fontSize:13,background:"white",color:MT,border:`1px solid ${MT}44`,
+                          borderRadius:20,padding:"8px 12px",cursor:"pointer"}}>Bloquear</button>
+                    </div>
                   </div>
                 );
               })}
@@ -591,7 +601,7 @@ export function Panel({real}:{real?:PanelReal}){
           <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",
             marginBottom:24,flexWrap:"wrap",gap:12}}>
             <div>
-              <div style={{...sans,fontSize:9,letterSpacing:"3px",color:G,marginBottom:6}}>OCUPACIÓN SEMANAL</div>
+              <div style={{...sans,fontSize:12.5,letterSpacing:"3px",color:G,marginBottom:6}}>OCUPACIÓN SEMANAL</div>
               <div style={{...serif,fontSize:30,fontWeight:300}}>
                 Semana del {weekDays[0].getDate()} al {weekDays[6].getDate()} de {MONTHS[weekDays[6].getMonth()]}
               </div>
@@ -626,7 +636,7 @@ export function Panel({real}:{real?:PanelReal}){
               <div key={s.l} className="card" style={{background:"white",padding:"20px 18px",
                 textAlign:"center",transition:"all .25s"}}>
                 <div style={{...serif,fontSize:31,fontWeight:400,color:s.c,lineHeight:1}}>{s.n}</div>
-                <div style={{...sans,fontSize:9,letterSpacing:"1.5px",color:MT,marginTop:7}}>
+                <div style={{...sans,fontSize:12.5,letterSpacing:"1.5px",color:MT,marginTop:7}}>
                   {s.l.toUpperCase()}
                 </div>
               </div>
@@ -649,14 +659,14 @@ export function Panel({real}:{real?:PanelReal}){
                       minHeight:250,display:"flex",flexDirection:"column"}}>
                     <div style={{padding:"12px 10px",borderBottom:`1px solid ${G}22`,
                       textAlign:"center",background:isToday?`${G}22`:BG}}>
-                      <div style={{...sans,fontSize:9,letterSpacing:"1.5px",
+                      <div style={{...sans,fontSize:12.5,letterSpacing:"1.5px",
                         color:isToday?DARK:MT,fontWeight:isToday?700:400}}>
                         {DAYS[d.getDay()].toUpperCase()}
                       </div>
                       <div style={{...serif,fontSize:22,marginTop:2,
                         color:isToday?DR:CH}}>{d.getDate()}</div>
                       {!closed&&(
-                        <div style={{...sans,fontSize:9,color:occ>70?RED:occ>35?AMBER:GREEN,marginTop:3}}>
+                        <div style={{...sans,fontSize:12.5,color:occ>70?RED:occ>35?AMBER:GREEN,marginTop:3}}>
                           {occ}% ocupado
                         </div>
                       )}
@@ -664,24 +674,24 @@ export function Panel({real}:{real?:PanelReal}){
                     <div style={{flex:1,padding:"8px 7px",display:"flex",
                       flexDirection:"column",gap:4}}>
                       {closed?(
-                        <div style={{...sans,fontSize:10,color:`${MT}77`,
+                        <div style={{...sans,fontSize:11.5,color:`${MT}77`,
                           textAlign:"center",padding:"20px 0"}}>Cerrado</div>
                       ):bks.length===0?(
-                        <div style={{...sans,fontSize:10,color:GREEN,
+                        <div style={{...sans,fontSize:11.5,color:GREEN,
                           textAlign:"center",padding:"20px 0"}}>Día libre</div>
                       ):bks.map((b:any)=>{
                         const st=statusStyle(b.status);
                         return(
                           <div key={b.id} style={{background:st.bg,
                             borderLeft:`2px solid ${st.color}`,padding:"6px 8px"}}>
-                            <div style={{...sans,fontSize:10,color:st.color,fontWeight:500}}>
-                              {String(b.time).padStart(2,"0")}:00
+                            <div style={{...sans,fontSize:11.5,color:st.color,fontWeight:500}}>
+                              {hhmm(b.time)}
                             </div>
-                            <div style={{...sans,fontSize:11,marginTop:1,
+                            <div style={{...sans,fontSize:12.5,marginTop:1,
                               overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>
                               {b.client.split(" ")[0]}
                             </div>
-                            <div style={{...sans,fontSize:9,color:MT,
+                            <div style={{...sans,fontSize:12.5,color:MT,
                               overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>
                               {b.service}
                             </div>
@@ -691,10 +701,10 @@ export function Panel({real}:{real?:PanelReal}){
                       {blocked.filter((b:any)=>b.date===ds).map((b:any)=>(
                         <div key={b.time} style={{background:`${RED}12`,
                           borderLeft:`2px solid ${RED}`,padding:"6px 8px"}}>
-                          <div style={{...sans,fontSize:10,color:RED}}>
-                            {String(b.time).padStart(2,"0")}:00
+                          <div style={{...sans,fontSize:11.5,color:RED}}>
+                            {hhmm(b.time)}
                           </div>
-                          <div style={{...sans,fontSize:9,color:MT}}>{b.reason}</div>
+                          <div style={{...sans,fontSize:12.5,color:MT}}>{b.reason}</div>
                         </div>
                       ))}
                     </div>
@@ -705,7 +715,7 @@ export function Panel({real}:{real?:PanelReal}){
           </div>
 
           <div style={{display:"flex",gap:20,marginTop:20,flexWrap:"wrap",
-            ...sans,fontSize:11,color:MT}}>
+            ...sans,fontSize:12.5,color:MT}}>
             <span style={{color:GREEN}}>■ Confirmada</span>
             <span style={{color:AMBER}}>■ Pendiente</span>
             <span style={{color:RED}}>■ Bloqueado por ti</span>
@@ -719,7 +729,7 @@ export function Panel({real}:{real?:PanelReal}){
         <div className="fu">
           <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:24}}>
             <div>
-              <div style={{...sans,fontSize:9,letterSpacing:"3px",color:G,marginBottom:6}}>VISTA MENSUAL</div>
+              <div style={{...sans,fontSize:12.5,letterSpacing:"3px",color:G,marginBottom:6}}>VISTA MENSUAL</div>
               <div style={{...serif,fontSize:30,fontWeight:300}}>{MONTHS[mo]} {yr}</div>
             </div>
             <div style={{display:"flex",gap:8}}>
@@ -747,7 +757,7 @@ export function Panel({real}:{real?:PanelReal}){
               <div key={s.l} className="card" style={{background:"white",padding:"20px 18px",
                 textAlign:"center",transition:"all .25s"}}>
                 <div style={{...serif,fontSize:31,fontWeight:400,color:s.c,lineHeight:1}}>{s.n}</div>
-                <div style={{...sans,fontSize:9,letterSpacing:"1.5px",color:MT,marginTop:7}}>
+                <div style={{...sans,fontSize:12.5,letterSpacing:"1.5px",color:MT,marginTop:7}}>
                   {s.l.toUpperCase()}
                 </div>
               </div>
@@ -756,7 +766,7 @@ export function Panel({real}:{real?:PanelReal}){
 
           <div style={{display:"grid",gridTemplateColumns:"repeat(7,1fr)",gap:2,marginBottom:2}}>
             {["Lun","Mar","Mié","Jue","Vie","Sáb","Dom"].map(d=>(
-              <div key={d} style={{...sans,textAlign:"center",fontSize:9,
+              <div key={d} style={{...sans,textAlign:"center",fontSize:12.5,
                 letterSpacing:"1.5px",color:MT,padding:"8px 0"}}>{d.toUpperCase()}</div>
             ))}
           </div>
@@ -782,21 +792,21 @@ export function Panel({real}:{real?:PanelReal}){
                       color:closed?`${MT}66`:isToday?DR:CH,
                       fontWeight:isToday?600:400}}>{d}</span>
                     {isToday&&(
-                      <span style={{...sans,fontSize:7,letterSpacing:"1px",
+                      <span style={{...sans,fontSize:9,letterSpacing:"1px",
                         background:G,color:DARK,padding:"2px 5px",borderRadius:8}}>HOY</span>
                     )}
                   </div>
                   {closed?(
-                    <div style={{...sans,fontSize:9,color:`${MT}55`,marginTop:6}}>Cerrado</div>
+                    <div style={{...sans,fontSize:12.5,color:`${MT}55`,marginTop:6}}>Cerrado</div>
                   ):(
                     <div style={{marginTop:6}}>
                       {bks.length>0&&(
-                        <div style={{...sans,fontSize:10,color:CH,marginBottom:3}}>
+                        <div style={{...sans,fontSize:11.5,color:CH,marginBottom:3}}>
                           {bks.length} cita{bks.length>1?"s":""}
                         </div>
                       )}
                       {bls.length>0&&(
-                        <div style={{...sans,fontSize:9,color:RED,marginBottom:3}}>
+                        <div style={{...sans,fontSize:12.5,color:RED,marginBottom:3}}>
                           {bls.length} bloqueo{bls.length>1?"s":""}
                         </div>
                       )}
@@ -813,7 +823,7 @@ export function Panel({real}:{real?:PanelReal}){
               );
             })}
           </div>
-          <div style={{display:"flex",gap:20,marginTop:20,flexWrap:"wrap",...sans,fontSize:11,color:MT}}>
+          <div style={{display:"flex",gap:20,marginTop:20,flexWrap:"wrap",...sans,fontSize:12.5,color:MT}}>
             <span style={{color:GREEN}}>▬ Poca ocupación</span>
             <span style={{color:AMBER}}>▬ Media</span>
             <span style={{color:RED}}>▬ Casi completo</span>
@@ -825,7 +835,7 @@ export function Panel({real}:{real?:PanelReal}){
         {view==="todas"&&(
         <div className="fu">
           <div style={{marginBottom:24}}>
-            <div style={{...sans,fontSize:9,letterSpacing:"3px",color:G,marginBottom:6}}>LISTADO COMPLETO</div>
+            <div style={{...sans,fontSize:12.5,letterSpacing:"3px",color:G,marginBottom:6}}>LISTADO COMPLETO</div>
             <div style={{...serif,fontSize:30,fontWeight:300}}>Todas las citas</div>
             <div style={{...sans,fontSize:13,color:MT,marginTop:6}}>
               {bookings.length} citas registradas · {pending.length} pendientes de confirmar
@@ -835,7 +845,7 @@ export function Panel({real}:{real?:PanelReal}){
           {pending.length>0&&(
             <div style={{background:`${AMBER}12`,border:`1px solid ${AMBER}44`,
               padding:"16px 20px",marginBottom:24,borderLeft:`3px solid ${AMBER}`}}>
-              <div style={{...sans,fontSize:11,letterSpacing:"2px",color:AMBER,
+              <div style={{...sans,fontSize:12.5,letterSpacing:"2px",color:AMBER,
                 marginBottom:6,fontWeight:500}}>⚠ REQUIEREN TU ATENCIÓN</div>
               <div style={{...sans,fontSize:13,color:CH,lineHeight:1.7}}>
                 Hay {pending.length} reserva{pending.length>1?"s":""} nueva{pending.length>1?"s":""} desde la web.
@@ -855,27 +865,27 @@ export function Panel({real}:{real?:PanelReal}){
                     transition:"background .18s",
                     borderLeft:`3px solid ${st.color}`}}>
                   <div style={{textAlign:"center",minWidth:46,flexShrink:0}}>
-                    <div style={{...sans,fontSize:8,letterSpacing:"1px",color:MT}}>
+                    <div style={{...sans,fontSize:11.5,letterSpacing:"1px",color:MT}}>
                       {DAYS[dt.getDay()].toUpperCase()}
                     </div>
                     <div style={{...serif,fontSize:21,lineHeight:1.1}}>{dt.getDate()}</div>
-                    <div style={{...sans,fontSize:8,color:MT}}>
+                    <div style={{...sans,fontSize:11.5,color:MT}}>
                       {MONTHS[dt.getMonth()].slice(0,3).toUpperCase()}
                     </div>
                   </div>
                   <div style={{...serif,fontSize:16,color:MT,minWidth:52,flexShrink:0}}>
-                    {String(b.time).padStart(2,"0")}:00
+                    {hhmm(b.time)}
                   </div>
                   <div style={{flex:1,minWidth:0}}>
                     <div style={{...sans,fontSize:14,fontWeight:500,marginBottom:2}}>{b.client}</div>
-                    <div style={{...sans,fontSize:12,color:MT,
+                    <div style={{...sans,fontSize:13.5,color:MT,
                       overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>
                       {b.service}
                     </div>
                   </div>
                   <div style={{textAlign:"right",flexShrink:0}}>
                     <div style={{...serif,fontSize:17,color:DR,marginBottom:4}}>{b.price}</div>
-                    <div style={{...sans,fontSize:8,letterSpacing:"1px",
+                    <div style={{...sans,fontSize:11.5,letterSpacing:"1px",
                       background:st.bg,color:st.color,padding:"3px 8px",
                       borderRadius:10,display:"inline-block"}}>{st.label}</div>
                   </div>
@@ -897,8 +907,8 @@ export function Panel({real}:{real?:PanelReal}){
             .sort((a:any,b:any)=>b.spent-a.spent).slice(0,8);
           const Section=({title,hint,items,render}:any)=>(
             <div style={{marginBottom:30}}>
-              <div style={{...sans,fontSize:9,letterSpacing:"3px",color:G,marginBottom:4}}>{title}</div>
-              <div style={{...sans,fontSize:12,color:MT,marginBottom:12}}>{hint}</div>
+              <div style={{...sans,fontSize:12.5,letterSpacing:"3px",color:G,marginBottom:4}}>{title}</div>
+              <div style={{...sans,fontSize:13.5,color:MT,marginBottom:12}}>{hint}</div>
               {items.length===0
                 ?<div style={{...sans,fontSize:13,color:MT,padding:"18px 20px",background:"white"}}>Nada pendiente aquí ✓</div>
                 :<div style={{display:"grid",gap:1,background:`${G}18`}}>{items.map(render)}</div>}
@@ -908,9 +918,9 @@ export function Panel({real}:{real?:PanelReal}){
             <div style={{background:"white",padding:"14px 20px",display:"flex",alignItems:"center",gap:14,flexWrap:"wrap"}}>
               <div style={{flex:1,minWidth:180}}>
                 <div style={{...sans,fontSize:14,fontWeight:500}}>{b.client}</div>
-                <div style={{...sans,fontSize:12,color:MT}}>{sub}</div>
+                <div style={{...sans,fontSize:13.5,color:MT}}>{sub}</div>
               </div>
-              {sent[k]&&<span style={{...sans,fontSize:10,color:GREEN,letterSpacing:"1px"}}>✓ ENVIADO</span>}
+              {sent[k]&&<span style={{...sans,fontSize:11.5,color:GREEN,letterSpacing:"1px"}}>✓ ENVIADO</span>}
               <a href={waTo(b.phone,msg)} target="_blank" rel="noreferrer"
                 onClick={()=>{markSent(k);onDone?.();}}>
                 <button style={{...bP,padding:"9px 16px",background:sent[k]?"transparent":GREEN,
@@ -921,7 +931,7 @@ export function Panel({real}:{real?:PanelReal}){
           return(
           <div className="fu">
             <div style={{marginBottom:24}}>
-              <div style={{...sans,fontSize:9,letterSpacing:"3px",color:G,marginBottom:6}}>TU LISTA DE HOY</div>
+              <div style={{...sans,fontSize:12.5,letterSpacing:"3px",color:G,marginBottom:6}}>TU LISTA DE HOY</div>
               <div style={{...serif,fontSize:30,fontWeight:300}}>Avisos por WhatsApp</div>
               <div style={{...sans,fontSize:13,color:MT,marginTop:6}}>
                 Cada botón abre WhatsApp con el mensaje ya escrito. Solo tienes que pulsar enviar.
@@ -960,7 +970,7 @@ export function Panel({real}:{real?:PanelReal}){
           <div className="fu">
             <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-end",flexWrap:"wrap",gap:12,marginBottom:20}}>
               <div>
-                <div style={{...sans,fontSize:9,letterSpacing:"3px",color:G,marginBottom:6}}>FICHAS</div>
+                <div style={{...sans,fontSize:12.5,letterSpacing:"3px",color:G,marginBottom:6}}>FICHAS</div>
                 <div style={{...serif,fontSize:30,fontWeight:300}}>Clientas</div>
                 <div style={{...sans,fontSize:13,color:MT,marginTop:6}}>
                   {clients.length} clientas · se crean solas al apuntar citas
@@ -979,11 +989,11 @@ export function Panel({real}:{real?:PanelReal}){
                   </div>
                   <div style={{flex:1,minWidth:160}}>
                     <div style={{...sans,fontSize:14,fontWeight:500}}>{c.client}</div>
-                    <div style={{...sans,fontSize:12,color:MT}}>{c.phone}{c.fav?` · suele hacerse ${c.fav}`:""}</div>
+                    <div style={{...sans,fontSize:13.5,color:MT}}>{c.phone}{c.fav?` · suele hacerse ${c.fav}`:""}</div>
                   </div>
-                  <div style={{...sans,fontSize:12,color:MT,minWidth:150}}>
+                  <div style={{...sans,fontSize:13.5,color:MT,minWidth:150}}>
                     {c.visits} visita{c.visits===1?"":"s"} · <span style={{color:DR}}>{c.spent}€</span>
-                    <div style={{fontSize:11}}>
+                    <div style={{fontSize:12.5}}>
                       {c.next?<span style={{color:GREEN}}>Próxima: {fmtD(c.next)}</span>
                         :c.last?`Última: hace ${c.daysAway} días`:"Aún no ha venido"}
                     </div>
@@ -1021,7 +1031,7 @@ export function Panel({real}:{real?:PanelReal}){
           <div className="fu">
             <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:24,flexWrap:"wrap",gap:12}}>
               <div>
-                <div style={{...sans,fontSize:9,letterSpacing:"3px",color:G,marginBottom:6}}>CÓMO VA EL NEGOCIO</div>
+                <div style={{...sans,fontSize:12.5,letterSpacing:"3px",color:G,marginBottom:6}}>CÓMO VA EL NEGOCIO</div>
                 <div style={{...serif,fontSize:30,fontWeight:300}}>{MONTHS[mo]} {yr}</div>
               </div>
               <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>
@@ -1042,36 +1052,36 @@ export function Panel({real}:{real?:PanelReal}){
               ].map(x=>(
                 <div key={x.l} className="card" style={{background:"white",padding:"20px 18px",textAlign:"center",transition:"all .25s"}}>
                   <div style={{...serif,fontSize:31,color:x.c,lineHeight:1}}>{x.n}</div>
-                  <div style={{...sans,fontSize:9,letterSpacing:"1.5px",color:MT,marginTop:7}}>{x.l.toUpperCase()}</div>
+                  <div style={{...sans,fontSize:12.5,letterSpacing:"1.5px",color:MT,marginTop:7}}>{x.l.toUpperCase()}</div>
                 </div>
               ))}
             </div>
             <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(300px,1fr))",gap:24}}>
               <div style={{background:"white",padding:22}}>
-                <div style={{...sans,fontSize:9,letterSpacing:"3px",color:G,marginBottom:16}}>TRATAMIENTOS QUE MÁS FACTURAN</div>
+                <div style={{...sans,fontSize:12.5,letterSpacing:"3px",color:G,marginBottom:16}}>TRATAMIENTOS QUE MÁS FACTURAN</div>
                 {top.length===0&&<div style={{...sans,fontSize:13,color:MT}}>Sin citas este mes</div>}
                 {top.map(([n,v])=>(
                   <div key={n} style={{marginBottom:12}}>
                     <div style={{display:"flex",justifyContent:"space-between",...sans,fontSize:13,marginBottom:4}}>
-                      <span>{n} <span style={{color:MT,fontSize:11}}>· {v.n}</span></span><span style={{color:DR}}>{v.e}€</span>
+                      <span>{n} <span style={{color:MT,fontSize:12.5}}>· {v.n}</span></span><span style={{color:DR}}>{v.e}€</span>
                     </div>
                     <div style={{height:4,background:`${G}18`}}><div style={{height:4,width:`${(v.e/maxE)*100}%`,background:G}}/></div>
                   </div>
                 ))}
               </div>
               <div style={{background:"white",padding:22}}>
-                <div style={{...sans,fontSize:9,letterSpacing:"3px",color:G,marginBottom:16}}>POR TIPO DE TRATAMIENTO</div>
+                <div style={{...sans,fontSize:12.5,letterSpacing:"3px",color:G,marginBottom:16}}>POR TIPO DE TRATAMIENTO</div>
                 {Object.entries(byCat).sort((a,b)=>b[1]-a[1]).map(([c,e])=>(
                   <div key={c} style={{display:"flex",justifyContent:"space-between",alignItems:"baseline",
                     padding:"10px 0",borderBottom:`1px solid ${G}18`,...sans,fontSize:14}}>
                     <span>{c==="Láser"?"Depilación láser":c==="Facial"?"Faciales":c==="Corporal"?"Corporales":c}</span>
-                    <span><span style={{color:MT,fontSize:12,marginRight:10}}>{Math.round((e/tot)*100)}%</span><span style={{color:DR}}>{e}€</span></span>
+                    <span><span style={{color:MT,fontSize:13.5,marginRight:10}}>{Math.round((e/tot)*100)}%</span><span style={{color:DR}}>{e}€</span></span>
                   </div>
                 ))}
               </div>
             </div>
             {!salonId&&(            <div style={{marginTop:36,padding:"18px 20px",border:`1px dashed ${G}55`,display:"flex",gap:10,flexWrap:"wrap",alignItems:"center"}}>
-              <div style={{...sans,fontSize:12,color:MT,flex:1,minWidth:220,lineHeight:1.6}}>
+              <div style={{...sans,fontSize:13.5,color:MT,flex:1,minWidth:220,lineHeight:1.6}}>
                 Los datos se guardan en este dispositivo. Ahora hay citas de ejemplo: cuando empieces de verdad, bórralas.
               </div>
               <button style={{...bO,padding:"9px 14px"}} onClick={()=>{
@@ -1089,156 +1099,183 @@ export function Panel({real}:{real?:PanelReal}){
 
       </div>
 
-      {/* ═════ MODAL NUEVA CITA ═════ */}
+      {/* ═════ HOJA NUEVA CITA ═════ */}
       {newBk&&(()=>{
-        const free=getSlots(newBk.date).filter((x:any)=>!x.booking&&!x.block).map((x:any)=>x.h);
-        const lbl={...sans,display:"block",fontSize:10,letterSpacing:"2px",color:MT,marginBottom:6,marginTop:14} as const;
+        const sv=SV.find(x=>x.name===newBk.service);
+        const dur=duracion(sv?.dur);
+        const dia=parseD(newBk.date);
+        const libres=huecosLibres(HOR,dia,dur,ocupadoDia(newBk.date),30);
+        // Si la hora elegida ya no cabe con este tratamiento, se avisa
+        const horaOk=newBk.time===""||libres.includes(Number(newBk.time));
+        const dias=Array.from({length:21},(_,i)=>{const d=parseD(today);d.setDate(d.getDate()+i);return d;});
+        const lbl={...sans,display:"block",fontSize:13,fontWeight:600,color:CH,marginBottom:8,marginTop:18} as const;
+        const chip=(on:boolean)=>({...sans,border:`1.5px solid ${on?DARK:"#E2D6CB"}`,background:on?DARK:"white",color:on?"#fff":CH,
+          borderRadius:12,cursor:"pointer",flexShrink:0} as const);
+        const listo=newBk.client.trim().length>=2&&newBk.time!==""&&horaOk;
         return(
         <div onClick={()=>setNewBk(null)}
-          style={{position:"fixed",inset:0,background:"rgba(15,13,12,.7)",backdropFilter:"blur(4px)",
-            zIndex:500,display:"flex",alignItems:"center",justifyContent:"center",padding:20}}>
+          style={{position:"fixed",inset:0,background:"rgba(15,13,12,.55)",zIndex:500,display:"flex",
+            alignItems:"flex-end",justifyContent:"center"}}>
           <div className="fu" onClick={(e:React.MouseEvent)=>e.stopPropagation()}
-            style={{background:BG,maxWidth:440,width:"100%",maxHeight:"90vh",overflowY:"auto",boxShadow:"0 24px 60px rgba(0,0,0,.4)"}}>
-            <div style={{background:DARK,padding:"22px 26px",borderBottom:`2px solid ${G}`}}>
-              <div style={{...sans,fontSize:9,letterSpacing:"3px",color:G,marginBottom:8}}>NUEVA CITA</div>
-              <div style={{...serif,fontSize:24,color:"#fff",fontWeight:300}}>Apuntar a mano</div>
-              <div style={{...sans,fontSize:12,color:"#ffffff66",marginTop:4}}>Para citas por teléfono, WhatsApp o en persona</div>
+            style={{background:BG,width:"100%",maxWidth:520,maxHeight:"94vh",overflowY:"auto",
+              borderRadius:"22px 22px 0 0",boxShadow:"0 -10px 40px rgba(0,0,0,.25)"}}>
+            <div style={{position:"sticky",top:0,background:BG,padding:"14px 20px 10px",borderBottom:`1px solid ${G}22`,zIndex:2}}>
+              <div style={{width:40,height:4,borderRadius:2,background:"#D4C9BE",margin:"0 auto 12px"}}/>
+              <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+                <div style={{...sans,fontSize:20,fontWeight:700}}>Nueva cita</div>
+                <button onClick={()=>setNewBk(null)} style={{...sans,background:"none",border:"none",fontSize:15,color:MT,cursor:"pointer"}}>Cerrar</button>
+              </div>
             </div>
-            <div style={{padding:"12px 26px 26px"}}>
-              <label style={lbl}>NOMBRE</label>
-              <input style={inp} list="clientas" value={newBk.client} placeholder="Nombre de la clienta"
+            <div style={{padding:"4px 20px 20px"}}>
+              <label style={lbl}>Clienta</label>
+              <input style={{...inp,fontSize:16,padding:"13px 14px",borderRadius:12}} list="clientas" value={newBk.client} placeholder="Nombre y apellido"
                 onChange={(e:React.ChangeEvent<HTMLInputElement>)=>{
                   const v=e.target.value;const c=clients.find((x:any)=>x.client.toLowerCase()===v.toLowerCase());
-                  setNewBk((n:any)=>({...n,client:v,phone:c?c.phone:n.phone}));}}/>
+                  setNewBk((n:any)=>({...n,client:v,phone:c?c.phone:n.phone,service:c?.fav||n.service}));}}/>
               <datalist id="clientas">{clients.map((c:any)=><option key={c.client} value={c.client}/>)}</datalist>
-              <label style={lbl}>TELÉFONO</label>
-              <input style={inp} value={newBk.phone} placeholder="600 000 000" inputMode="tel"
+              <input style={{...inp,fontSize:16,padding:"13px 14px",borderRadius:12,marginTop:8}} value={newBk.phone}
+                placeholder="Teléfono (opcional)" inputMode="tel"
                 onChange={(e:React.ChangeEvent<HTMLInputElement>)=>setNewBk((n:any)=>({...n,phone:e.target.value}))}/>
-              <label style={lbl}>TRATAMIENTO</label>
-              <select style={inp} value={newBk.service}
+
+              <label style={lbl}>Tratamiento</label>
+              <select style={{...inp,fontSize:16,padding:"13px 14px",borderRadius:12}} value={newBk.service}
                 onChange={(e:React.ChangeEvent<HTMLSelectElement>)=>setNewBk((n:any)=>({...n,service:e.target.value}))}>
                 {categorias(SV).map(({id:cat,label})=>(
                   <optgroup key={cat} label={label}>
-                    {SV.filter(x=>x.cat===cat).map(x=><option key={x.name} value={x.name}>{x.name} · {x.price}</option>)}
+                    {SV.filter(x=>x.cat===cat).map(x=><option key={x.name} value={x.name}>{x.name} · {x.dur} · {x.price}</option>)}
                   </optgroup>
                 ))}
               </select>
-              <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}>
-                <div>
-                  <label style={lbl}>DÍA</label>
-                  <input type="date" style={inp} value={newBk.date}
-                    onChange={(e:React.ChangeEvent<HTMLInputElement>)=>setNewBk((n:any)=>({...n,date:e.target.value,time:""}))}/>
-                </div>
-                <div>
-                  <label style={lbl}>HORA</label>
-                  <select style={inp} value={newBk.time}
-                    onChange={(e:React.ChangeEvent<HTMLSelectElement>)=>setNewBk((n:any)=>({...n,time:e.target.value}))}>
-                    <option value="">{free.length?"Elige":"Sin huecos"}</option>
-                    {free.map((h:number)=><option key={h} value={h}>{hhmm(h)}</option>)}
-                  </select>
-                </div>
+
+              <label style={lbl}>Día</label>
+              <div style={{display:"flex",gap:8,overflowX:"auto",paddingBottom:4,margin:"0 -20px",padding:"0 20px 4px"}}>
+                {dias.map((d,i)=>{
+                  const ds=toDS(d);const on=ds===newBk.date;const cerrado=!HOR[d.getDay()];
+                  return(
+                    <button key={ds} onClick={()=>setNewBk((n:any)=>({...n,date:ds,time:""}))}
+                      style={{...chip(on),width:62,padding:"8px 0",textAlign:"center",opacity:cerrado&&!on?.4:1}}>
+                      <div style={{fontSize:12.5,fontWeight:600,textTransform:"uppercase"}}>{i===0?"Hoy":i===1?"Mañ.":DAYS[d.getDay()]}</div>
+                      <div style={{fontSize:20,fontWeight:700,lineHeight:1.2}}>{d.getDate()}</div>
+                      <div style={{fontSize:11.5}}>{MONTHS[d.getMonth()].slice(0,3)}</div>
+                    </button>
+                  );
+                })}
               </div>
-              <label style={lbl}>NOTAS</label>
-              <input style={inp} value={newBk.notes} placeholder="Alergias, bono, preferencias…"
+              <div style={{...sans,fontSize:13.5,color:MT,marginTop:8,display:"flex",alignItems:"center",gap:8}}>
+                ¿Otro día?
+                <input type="date" value={newBk.date} style={{...inp,width:"auto",padding:"6px 10px",fontSize:14,borderRadius:10}}
+                  onChange={(e:React.ChangeEvent<HTMLInputElement>)=>e.target.value&&setNewBk((n:any)=>({...n,date:e.target.value,time:""}))}/>
+              </div>
+
+              <label style={lbl}>Hora <span style={{fontWeight:400,color:MT}}>· {fmtD(newBk.date)} · dura {dur} min</span></label>
+              {libres.length===0?(
+                <div style={{...sans,fontSize:14,color:MT,padding:"12px 0"}}>No hay huecos libres ese día para este tratamiento.</div>
+              ):(
+                <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:8}}>
+                  {libres.map(m=>{const on=Number(newBk.time)===m&&newBk.time!=="";return(
+                    <button key={m} onClick={()=>setNewBk((n:any)=>({...n,time:m}))}
+                      style={{...chip(on),padding:"11px 0",fontSize:15,fontWeight:600}}>{hhmm(m/60)}</button>
+                  );})}
+                </div>
+              )}
+              {!horaOk&&<div style={{...sans,fontSize:13,color:RED,marginTop:8}}>Esa hora no cabe con este tratamiento: elige otra.</div>}
+
+              <label style={lbl}>Notas <span style={{fontWeight:400,color:MT}}>(opcional)</span></label>
+              <input style={{...inp,fontSize:16,padding:"13px 14px",borderRadius:12}} value={newBk.notes} placeholder="Alergias, bono, preferencias…"
                 onChange={(e:React.ChangeEvent<HTMLInputElement>)=>setNewBk((n:any)=>({...n,notes:e.target.value}))}/>
-              <div style={{display:"flex",gap:10,marginTop:22}}>
-                <button style={{...bO,flex:1}} onClick={()=>setNewBk(null)}>Cancelar</button>
-                <button style={{...bP,flex:1}} onClick={saveNew}>Guardar cita</button>
-              </div>
+            </div>
+            <div style={{position:"sticky",bottom:0,background:BG,padding:"12px 20px 18px",borderTop:`1px solid ${G}22`}}>
+              <button disabled={!listo} onClick={saveNew}
+                style={{...sans,width:"100%",padding:"15px",borderRadius:30,border:"none",fontSize:16,fontWeight:700,
+                  background:G,color:"#fff",cursor:listo?"pointer":"default",opacity:listo?1:.4}}>
+                {newBk.time!==""&&horaOk?`Guardar cita · ${hhmm(Number(newBk.time)/60)}`:"Elige nombre y hora"}
+              </button>
             </div>
           </div>
         </div>);
       })()}
 
-      {/* ═════ MODAL DETALLE ═════ */}
-      {detail&&(
+      {/* ═════ HOJA DETALLE ═════ */}
+      {detail&&(()=>{
+        const st=statusStyle(detail.status);
+        const ini=detail.time,fin=detail.time+(detail.dur||60)/60;
+        const tel=detail.phone;
+        const fila=(k:string,v:any)=>(
+          <div key={k} style={{display:"flex",justifyContent:"space-between",padding:"12px 0",borderBottom:`1px solid ${G}22`,gap:16}}>
+            <span style={{...sans,fontSize:14,color:MT}}>{k}</span>
+            <span style={{...sans,fontSize:15,fontWeight:600,textAlign:"right"}}>{v}</span>
+          </div>
+        );
+        return(
       <div onClick={()=>setDetail(null)}
-        style={{position:"fixed",inset:0,background:"rgba(15,13,12,.7)",
-          backdropFilter:"blur(4px)",zIndex:500,display:"flex",
-          alignItems:"center",justifyContent:"center",padding:20}}>
+        style={{position:"fixed",inset:0,background:"rgba(15,13,12,.55)",zIndex:500,display:"flex",
+          alignItems:"flex-end",justifyContent:"center"}}>
         <div className="fu" onClick={(e:React.MouseEvent)=>e.stopPropagation()}
-          style={{background:BG,maxWidth:440,width:"100%",
-            maxHeight:"90vh",overflowY:"auto",
-            boxShadow:"0 24px 60px rgba(0,0,0,.4)"}}>
-          <div style={{background:DARK,padding:"24px 26px",
-            borderBottom:`2px solid ${G}`}}>
-            <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start"}}>
+          style={{background:BG,width:"100%",maxWidth:520,maxHeight:"94vh",overflowY:"auto",
+            borderRadius:"22px 22px 0 0",boxShadow:"0 -10px 40px rgba(0,0,0,.25)"}}>
+          <div style={{padding:"14px 20px 0"}}>
+            <div style={{width:40,height:4,borderRadius:2,background:"#D4C9BE",margin:"0 auto 14px"}}/>
+            <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",gap:12}}>
               <div>
-                <div style={{...sans,fontSize:9,letterSpacing:"3px",color:G,marginBottom:8}}>
-                  DETALLE DE LA CITA
-                </div>
-                <div style={{...serif,fontSize:26,color:"#fff",fontWeight:300}}>{detail.client}</div>
+                <div style={{...sans,fontSize:22,fontWeight:700,lineHeight:1.2}}>{detail.client}</div>
+                <div style={{...sans,fontSize:15,color:MT,marginTop:4}}>{detail.service}</div>
               </div>
-              <button onClick={()=>setDetail(null)}
-                style={{background:"none",border:"none",color:"#ffffff77",
-                  fontSize:22,cursor:"pointer",lineHeight:1,padding:0}}>×</button>
+              <span style={{...sans,fontSize:13.5,fontWeight:600,background:st.bg,color:st.color,padding:"5px 12px",borderRadius:20,whiteSpace:"nowrap"}}>{st.label}</span>
             </div>
           </div>
 
-          <div style={{padding:"26px"}}>
-            {[
-              ["Fecha",fmtD(detail.date)],
-              ["Hora",`${String(detail.time).padStart(2,"0")}:00h`],
-              ["Tratamiento",detail.service],
-              ["Precio",detail.price],
-              ["Teléfono",detail.phone],
-            ].map(([k,v])=>(
-              <div key={k} style={{display:"flex",justifyContent:"space-between",
-                padding:"12px 0",borderBottom:`1px solid ${G}22`,gap:16}}>
-                <span style={{...sans,fontSize:11,letterSpacing:"1.5px",color:MT}}>
-                  {k.toUpperCase()}
-                </span>
-                <span style={{...sans,fontSize:14,textAlign:"right"}}>{v}</span>
-              </div>
-            ))}
+          <div style={{padding:"8px 20px 22px"}}>
+            {fila("Día",fmtD(detail.date))}
+            {fila("Hora",`${hhmm(ini)} – ${hhmm(fin)}`)}
+            {fila("Precio",detail.price)}
+            {fila("Teléfono",tel||<span style={{color:MT,fontWeight:400}}>Sin teléfono</span>)}
 
             <div style={{marginTop:18}}>
-              <div style={{...sans,fontSize:9,letterSpacing:"2px",color:AMBER,marginBottom:6}}>
-                NOTAS (ALERGIAS, BONO, PREFERENCIAS…)
-              </div>
-              <textarea style={{...inp,minHeight:64,resize:"vertical"}} value={noteDraft}
+              <div style={{...sans,fontSize:14,fontWeight:600,marginBottom:8}}>Notas <span style={{fontWeight:400,color:MT}}>(alergias, bono, preferencias)</span></div>
+              <textarea style={{...inp,minHeight:70,resize:"vertical",fontSize:15,borderRadius:12}} value={noteDraft}
                 onChange={(e:React.ChangeEvent<HTMLTextAreaElement>)=>setNoteDraft(e.target.value)}
                 placeholder="Solo lo ves tú"/>
               {noteDraft!==(detail.notes||"")&&(
-                <button style={{...bO,marginTop:8,padding:"8px 14px"}} onClick={()=>saveNote(detail.id)}>Guardar nota</button>
+                <button style={{...bO,marginTop:8,padding:"10px 16px",fontSize:13.5}} onClick={()=>saveNote(detail.id)}>Guardar nota</button>
               )}
             </div>
 
-            <div style={{...sans,fontSize:9,letterSpacing:"2px",color:MT,marginTop:24,marginBottom:8}}>
-              MENSAJES LISTOS PARA WHATSAPP
-            </div>
-            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:6}}>
-              {[["Confirmar",msgConfirm(detail)],["Recordar",msgReminder(detail)],["Pedir reseña",msgReview(detail)]].map(([l,m])=>(
-                <a key={l} href={waTo(detail.phone,m)} target="_blank" rel="noreferrer"
-                  style={{...sans,fontSize:10,letterSpacing:"1px",textAlign:"center",padding:"10px 6px",
-                    border:`1px solid ${GREEN}55`,color:GREEN,borderRadius:20,textTransform:"uppercase"}}>
-                  {l}
+            {tel?(
+              <>
+                <div style={{...sans,fontSize:14,fontWeight:600,marginTop:22,marginBottom:8}}>Mandarle un WhatsApp</div>
+                <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8}}>
+                  {[["✓ Confirmar cita",msgConfirm(detail)],["⏰ Recordar cita",msgReminder(detail)],["⭐ Pedir reseña",msgReview(detail)],["💬 Escribir",""]].map(([l,m])=>(
+                    <a key={l} href={waTo(tel,m)} target="_blank" rel="noreferrer"
+                      style={{...sans,fontSize:14,fontWeight:600,textAlign:"center",padding:"12px 8px",
+                        border:`1.5px solid ${GREEN}55`,color:GREEN,borderRadius:14,background:"white"}}>
+                      {l}
+                    </a>
+                  ))}
+                </div>
+                <a href={`tel:${tel.replace(/\s/g,"")}`} style={{display:"block",marginTop:8}}>
+                  <button style={{...bO,width:"100%",fontSize:13.5,padding:"12px"}}>📞 Llamar</button>
                 </a>
-              ))}
-            </div>
+              </>
+            ):(
+              <div style={{...sans,fontSize:13,color:MT,marginTop:18}}>Sin teléfono no se le pueden mandar mensajes.</div>
+            )}
 
-            <div style={{display:"flex",flexDirection:"column",gap:10,marginTop:18}}>
-              <a href={waTo(detail.phone,"")}
-                target="_blank" rel="noreferrer">
-                <button style={{...bP,width:"100%"}}>📱 Escribir por WhatsApp</button>
-              </a>
-              <a href={`tel:${detail.phone.replace(/\s/g,"")}`}>
-                <button style={{...bO,width:"100%"}}>📞 Llamar</button>
-              </a>
+            <div style={{display:"flex",flexDirection:"column",gap:10,marginTop:22}}>
               {detail.status==="pendiente"&&(
-                <button style={{...bP,width:"100%",background:GREEN,color:"#fff"}}
+                <button style={{...bP,width:"100%",background:GREEN,color:"#fff",fontSize:13,padding:"14px"}}
                   onClick={()=>confirmBk(detail.id)}>
-                  ✓ Confirmar esta cita
+                  ✓ Marcar como confirmada
                 </button>
               )}
-              <button style={{...bDanger,width:"100%"}} onClick={()=>cancelBk(detail.id)}>
+              <button style={{...bDanger,width:"100%",fontSize:13.5,padding:"13px"}} onClick={()=>{
+                if(confirm(`¿Cancelar la cita de ${detail.client}?`))cancelBk(detail.id);}}>
                 Cancelar cita y liberar hueco
               </button>
             </div>
           </div>
         </div>
-      </div>
-      )}
+      </div>);
+      })()}
 
       {/* ═════ MODAL BLOQUEAR ═════ */}
       {blockModal&&(
@@ -1250,24 +1287,24 @@ export function Panel({real}:{real?:PanelReal}){
           style={{background:BG,maxWidth:400,width:"100%",
             boxShadow:"0 24px 60px rgba(0,0,0,.4)"}}>
           <div style={{background:DARK,padding:"22px 26px",borderBottom:`2px solid ${G}`}}>
-            <div style={{...sans,fontSize:9,letterSpacing:"3px",color:G,marginBottom:8}}>
+            <div style={{...sans,fontSize:12.5,letterSpacing:"3px",color:G,marginBottom:8}}>
               HUECO LIBRE
             </div>
             <div style={{...serif,fontSize:24,color:"#fff",fontWeight:300}}>
               {String(blockModal.h).padStart(2,"0")}:00h
             </div>
-            <div style={{...sans,fontSize:12,color:"#ffffff66",marginTop:4}}>
+            <div style={{...sans,fontSize:13.5,color:"#ffffff66",marginTop:4}}>
               {fmtD(blockModal.date)}
             </div>
           </div>
           <div style={{padding:26}}>
             <button style={{...bP,width:"100%",marginBottom:22}}
-              onClick={()=>openNew(blockModal.date,blockModal.h)}>+ Apuntar una cita a esta hora</button>
+              onClick={()=>openNew(blockModal.date,blockModal.h*60)}>+ Apuntar una cita a esta hora</button>
             <div style={{...sans,fontSize:13,color:MT,lineHeight:1.8,marginBottom:20}}>
               O bloquéala: al bloquear esta hora dejará de aparecer como disponible en la web.
               Los clientes no podrán reservarla.
             </div>
-            <label style={{...sans,display:"block",fontSize:10,letterSpacing:"2px",
+            <label style={{...sans,display:"block",fontSize:11.5,letterSpacing:"2px",
               color:MT,marginBottom:8}}>MOTIVO (SOLO LO VES TÚ)</label>
             <input style={{...inp,marginBottom:22}} value={blockReason}
               onChange={(e:React.ChangeEvent<HTMLInputElement>)=>setBlockReason(e.target.value)}

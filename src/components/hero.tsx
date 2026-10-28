@@ -1,6 +1,5 @@
 "use client";
 
-import { useEffect, useRef } from "react";
 import { ArrowUpRight } from "lucide-react";
 import { OpenNow } from "@/components/open-now";
 import { NegocioTexto, useNegocio } from "@/components/negocio";
@@ -10,54 +9,15 @@ function whatsappUrl(wa: string, msg?: string) {
   return `https://wa.me/${wa}${text ? `?text=${text}` : ""}`;
 }
 
-// Fotos que flotan en el espacio, cada una a una profundidad distinta
+// Fotos de la portada (pantallas grandes)
 const FLOATING = [
-  { src: "images/tratamientos/facial.webp", alt: "Tratamiento facial", cls: "right-[6%] top-[16%] w-[30vw] max-w-[440px]", z: 120, delay: "0s" },
-  { src: "images/tratamientos/laser-facial.webp", alt: "Láser facial", cls: "right-[30%] top-[52%] w-[17vw] max-w-[240px]", z: 220, delay: "1.2s" },
-  { src: "images/tratamientos/maderoterapia.webp", alt: "Maderoterapia", cls: "right-[3%] top-[60%] w-[19vw] max-w-[270px]", z: 60, delay: "2.1s" },
+  { src: "images/tratamientos/facial.webp", alt: "Tratamiento facial", cls: "right-[6%] top-[16%] w-[30vw] max-w-[440px]" },
+  { src: "images/tratamientos/laser-facial.webp", alt: "Láser facial", cls: "right-[30%] top-[52%] w-[17vw] max-w-[240px]" },
+  { src: "images/tratamientos/maderoterapia.webp", alt: "Maderoterapia", cls: "right-[3%] top-[60%] w-[19vw] max-w-[270px]" },
 ];
 
 export function Hero() {
   const wa = useNegocio().whatsapp;
-  const sceneRef = useRef<HTMLDivElement>(null);
-  const bgRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    const scene = sceneRef.current;
-    if (!scene) return;
-    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
-    let mx = 0, my = 0, sy = 0, raf = 0;
-
-    const paint = () => {
-      raf = 0;
-      scene.style.transform = `rotateY(${mx * 8}deg) rotateX(${-my * 6}deg) translateZ(0)`;
-      if (bgRef.current) bgRef.current.style.transform = `translate3d(${-mx * 20}px, ${sy * 0.35 - my * 14}px, 0)`;
-    };
-    const queue = () => { if (!raf) raf = requestAnimationFrame(paint); };
-    const onMove = (e: PointerEvent) => {
-      if (e.pointerType !== "mouse") return;
-      mx = e.clientX / window.innerWidth - 0.5;
-      my = e.clientY / window.innerHeight - 0.5;
-      queue();
-    };
-    const onScroll = () => { sy = window.scrollY; queue(); };
-    // En móvil: inclinar con el giroscopio
-    const onTilt = (e: DeviceOrientationEvent) => {
-      if (e.gamma == null || e.beta == null) return;
-      mx = Math.max(-0.5, Math.min(0.5, e.gamma / 60));
-      my = Math.max(-0.5, Math.min(0.5, (e.beta - 45) / 60));
-      queue();
-    };
-    window.addEventListener("pointermove", onMove);
-    window.addEventListener("scroll", onScroll, { passive: true });
-    window.addEventListener("deviceorientation", onTilt);
-    return () => {
-      window.removeEventListener("pointermove", onMove);
-      window.removeEventListener("scroll", onScroll);
-      window.removeEventListener("deviceorientation", onTilt);
-      if (raf) cancelAnimationFrame(raf);
-    };
-  }, []);
 
   return (
     <section
@@ -65,11 +25,11 @@ export function Hero() {
       className="relative min-h-[100svh] flex flex-col justify-end pb-16 sm:pb-24 px-6 lg:px-8 overflow-hidden bg-[var(--background)]"
     >
       {/* Fondo: la sala, con movimiento lento de cámara */}
-      <div ref={bgRef} className="absolute -inset-10 layer-3d" aria-hidden>
+      <div className="absolute inset-0" aria-hidden>
         <img
           src="images/salon.webp"
           alt=""
-          className="w-full h-full object-cover ken-burns"
+          className="w-full h-full object-cover"
         />
       </div>
       <div
@@ -81,19 +41,16 @@ export function Hero() {
         aria-hidden
       />
       <div className="absolute inset-0 bg-[var(--background)]/40 md:hidden" aria-hidden />
-      <div className="absolute inset-0 light-beam" aria-hidden />
-      <div className="absolute inset-0 vignette" aria-hidden />
 
       {/* Fotos flotando en 3D (solo pantallas grandes) */}
-      <div className="absolute inset-0 hidden md:block" style={{ perspective: "1400px" }} aria-hidden>
-        <div ref={sceneRef} className="absolute inset-0 layer-3d">
+      <div className="absolute inset-0 hidden md:block" aria-hidden>
+        <div className="absolute inset-0">
           {FLOATING.map((f) => (
             <div
               key={f.src}
               className={`absolute ${f.cls}`}
-              style={{ transform: `translateZ(${f.z}px)`, transformStyle: "preserve-3d" }}
             >
-              <div style={{ animation: `float-y 7s ease-in-out ${f.delay} infinite` }}>
+              <div>
                 <img
                   src={f.src}
                   alt={f.alt}

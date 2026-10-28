@@ -2,7 +2,6 @@
 
 import { Reveal } from "@/components/reveal";
 import { SectionHeading } from "@/components/section-heading";
-import { Tilt } from "@/components/tilt";
 import { NegocioTexto, useSalon, categorias } from "@/components/negocio";
 
 const ETIQUETA: Record<string, string> = {
@@ -21,7 +20,7 @@ export function Intro() {
       <div className="max-w-7xl mx-auto grid lg:grid-cols-2 gap-12 lg:gap-20 items-center">
         {/* Fotos en capas con profundidad */}
         <Reveal>
-          <Tilt max={6} className="relative aspect-[4/5]">
+          <div className="relative aspect-[4/5]">
             <img
               src="images/tratamientos/serum.webp"
               alt="Sala de tratamientos"
@@ -31,18 +30,16 @@ export function Intro() {
               src="images/tratamientos/radiofrecuencia.webp"
               alt="Radiofrecuencia facial"
               className="pop-z absolute right-0 bottom-0 w-[55%] aspect-square object-cover border border-[var(--gold)]/40 shadow-[0_30px_60px_-15px_rgba(26,26,26,0.4)]"
-              style={{ transform: "translateZ(70px)" }}
             />
             <div
               className="absolute left-4 bottom-[18%] bg-[var(--background)]/90 backdrop-blur-md px-6 py-4 border-l-2 border-[var(--gold)]"
-              style={{ transform: "translateZ(110px)" }}
             >
               <p className="text-xs font-sans tracking-[0.15em] uppercase text-[var(--gold)]">
                 <NegocioTexto campo="nombre" />
               </p>
               <p className="text-sm font-light text-foreground/80 mt-1"><NegocioTexto campo="ciudad" /></p>
             </div>
-          </Tilt>
+          </div>
         </Reveal>
 
         {/* Content */}

@@ -1,10 +1,20 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { WhatsAppIcon, InstagramIcon } from "@/components/brand-icons";
 import { NegocioTexto, useNegocio } from "@/components/negocio";
 
 export function SiteFooter() {
   const { instagram: INSTAGRAM, whatsapp: WHATSAPP } = useNegocio();
+  // El botón flotante se esconde mientras se reserva, para no tapar «Siguiente»
+  const [enReserva, setEnReserva] = useState(false);
+  useEffect(() => {
+    const el = document.getElementById("reservar");
+    if (!el) return;
+    const o = new IntersectionObserver(([e]) => setEnReserva(e.isIntersecting), { threshold: 0.05 });
+    o.observe(el);
+    return () => o.disconnect();
+  }, []);
   const year = new Date().getFullYear();
 
   return (
@@ -48,7 +58,9 @@ export function SiteFooter() {
         target="_blank"
         rel="noopener noreferrer"
         aria-label="Contactar por WhatsApp"
-        className="fixed bottom-6 right-6 z-50 w-14 h-14 rounded-full bg-[#25D366] text-white flex items-center justify-center shadow-lg hover:scale-105 transition-transform sm:hidden"
+        className={`fixed bottom-6 right-6 z-50 w-14 h-14 rounded-full bg-[#25D366] text-white flex items-center justify-center shadow-lg transition-all duration-300 sm:hidden ${
+          enReserva ? "opacity-0 pointer-events-none translate-y-4" : ""
+        }`}
       >
         <WhatsAppIcon className="w-7 h-7" />
       </a>

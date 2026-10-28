@@ -15,9 +15,14 @@ export interface Salon {
   negocio: Negocio;
   servicios: Service[];
   horario: Horario;
+  confirmarAuto: boolean; // la reserva queda confirmada al momento (o la confirma la dueña)
+  intervalo: number; // cada cuántos minutos se ofrecen huecos
 }
 
-const DEMO: Salon = { modo: "demo", slug: null, negocio: { ...NEGOCIO }, servicios: SERVICES, horario: SCHEDULE_MAP };
+const DEMO: Salon = {
+  modo: "demo", slug: null, negocio: { ...NEGOCIO }, servicios: SERVICES, horario: SCHEDULE_MAP,
+  confirmarAuto: true, intervalo: 30,
+};
 const KEY = "estetica-negocio";
 
 // Foto por defecto según el tipo de tratamiento, si la estética aún no ha puesto la suya
@@ -70,6 +75,8 @@ export async function cargarSalonReal(slug: string): Promise<Salon & { id?: stri
     negocio: { nombre: s.nombre, ciudad: s.ciudad || "", whatsapp: s.whatsapp || NEGOCIO.whatsapp, instagram: s.instagram || "" },
     servicios,
     horario,
+    confirmarAuto: s.confirmar_auto ?? true,
+    intervalo: s.intervalo_min ?? 30,
   };
 }
 
@@ -134,4 +141,36 @@ export function horarioTexto(h: Horario) {
     else grupos.push({ dias: [d], h: txt });
   }
   return grupos.map((g) => ({ d: g.dias.map((x) => DIAS[x]).join(" · "), h: g.h }));
+}
+
+// Minutos que dura un tratamiento («50 min» → 50)
+export const duracion = (dur?: string) => parseInt(dur ?? "") || 60;
+
+// «10:30» a partir de los minutos del día (630)
+export const hhmm = (min: number) =>
+  `${String(Math.floor(min / 60)).padStart(2, "0")}:${String(min % 60).padStart(2, "0")}`;
+
+// Horas de inicio libres de un día para un tratamiento de «dur» minutos:
+// cada «paso» minutos, que quepa entero dentro de un tramo del horario y no pise otra cita.
+export function huecosLibres(
+  h: Horario,
+  dia: Date,
+  dur: number,
+  ocupado: { ini: number; fin: number }[],
+  paso = 30
+): number[] {
+  const tramos = h[dia.getDay()];
+  if (!tramos) return [];
+  const ahora = new Date();
+  const esHoy = dia.toDateString() === ahora.toDateString();
+  const yaPasado = ahora.getHours() * 60 + ahora.getMinutes();
+  const out: number[] = [];
+  for (const { s, e } of tramos) {
+    for (let t = s * 60; t + dur <= e * 60; t += paso) {
+      if (esHoy && t <= yaPasado) continue;
+      if (ocupado.some((o) => o.ini < t + dur && o.fin > t)) continue;
+      out.push(t);
+    }
+  }
+  return out;
 }

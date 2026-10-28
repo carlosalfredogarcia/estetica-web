@@ -5,7 +5,6 @@ import { ArrowUpRight } from "lucide-react";
 import { Reveal } from "@/components/reveal";
 import { SectionHeading } from "@/components/section-heading";
 import { cn } from "@/lib/utils";
-import { Tilt } from "@/components/tilt";
 import { useSalon, categorias } from "@/components/negocio";
 
 // Cuánto se ahorra con un bono frente a pagar sesión a sesión
@@ -70,15 +69,14 @@ export function Services() {
                 className="tab-enter h-full"
                 style={{ animationDelay: `${i * 60}ms` }}
               >
-                <Tilt className="h-full bg-[var(--card)] border border-border flex flex-col group overflow-hidden">
+                <div className="h-full bg-[var(--card)] border border-border flex flex-col overflow-hidden rounded-xl">
                   <div className="relative overflow-hidden aspect-[4/3]">
                     <img
                       src={service.img}
                       alt={service.name}
-                      className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110"
+                      className="w-full h-full object-cover"
                       loading="lazy"
                     />
-                    <div className="absolute inset-0 bg-gradient-to-t from-[var(--card)] via-transparent to-transparent" />
                     {service.promo && (
                       <span className="pop-z absolute top-3 left-3 bg-[var(--gold)] text-white text-[10px] font-sans font-medium tracking-[0.1em] uppercase px-2 py-1">
                         {service.promo}
@@ -131,7 +129,7 @@ export function Services() {
                       </div>
                     </div>
                   </div>
-                </Tilt>
+                </div>
               </div>
             );
           })}

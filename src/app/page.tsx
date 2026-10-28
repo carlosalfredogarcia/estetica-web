@@ -53,7 +53,6 @@ export default function Home() {
       />
       <EstadoSalon />
       <CinemaIntro />
-      <div className="film-grain" aria-hidden />
       <SiteHeader />
       <main>
         <Hero />
