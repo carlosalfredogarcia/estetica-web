@@ -81,7 +81,7 @@ export default function PanelPage() {
               value={correo}
               onChange={(e) => setCorreo(e.target.value)}
               placeholder="Tu correo"
-              className="w-full px-4 py-3 bg-white border border-border text-sm font-sans outline-none focus:border-[var(--gold)]"
+              className="w-full px-4 py-3 bg-white border border-border text-base font-sans outline-none focus:border-[var(--gold)]"
             />
             <input
               type="password"
@@ -90,7 +90,7 @@ export default function PanelPage() {
               value={clave}
               onChange={(e) => setClave(e.target.value)}
               placeholder="Contraseña"
-              className="w-full px-4 py-3 bg-white border border-border text-sm font-sans outline-none focus:border-[var(--gold)]"
+              className="w-full px-4 py-3 bg-white border border-border text-base font-sans outline-none focus:border-[var(--gold)]"
             />
             {estado.error && <p className="text-sm font-sans text-[#b42318]">{estado.error}</p>}
             <button disabled={enviando} className="w-full btn-gold py-3.5 text-xs font-sans tracking-[0.2em] uppercase rounded-full disabled:opacity-50">

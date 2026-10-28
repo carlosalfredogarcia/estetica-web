@@ -179,11 +179,14 @@ export function Booking() {
     });
     setEnviando(false);
     if (e) {
-      setError(e.message || "No se pudo guardar la reserva. Inténtalo de nuevo.");
       if (/disponible|cerrado|pasado/i.test(e.message)) {
+        // Alguien la cogió o la bloquearon mientras tanto: se vuelve a elegir hora con el aviso a la vista
         setInicio(null);
         cargarOcupado();
         irA(2);
+        setError("Lo sentimos, esa hora ya no está disponible. Elige otra, por favor.");
+      } else {
+        setError(e.message || "No se pudo guardar la reserva. Inténtalo de nuevo.");
       }
       return;
     }
@@ -224,8 +227,8 @@ export function Booking() {
     : "";
   const subtitulo = real
     ? salon.confirmarAuto
-      ? "Te esperamos. Si no puedes venir, avísanos por WhatsApp con 24 horas."
-      : "Ya la tenemos apuntada. Te escribiremos por WhatsApp para confirmártela."
+      ? "En breve te llegará un WhatsApp con los detalles de tu cita. Si no puedes venir, avísanos con 24 horas."
+      : "Ya la tenemos apuntada. En breve te llegará un WhatsApp para confirmártela."
     : "Te hemos abierto WhatsApp con tu reserva: pulsa enviar y te la confirmamos enseguida.";
 
   return (
@@ -367,6 +370,11 @@ export function Booking() {
                 {/* ---------- 2. Día y hora ---------- */}
                 {step === 2 && (
                   <div className="space-y-6 tab-enter">
+                    {error && (
+                      <p className="text-[15px] font-medium text-[#b42318] bg-[#b42318]/8 border border-[#b42318]/20 rounded-xl px-4 py-3">
+                        {error}
+                      </p>
+                    )}
                     {elegido && (
                       <p className="text-sm text-muted-foreground">
                         <span className="text-foreground font-semibold">{elegido.name}</span> · dura {dur} min
@@ -446,7 +454,10 @@ export function Booking() {
                                   {(lista as number[]).map((m) => (
                                     <button
                                       key={m}
-                                      onClick={() => setInicio(m)}
+                                      onClick={() => {
+                                        setInicio(m);
+                                        setError("");
+                                      }}
                                       className={cn(
                                         "py-2.5 rounded-lg border text-[15px] tabular-nums font-medium transition-colors",
                                         inicio === m
@@ -507,7 +518,7 @@ export function Booking() {
                   </div>
                 )}
 
-                {error && <p className="mt-4 text-sm text-[#b42318] bg-[#b42318]/5 rounded-lg px-4 py-3">{error}</p>}
+                {error && step !== 2 && <p className="mt-4 text-[15px] font-medium text-[#b42318] bg-[#b42318]/8 border border-[#b42318]/20 rounded-xl px-4 py-3">{error}</p>}
               </div>
 
               {/* ---------- Barra fija abajo ---------- */}

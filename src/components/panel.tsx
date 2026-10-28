@@ -18,7 +18,8 @@ export interface PanelReal {
 // Fila de la base de datos → la forma que usa el panel
 // time = hora de inicio en horas (10.5 = 10:30); dur = minutos que dura
 const deCita=(c:any)=>({id:c.id,date:c.fecha,time:c.hora+(c.minuto||0)/60,dur:c.duracion_min||60,client:c.nombre,phone:c.telefono||"",
-  service:c.tratamiento,price:`${Number(c.precio||0)}€`,status:c.estado,notes:c.notas||"",origen:c.origen});
+  service:c.tratamiento,price:`${Number(c.precio||0)}€`,status:c.estado,notes:c.notas||"",origen:c.origen,
+  aviso:!!c.aviso_enviado,rec:!!c.recordatorio_enviado,res:!!c.resena_pedida});
 const deBloqueo=(b:any)=>({id:b.id,date:b.fecha,time:b.hora,reason:b.motivo||"No disponible"});
 
 const G="#B8922A", DR="#8B2252", ROSE="#D4929A";
@@ -153,6 +154,7 @@ const CSS=`
   ::-webkit-scrollbar{width:5px;height:5px}
   ::-webkit-scrollbar-thumb{background:${G}55;border-radius:3px}
   a{text-decoration:none}
+  html,body{overscroll-behavior:none;-webkit-tap-highlight-color:transparent}
   @media(max-width:640px){.hide-sm{display:none!important}}
 `;
 
@@ -185,6 +187,7 @@ export function Panel({real}:{real?:PanelReal}){
   const [blockReason,setBlockReason]=useState("");
   const [calM,setCalM]=useState(new Date());
   const [toast,setToast]=useState("");
+  const [toastAccion,setToastAccion]=useState<{label:string,fn:()=>void}|null>(null);
 
   const salonId=real?.salonId;
   const storeKey=real?`${STORE}-${real.slug}`:STORE;
@@ -249,7 +252,12 @@ export function Panel({real}:{real?:PanelReal}){
   const serif={fontFamily:"'Roboto',Helvetica,sans-serif"};
   const sans={fontFamily:"'Roboto',Helvetica,sans-serif"};
 
-  const showToast=(m:string)=>{setToast(m);setTimeout(()=>setToast(""),2600);};
+  // Aviso abajo; con «accion» sale un botón (p. ej. «Deshacer») y dura más
+  const showToast=(m:string,accion?:{label:string,fn:()=>void})=>{
+    setToast(m);setToastAccion(accion??null);
+    const id=Date.now();(showToast as any).ultimo=id;
+    setTimeout(()=>{if((showToast as any).ultimo===id){setToast("");setToastAccion(null);}},accion?7000:2600);
+  };
 
   const parseD=(ds:string)=>{const[y,m,d]=ds.split("-").map(Number);return new Date(y,m-1,d);};
   const fmtD=(ds:string)=>{const dt=parseD(ds);return `${DAYS_FULL[dt.getDay()]}, ${dt.getDate()} de ${MONTHS[dt.getMonth()]}`;};
@@ -290,7 +298,13 @@ export function Panel({real}:{real?:PanelReal}){
   const libresMin=agenda(selDate).filter(x=>x.tipo==="libre").reduce((n,x)=>n+x.fin-x.ini,0);
   const freeCount=libresMin%60?`${(libresMin/60).toFixed(1).replace(".",",")} h`:`${libresMin/60} h`;
   const revenue=dayBookings.reduce((sum:number,b:any)=>sum+parseInt(b.price)||0,0);
-  const pending=bookings.filter((b:any)=>b.status==="pendiente");
+  // ¿Ya se le mandó ese WhatsApp? conf = detalles de la cita, rec = recordatorio, res = reseña
+  const COL:Record<string,string>={conf:"aviso_enviado",rec:"recordatorio_enviado",res:"resena_pedida"};
+  const CAMPO:Record<string,string>={conf:"aviso",rec:"rec",res:"res"};
+  const enviado=(k:string,b?:any)=>!!sent[k]||!!(b&&b[CAMPO[k.split("-")[0]]]);
+  // Reservas a las que aún no se les ha mandado el WhatsApp con los detalles
+  const pending=bookings.filter((b:any)=>b.date>=today&&(b.origen==="web"||b.status==="pendiente")&&!enviado(`conf-${b.id}`,b))
+    .sort((a:any,b:any)=>a.date===b.date?a.time-b.time:a.date.localeCompare(b.date));
 
   // Week days
   const selDt=parseD(selDate);
@@ -320,10 +334,16 @@ export function Panel({real}:{real?:PanelReal}){
     setDetail(null);
   };
   const cancelBk=(id:any)=>{
+    const antes=bookings.find((b:any)=>b.id===id);
     setBookings((p:any[])=>p.filter(b=>b.id!==id));
     if(salonId)guardar(db().from("citas").update({estado:"cancelada"}).eq("id",id));
-    showToast("Cita cancelada. Hueco liberado.");
     setDetail(null);
+    if(!antes)return;
+    showToast(`Cita de ${firstName(antes.client)} cancelada`,{label:"Deshacer",fn:async()=>{
+      if(salonId&&!await guardar(db().from("citas").update({estado:antes.status}).eq("id",id)))return;
+      setBookings((p:any[])=>[...p,antes]);
+      showToast("Cita recuperada ✓");
+    }});
   };
   const doBlock=async()=>{
     const nuevo={date:blockModal.date,time:blockModal.h,reason:blockReason||"No disponible"};
@@ -368,7 +388,14 @@ export function Panel({real}:{real?:PanelReal}){
     setSelDate(newBk.date);setNewBk(null);
     showToast("Cita apuntada ✓");
   };
-  const markSent=(key:string)=>setSent(p=>({...p,[key]:true}));
+  const markSent=(key:string,b?:any)=>{
+    setSent(p=>({...p,[key]:true}));
+    const tipo=key.split("-")[0];
+    if(b&&COL[tipo]){
+      setBookings((p:any[])=>p.map(x=>x.id===b.id?{...x,[CAMPO[tipo]]:true}:x));
+      if(salonId)db().from("citas").update({[COL[tipo]]:true}).eq("id",b.id).then(()=>{});
+    }
+  };
 
   // Mensajes de WhatsApp listos para enviar
   const msgConfirm=(b:any)=>`Hola ${firstName(b.client)}! Te confirmo tu cita en ${NEGOCIO.nombre}: ${b.service}, el ${fmtD(b.date).toLowerCase()} a las ${hhmm(b.time)}. ¡Te esperamos!`;
@@ -409,8 +436,9 @@ export function Panel({real}:{real?:PanelReal}){
     textTransform:"uppercase" as const,fontWeight:500};
   const bO={...bP,background:"transparent",color:G,border:`1px solid ${G}`};
   const bDanger={...bP,background:"transparent",color:RED,border:`1px solid ${RED}55`};
+  // 16px: con menos, el móvil hace zoom al tocar el campo
   const inp={...sans,width:"100%",padding:"11px 14px",border:`1px solid ${G}44`,
-    borderRadius:2,background:"white",color:CH,fontSize:14,outline:"none"};
+    borderRadius:10,background:"white",color:CH,fontSize:16,outline:"none"};
 
   const yr=calM.getFullYear(),mo=calM.getMonth();
   const firstDay=new Date(yr,mo,1).getDay();
@@ -431,12 +459,19 @@ export function Panel({real}:{real?:PanelReal}){
 
       {/* TOAST */}
       {toast&&(
-        <div className="fu" style={{position:"fixed",bottom:24,left:"50%",
-          transform:"translateX(-50%)",zIndex:900,
+        <div className="fu" style={{position:"fixed",bottom:20,left:16,right:16,margin:"0 auto",maxWidth:460,
+          zIndex:900,justifyContent:"space-between",
           background:DARK,color:"#fff",padding:"14px 26px",
-          borderRadius:2,borderLeft:`3px solid ${G}`,
-          ...sans,fontSize:13,boxShadow:"0 8px 28px rgba(0,0,0,.3)"}}>
-          {toast}
+          borderLeft:`3px solid ${G}`,
+          ...sans,fontSize:14,boxShadow:"0 8px 28px rgba(0,0,0,.3)",display:"flex",alignItems:"center",gap:16,
+          maxWidth:"calc(100vw - 32px)",borderRadius:12}}>
+          <span>{toast}</span>
+          {toastAccion&&(
+            <button onClick={()=>{toastAccion.fn();setToast("");setToastAccion(null);}}
+              style={{...sans,background:"none",border:"none",color:G,fontWeight:700,fontSize:14,cursor:"pointer",padding:0,whiteSpace:"nowrap"}}>
+              {toastAccion.label}
+            </button>
+          )}
         </div>
       )}
 
@@ -457,7 +492,7 @@ export function Panel({real}:{real?:PanelReal}){
               background:`${AMBER}20`,padding:"6px 14px",borderRadius:20}}>
               <div className="pulse" style={{width:6,height:6,borderRadius:"50%",background:AMBER}}/>
               <span style={{...sans,fontSize:12.5,color:AMBER}}>
-                {pending.length} nueva{pending.length>1?"s":""} sin confirmar
+                {pending.length} por avisar
               </span>
             </div>
           )}
@@ -558,6 +593,9 @@ export function Panel({real}:{real?:PanelReal}){
                       </div>
                       <div style={{...sans,fontSize:13,color:b.phone?MT:`${MT}99`,marginTop:2}}>{b.phone||"Sin teléfono"}</div>
                       {b.notes&&<div style={{...sans,fontSize:13,color:AMBER,marginTop:6}}>⚠ {b.notes}</div>}
+                      {pending.some((x:any)=>x.id===b.id)&&(
+                        <div style={{...sans,fontSize:13,color:"#2563eb",marginTop:6,fontWeight:600}}>📩 Falta mandarle los detalles por WhatsApp</div>
+                      )}
                     </div>
                   );
                 }
@@ -900,7 +938,7 @@ export function Panel({real}:{real?:PanelReal}){
         {view==="avisos"&&(()=>{
           const t=parseD(today);t.setDate(t.getDate()+1);const tomorrow=toDS(t);
           const tmr=bookings.filter((b:any)=>b.date===tomorrow).sort((a:any,b:any)=>a.time-b.time);
-          const pend=[...pending].sort((a:any,b:any)=>a.date===b.date?a.time-b.time:a.date.localeCompare(b.date));
+          const pend=pending;
           const yest=new Date(parseD(today));yest.setDate(yest.getDate()-1);const ystr=toDS(yest);
           const done=bookings.filter((b:any)=>b.date===ystr||(b.date===today&&b.time<new Date().getHours()));
           const away=clients.filter((c:any)=>!c.next&&c.daysAway!==null&&c.daysAway>=30)
@@ -920,12 +958,14 @@ export function Panel({real}:{real?:PanelReal}){
                 <div style={{...sans,fontSize:14,fontWeight:500}}>{b.client}</div>
                 <div style={{...sans,fontSize:13.5,color:MT}}>{sub}</div>
               </div>
-              {sent[k]&&<span style={{...sans,fontSize:11.5,color:GREEN,letterSpacing:"1px"}}>✓ ENVIADO</span>}
-              <a href={waTo(b.phone,msg)} target="_blank" rel="noreferrer"
-                onClick={()=>{markSent(k);onDone?.();}}>
-                <button style={{...bP,padding:"9px 16px",background:sent[k]?"transparent":GREEN,
-                  color:sent[k]?GREEN:"#fff",border:`1px solid ${GREEN}`}}>{label}</button>
-              </a>
+              {enviado(k,b)&&<span style={{...sans,fontSize:12.5,color:GREEN,fontWeight:600}}>✓ Enviado</span>}
+              {b.phone?(
+                <a href={waTo(b.phone,msg)} target="_blank" rel="noreferrer"
+                  onClick={()=>{markSent(k,b.id?b:undefined);onDone?.();}}>
+                  <button style={{...bP,padding:"9px 16px",background:enviado(k,b)?"transparent":GREEN,
+                    color:enviado(k,b)?GREEN:"#fff",border:`1px solid ${GREEN}`}}>{label}</button>
+                </a>
+              ):<span style={{...sans,fontSize:12.5,color:MT}}>Sin teléfono</span>}
             </div>
           );
           return(
@@ -942,9 +982,9 @@ export function Panel({real}:{real?:PanelReal}){
                 <Row key={b.id} b={b} k={`rec-${b.id}`} label="Recordar" msg={msgReminder(b)}
                   sub={`${hhmm(b.time)} · ${b.service}`}/>
               )}/>
-            <Section title="RESERVAS SIN CONFIRMAR" hint="Al pulsar «Confirmar» se marca como confirmada y se le envía el mensaje."
+            <Section title="RESERVAS NUEVAS: MÁNDALES LOS DETALLES" hint="La web les dice que les llegará un WhatsApp con los detalles de su cita. Envíaselo desde aquí."
               items={pend} render={(b:any)=>(
-                <Row key={b.id} b={b} k={`conf-${b.id}`} label="Confirmar" msg={msgConfirm(b)}
+                <Row key={b.id} b={b} k={`conf-${b.id}`} label="Enviar detalles" msg={msgConfirm(b)}
                   sub={`${fmtD(b.date)} · ${hhmm(b.time)} · ${b.service}`}
                   onDone={()=>cambiarEstado(b.id,"confirmada")}/>
               )}/>
@@ -1232,7 +1272,7 @@ export function Panel({real}:{real?:PanelReal}){
 
             <div style={{marginTop:18}}>
               <div style={{...sans,fontSize:14,fontWeight:600,marginBottom:8}}>Notas <span style={{fontWeight:400,color:MT}}>(alergias, bono, preferencias)</span></div>
-              <textarea style={{...inp,minHeight:70,resize:"vertical",fontSize:15,borderRadius:12}} value={noteDraft}
+              <textarea style={{...inp,minHeight:70,resize:"vertical",fontSize:16,borderRadius:12}} value={noteDraft}
                 onChange={(e:React.ChangeEvent<HTMLTextAreaElement>)=>setNoteDraft(e.target.value)}
                 placeholder="Solo lo ves tú"/>
               {noteDraft!==(detail.notes||"")&&(
@@ -1244,8 +1284,9 @@ export function Panel({real}:{real?:PanelReal}){
               <>
                 <div style={{...sans,fontSize:14,fontWeight:600,marginTop:22,marginBottom:8}}>Mandarle un WhatsApp</div>
                 <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8}}>
-                  {[["✓ Confirmar cita",msgConfirm(detail)],["⏰ Recordar cita",msgReminder(detail)],["⭐ Pedir reseña",msgReview(detail)],["💬 Escribir",""]].map(([l,m])=>(
+                  {[["✓ Enviar detalles",msgConfirm(detail),"conf"],["⏰ Recordar cita",msgReminder(detail),"rec"],["⭐ Pedir reseña",msgReview(detail),"res"],["💬 Escribir","",""]].map(([l,m,k])=>(
                     <a key={l} href={waTo(tel,m)} target="_blank" rel="noreferrer"
+                      onClick={()=>{if(k){markSent(`${k}-${detail.id}`,detail);if(k==="conf"&&detail.status==="pendiente")cambiarEstado(detail.id,"confirmada");setDetail(null);}}}
                       style={{...sans,fontSize:14,fontWeight:600,textAlign:"center",padding:"12px 8px",
                         border:`1.5px solid ${GREEN}55`,color:GREEN,borderRadius:14,background:"white"}}>
                       {l}
@@ -1267,8 +1308,7 @@ export function Panel({real}:{real?:PanelReal}){
                   ✓ Marcar como confirmada
                 </button>
               )}
-              <button style={{...bDanger,width:"100%",fontSize:13.5,padding:"13px"}} onClick={()=>{
-                if(confirm(`¿Cancelar la cita de ${detail.client}?`))cancelBk(detail.id);}}>
+              <button style={{...bDanger,width:"100%",fontSize:13.5,padding:"13px"}} onClick={()=>cancelBk(detail.id)}>
                 Cancelar cita y liberar hueco
               </button>
             </div>
