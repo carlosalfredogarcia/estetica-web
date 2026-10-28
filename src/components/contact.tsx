@@ -1,9 +1,13 @@
-import { WHATSAPP, INSTAGRAM, telefonoBonito } from "@/lib/data";
+"use client";
+
+import { WHATSAPP, telefonoBonito } from "@/lib/data";
 import { WhatsAppIcon, InstagramIcon } from "@/components/brand-icons";
 import { Reveal } from "@/components/reveal";
 import { SectionHeading } from "@/components/section-heading";
+import { useNegocio } from "@/components/negocio";
 
 export function Contact() {
+  const INSTAGRAM = useNegocio().instagram;
   return (
     <section
       id="contacto"

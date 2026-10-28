@@ -40,7 +40,7 @@ export const SERVICES: Service[] = [
   },
   {
     cat: "Facial", name: "Cóctel de Vitaminas", price: "65€",
-    icon: "💧", dur: "45 min", img: "img/coctel-vitaminas.jpg",
+    icon: "💧", dur: "45 min", img: "images/tratamientos/serum.webp",
     desc: "Infusión de vitaminas A, C y E directamente en la piel. Nutre en profundidad, combate los radicales libres y devuelve elasticidad y vitalidad al rostro.",
   },
   {
@@ -65,7 +65,7 @@ export const SERVICES: Service[] = [
   },
   {
     cat: "Corporal", name: "Cavitación + Maderoterapia", price: "38€", promo: "Bono 10 ses. · 230€",
-    icon: "◈", dur: "60 min", img: "img/cavitacion-madero.jpg",
+    icon: "◈", dur: "60 min", img: "images/tratamientos/maderoterapia.webp",
     desc: "Combinación estrella para moldear tu silueta. La cavitación rompe las células de grasa localizada con ultrasonidos, mientras la maderoterapia redefine contornos y activa la circulación.",
   },
   {
@@ -80,12 +80,12 @@ export const SERVICES: Service[] = [
   },
   {
     cat: "Corporal", name: "Presoterapia", price: "15€", promo: "Bono 5 ses. · 70€",
-    icon: "↻", dur: "30 min", img: "img/presoterapia.jpg",
+    icon: "↻", dur: "30 min", img: "images/tratamientos/presoterapia.webp",
     desc: "Drenaje linfático mecánico mediante presión controlada. Reduce retención de líquidos, alivia piernas cansadas, mejora la circulación y ayuda a eliminar toxinas. Ideal post-entrenamiento.",
   },
   {
     cat: "Corporal", name: "Body Sculp Vibratorio", price: "45€", promo: "Bono 10 ses. · 300€",
-    icon: "⚡", dur: "50 min", img: "img/body-sculp.jpg",
+    icon: "⚡", dur: "50 min", img: "images/tratamientos/corporal.webp",
     desc: "Tecnología vibratoria de alta frecuencia que actúa sobre la grasa localizada y la celulitis. Tonifica, redefine la figura y potencia los resultados de otros tratamientos corporales.",
   },
   {
@@ -105,7 +105,7 @@ export const SERVICES: Service[] = [
   },
   {
     cat: "Láser", name: "Facial Láser", price: "9€ / 14€",
-    icon: "◇", dur: "10 min", img: "img/laser-facial.jpg",
+    icon: "◇", dur: "10 min", img: "images/tratamientos/laser-facial.webp",
     desc: "Depilación láser de precisión en zonas faciales: labio, patillas, mentón o entrecejo. Rápida, prácticamente indolora y con resultados que se notan desde la primera sesión.",
   },
   {
@@ -120,7 +120,7 @@ export const SERVICES: Service[] = [
   },
   {
     cat: "Láser", name: "Piernas + Axilas", price: "39€",
-    icon: "◇", dur: "55 min", img: "img/laser-piernas-axilas.jpg",
+    icon: "◇", dur: "55 min", img: "images/tratamientos/laser-piernas.webp",
     desc: "Combo muy popular que cubre piernas completas y axilas en una sola cita. Ahorra tiempo y dinero con este pack pensado para un resultado integral.",
   },
   {
@@ -199,6 +199,7 @@ export const NEGOCIO = {
   whatsapp: "34640309239",
   instagram: "",
 };
+// En la web de muestra se pueden cambiar con el enlace: ?salon=…&ciudad=…&ig=…
 
 // Tu marca (página /alfrega y página de captación)
 export const ALFREGA = {

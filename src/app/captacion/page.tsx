@@ -21,6 +21,7 @@ interface Salon {
   duena: string;
   telefono: string;
   zona: string;
+  instagram?: string;
   estado: Estado;
   regalo: boolean;
   visita: string;
@@ -42,7 +43,7 @@ const enDias = (n: number) => {
 const fecha = (s: string) =>
   s ? new Date(s + "T12:00").toLocaleDateString("es-ES", { weekday: "short", day: "numeric", month: "short" }) : "";
 const vacio = (): Omit<Salon, "id"> => ({
-  salon: "", duena: "", telefono: "", zona: "", estado: "Por visitar", regalo: false, visita: "", proximo: "", notas: "",
+  salon: "", duena: "", telefono: "", zona: "", instagram: "", estado: "Por visitar", regalo: false, visita: "", proximo: "", notas: "",
 });
 const waTo = (phone: string, msg: string) => {
   let n = phone.replace(/\D/g, "");
@@ -77,9 +78,10 @@ export default function Captacion() {
     setTimeout(() => setAviso(""), 2400);
   };
 
-  const enlaceWeb = (s: { salon: string; zona: string }) =>
-    `${origen}/?salon=${encodeURIComponent(s.salon)}${s.zona ? `&ciudad=${encodeURIComponent(s.zona)}` : ""}`;
-  const enlacePanel = (s: { salon: string; zona: string }) => enlaceWeb(s).replace("/?", "/admin?");
+  const enlaceWeb = (s: { salon: string; zona: string; instagram?: string }) =>
+    `${origen}/?salon=${encodeURIComponent(s.salon)}${s.zona ? `&ciudad=${encodeURIComponent(s.zona)}` : ""}${
+      s.instagram ? `&ig=${encodeURIComponent(s.instagram.replace(/^@/, ""))}` : ""}`;
+  const enlacePanel = (s: { salon: string; zona: string; instagram?: string }) => enlaceWeb(s).replace("/?", "/admin?");
 
   const msgSeguimiento = (s: Salon) =>
     `Hola${s.duena ? ` ${s.duena}` : ""}, soy Carlos, el de la web y el dispensador 😊 ¿Pudiste verla con calma? Aquí la tienes: ${enlaceWeb(s)}\n\nSi te animas, esta semana te la dejo lista con tus tratamientos y precios.`;
@@ -249,8 +251,17 @@ export default function Captacion() {
                 <input className={campo} inputMode="tel" value={form.telefono} onChange={(e) => setForm({ ...form, telefono: e.target.value })} placeholder="600 000 000" />
               </div>
             </div>
-            <label className={etiqueta}>Zona o ciudad (sale en su web)</label>
-            <input className={campo} value={form.zona} onChange={(e) => setForm({ ...form, zona: e.target.value })} placeholder="Málaga" />
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className={etiqueta}>Zona o ciudad</label>
+                <input className={campo} value={form.zona} onChange={(e) => setForm({ ...form, zona: e.target.value })} placeholder="Málaga" />
+              </div>
+              <div>
+                <label className={etiqueta}>Su Instagram</label>
+                <input className={campo} value={form.instagram ?? ""} onChange={(e) => setForm({ ...form, instagram: e.target.value })} placeholder="@esteticarosa" />
+              </div>
+            </div>
+            <p className="text-[11px] font-sans text-muted-foreground mt-2">El nombre, la zona y su Instagram salen en su web de muestra.</p>
             <label className={etiqueta}>Cómo va</label>
             <div className="flex flex-wrap gap-2">
               {ESTADOS.map((e) => (

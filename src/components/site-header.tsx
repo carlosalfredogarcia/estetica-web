@@ -2,9 +2,9 @@
 
 import { useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
-import { WHATSAPP, INSTAGRAM } from "@/lib/data";
+import { WHATSAPP } from "@/lib/data";
 import { WhatsAppIcon, InstagramIcon } from "@/components/brand-icons";
-import { NegocioTexto } from "@/components/negocio";
+import { NegocioTexto, useNegocio } from "@/components/negocio";
 
 const NAV_LINKS = [
   { label: "Inicio", href: "#inicio" },
@@ -15,6 +15,7 @@ const NAV_LINKS = [
 ];
 
 export function SiteHeader() {
+  const INSTAGRAM = useNegocio().instagram;
   const [scrolled, setScrolled] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
 
