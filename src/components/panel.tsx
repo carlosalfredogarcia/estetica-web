@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback } from "react";
 import { SERVICES, type Service } from "@/lib/data";
 import { useNegocio, categorias, huecosLibres, duracion, type Horario } from "@/components/negocio";
 import { db } from "@/lib/supabase";
-import { CalendarCheck, CalendarDays, Bell, Users, Menu, Plus, Ban, ChevronLeft, ChevronRight, List, ExternalLink, LogOut } from "lucide-react";
+import { CalendarDays, Bell, Users, Menu, Plus, Ban, ChevronLeft, ChevronRight, ChartColumn, List, ExternalLink, LogOut } from "lucide-react";
 
 // Estética real (desde /panel, con la dueña ya dentro). Sin esto, el panel es la demo con datos inventados.
 export interface PanelReal {
@@ -21,7 +21,7 @@ export interface PanelReal {
 const deCita=(c:any)=>({id:c.id,date:c.fecha,time:c.hora+(c.minuto||0)/60,dur:c.duracion_min||60,client:c.nombre,phone:c.telefono||"",
   service:c.tratamiento,price:`${Number(c.precio||0)}€`,status:c.estado,notes:c.notas||"",origen:c.origen,
   aviso:!!c.aviso_enviado,rec:!!c.recordatorio_enviado,res:!!c.resena_pedida});
-const deBloqueo=(b:any)=>({id:b.id,date:b.fecha,time:b.hora,reason:b.motivo||"No disponible"});
+const deBloqueo=(b:any)=>({id:b.id,date:b.fecha,time:b.hora+(b.minuto||0)/60,dur:b.duracion_min||60,reason:b.motivo||"No disponible"});
 
 const G="#B8922A", DR="#8B2252", ROSE="#D4929A";
 const BG="#F0E8E0", BG2="#E8DDD4", DARK="#1A1A1A", DARK2="#2C2C2C";
@@ -119,11 +119,11 @@ function generarDemo(hoy:Date){
 function demoBlocked(hoy:Date){
   const at=(d:number)=>{const x=new Date(hoy);x.setDate(x.getDate()+d);return toDS(x);};
   return [
-    {date:at(-12),time:13,reason:"Entrega de material"},
-    {date:at(-5),time:19,reason:"Cita con proveedor"},
-    {date:at(2),time:13,reason:"Comida familiar"},
-    {date:at(6),time:9,reason:"Formación láser"},
-    {date:at(6),time:10,reason:"Formación láser"},
+    {date:at(-12),time:13,dur:60,reason:"Entrega de material"},
+    {date:at(-5),time:19,dur:60,reason:"Cita con proveedor"},
+    {date:at(2),time:13,dur:60,reason:"Comida familiar"},
+    {date:at(6),time:9,dur:60,reason:"Formación láser"},
+    {date:at(6),time:10,dur:60,reason:"Formación láser"},
   ];
 }
 
@@ -170,9 +170,9 @@ function Lotus({size=32,color=G}:{size?:number,color?:string}){
 }
 
 export function Panel({real}:{real?:PanelReal}){
-  const [view,setView]=useState("dia");
+  const [view,setView]=useState("agenda");
   const [mas,setMas]=useState(false); // menú «Más» de la barra de abajo
-  const [calModo,setCalModo]=useState<"mes"|"semana">("mes"); // pestaña Calendario
+  const [calModo,setCalModo]=useState<"dia"|"semana"|"mes">("dia"); // pestaña Agenda
   const demoNegocio=useNegocio();
   const NEGOCIO=real?{...demoNegocio,nombre:real.nombre}:demoNegocio;
   const HOR:any=real?real.horario:SCHED;
@@ -188,6 +188,7 @@ export function Panel({real}:{real?:PanelReal}){
   const [sent,setSent]=useState<Record<string,boolean>>({});
   const [detail,setDetail]=useState<any>(null);
   const [blockModal,setBlockModal]=useState<any>(null);
+  const [hueco,setHueco]=useState<{date:string,min:number}|null>(null); // media hora libre tocada en la rejilla
   const [blockReason,setBlockReason]=useState("");
   const [calM,setCalM]=useState(new Date());
   const [toast,setToast]=useState("");
@@ -271,7 +272,7 @@ export function Panel({real}:{real?:PanelReal}){
     const out:any[]=[];
     for(const{s,e}of sc)for(let h=s;h<e;h++){
       const bk=bookings.find((b:any)=>b.date===ds&&b.time<h+1&&b.time+(b.dur||60)/60>h);
-      const bl=blocked.find((b:any)=>b.date===ds&&b.time===h);
+      const bl=blocked.find((b:any)=>b.date===ds&&b.time<h+1&&b.time+(b.dur||60)/60>h);
       out.push({h,booking:bk,block:bl});
     }
     return out;
@@ -282,14 +283,14 @@ export function Panel({real}:{real?:PanelReal}){
   // Minutos ocupados de un día (citas y bloqueos), para buscar huecos
   const ocupadoDia=(ds:string)=>[
     ...bookings.filter((b:any)=>b.date===ds).map((b:any)=>({ini:Math.round(b.time*60),fin:Math.round(b.time*60)+(b.dur||60)})),
-    ...blocked.filter((b:any)=>b.date===ds).map((b:any)=>({ini:b.time*60,fin:b.time*60+60})),
+    ...blocked.filter((b:any)=>b.date===ds).map((b:any)=>({ini:Math.round(b.time*60),fin:Math.round(b.time*60)+(b.dur||60)})),
   ];
   // Agenda del día: citas, bloqueos y los ratos libres entre medias
   const agenda=(ds:string)=>{
     const tramos=HOR[parseD(ds).getDay()]||[];
     const items:any[]=[
       ...bookings.filter((b:any)=>b.date===ds).map((b:any)=>({tipo:"cita",ini:Math.round(b.time*60),fin:Math.round(b.time*60)+(b.dur||60),b})),
-      ...blocked.filter((b:any)=>b.date===ds).map((b:any)=>({tipo:"bloqueo",ini:b.time*60,fin:b.time*60+60,b})),
+      ...blocked.filter((b:any)=>b.date===ds).map((b:any)=>({tipo:"bloqueo",ini:Math.round(b.time*60),fin:Math.round(b.time*60)+(b.dur||60),b})),
     ];
     for(const{s:ts,e:te}of tramos){
       let t=ts*60;
@@ -349,17 +350,32 @@ export function Panel({real}:{real?:PanelReal}){
       showToast("Cita recuperada ✓");
     }});
   };
+  // blockModal = {date, min (inicio en minutos o null), dur (minutos)}
   const doBlock=async()=>{
-    const nuevo={date:blockModal.date,time:blockModal.h,reason:blockReason||"No disponible"};
+    const {date,min,dur}=blockModal;
+    const nuevo:any={date,time:min/60,dur,reason:blockReason||"No disponible"};
     setBlockModal(null);setBlockReason("");
+    if(salonId){
+      const {data,error}=await db().from("bloqueos").insert({salon_id:salonId,fecha:date,hora:Math.floor(min/60),minuto:min%60,
+        duracion_min:dur,motivo:nuevo.reason}).select("id").single();
+      if(error){showToast("No se pudo bloquear. Inténtalo de nuevo.");return;}
+      nuevo.id=data.id;
+    }
     setBlocked((p:any[])=>[...p,nuevo]);
-    if(salonId&&!await guardar(db().from("bloqueos").insert({salon_id:salonId,fecha:nuevo.date,hora:nuevo.time,motivo:nuevo.reason})))return;
-    showToast(`${String(nuevo.time).padStart(2,"0")}:00 bloqueado`);
+    showToast(`Bloqueado de ${hhmm(min/60)} a ${hhmm((min+dur)/60)}`);
   };
-  const unblock=(d:string,h:number)=>{
-    setBlocked((p:any[])=>p.filter(b=>!(b.date===d&&b.time===h)));
-    if(salonId)guardar(db().from("bloqueos").delete().eq("salon_id",salonId).eq("fecha",d).eq("hora",h));
-    showToast("Hora liberada ✓");
+  const unblock=(b:any)=>{
+    setBlocked((p:any[])=>p.filter(x=>x!==b));
+    if(salonId&&b.id)guardar(db().from("bloqueos").delete().eq("id",b.id));
+    showToast(`Liberado de ${hhmm(b.time)} a ${hhmm(b.time+(b.dur||60)/60)}`,{label:"Deshacer",fn:async()=>{
+      if(salonId){
+        const {data,error}=await db().from("bloqueos").insert({salon_id:salonId,fecha:b.date,hora:Math.floor(b.time),
+          minuto:Math.round((b.time%1)*60),duracion_min:b.dur||60,motivo:b.reason}).select("id").single();
+        if(error){showToast("No se pudo deshacer");return;}
+        b={...b,id:data.id};
+      }
+      setBlocked((p:any[])=>[...p,b]);
+    }});
   };
 
   const saveNote=(id:any)=>{
@@ -455,6 +471,99 @@ export function Panel({real}:{real?:PanelReal}){
     ?{bg:`${GREEN}18`,color:GREEN,label:"CONFIRMADA"}
     :{bg:`${AMBER}20`,color:AMBER,label:"PENDIENTE"};
 
+  // Rejilla de horas: una fila por media hora, de la apertura al cierre; las citas y bloqueos
+  // ocupan su duración. Con varios días (semana) se ven en columnas, de lunes a domingo.
+  const rejilla=(dias:string[])=>{
+    const semana=dias.length>1;
+    const ROW=semana?24:34;
+    let ini=24*60,fin=0;
+    for(const ds of dias){
+      for(const{s:a,e:z}of(HOR[parseD(ds).getDay()]||[])){ini=Math.min(ini,a*60);fin=Math.max(fin,z*60);}
+      for(const o of ocupadoDia(ds)){ini=Math.min(ini,Math.floor(o.ini/30)*30);fin=Math.max(fin,Math.ceil(o.fin/30)*30);}
+    }
+    if(fin<=ini){ini=10*60;fin=20*60;}
+    const filas=Array.from({length:(fin-ini)/30},(_,i)=>ini+i*30);
+    const abierto=(ds:string,m:number)=>(HOR[parseD(ds).getDay()]||[]).some(({s:a,e:z}:any)=>m>=a*60&&m<z*60);
+    const LBL=semana?38:50;
+    const cols=`${LBL}px repeat(${dias.length},minmax(0,1fr))`;
+    const ahora=new Date();const minAhora=ahora.getHours()*60+ahora.getMinutes();
+    return(
+      <div style={{background:"white",borderRadius:16,border:`1px solid ${G}22`,overflow:"hidden"}}>
+        {semana&&(
+          <div style={{display:"grid",gridTemplateColumns:cols,borderBottom:`1px solid ${G}22`,background:"white"}}>
+            <div/>
+            {dias.map(ds=>{const d=parseD(ds);const hoy=ds===today;return(
+              <button key={ds} onClick={()=>{setSelDate(ds);setCalModo("dia");}}
+                style={{...sans,background:"none",border:"none",padding:"8px 0 6px",cursor:"pointer",textAlign:"center"}}>
+                <div style={{fontSize:11,fontWeight:600,color:hoy?G:MT,textTransform:"uppercase"}}>{DAYS[d.getDay()].slice(0,2)}</div>
+                <div style={{fontSize:17,fontWeight:700,margin:"2px auto 0",width:30,height:30,lineHeight:"30px",borderRadius:15,
+                  background:hoy?G:"transparent",color:hoy?"#fff":CH}}>{d.getDate()}</div>
+              </button>
+            );})}
+          </div>
+        )}
+        <div style={{display:"grid",gridTemplateColumns:cols}}>
+          <div>
+            {filas.map(m=>(
+              <div key={m} style={{height:ROW,...sans,fontSize:semana?10.5:12,color:MT,textAlign:"right",paddingRight:6,
+                fontWeight:m%60===0?600:400,lineHeight:"14px",paddingTop:2}}>
+                {m%60===0||!semana?hhmm(m/60):""}
+              </div>
+            ))}
+          </div>
+          {dias.map(ds=>{
+            const items=[
+              ...bookings.filter((b:any)=>b.date===ds).map((b:any)=>({tipo:"cita",ini:Math.round(b.time*60),fin:Math.round(b.time*60)+(b.dur||60),b})),
+              ...blocked.filter((b:any)=>b.date===ds).map((b:any)=>({tipo:"bloqueo",ini:Math.round(b.time*60),fin:Math.round(b.time*60)+(b.dur||60),b})),
+            ];
+            const lleno=(m:number)=>items.some(x=>x.ini<m+30&&x.fin>m);
+            return(
+              <div key={ds} style={{position:"relative",borderLeft:`1px solid ${G}22`}}>
+                {filas.map(m=>{const ab=abierto(ds,m);return(
+                  <div key={m} onClick={()=>{if(ab&&!lleno(m))setHueco({date:ds,min:m});}}
+                    style={{height:ROW,borderTop:`1px solid ${m%60===0?"#E8DDD4":"#F4EEE8"}`,cursor:ab?"pointer":"default",
+                      background:ab?"white":"repeating-linear-gradient(45deg,#F5EFE9,#F5EFE9 4px,#EFE7DF 4px,#EFE7DF 8px)"}}/>
+                );})}
+                {ds===today&&minAhora>=ini&&minAhora<=fin&&(
+                  <div style={{position:"absolute",left:0,right:0,top:(minAhora-ini)/30*ROW,height:2,background:RED,zIndex:3,pointerEvents:"none"}}/>
+                )}
+                {items.map((x:any,i:number)=>{
+                  const top=(x.ini-ini)/30*ROW+1,h=Math.max(ROW-2,(x.fin-x.ini)/30*ROW-2);
+                  if(x.tipo==="bloqueo")return(
+                    <div key={"b"+i} onClick={()=>unblock(x.b)}
+                      style={{position:"absolute",top,height:h,left:2,right:2,borderRadius:6,cursor:"pointer",overflow:"hidden",zIndex:2,
+                        background:`repeating-linear-gradient(45deg,${RED}14,${RED}14 5px,${RED}22 5px,${RED}22 10px)`,borderLeft:`3px solid ${RED}`,
+                        ...sans,fontSize:semana?10:12.5,color:RED,padding:semana?"2px 3px":"4px 8px",lineHeight:1.25}}>
+                      {semana?"Bloq.":<><b>Bloqueado</b> · {hhmm(x.ini/60)}–{hhmm(x.fin/60)} · {x.b.reason} <span style={{opacity:.7}}>(toca para liberar)</span></>}
+                    </div>
+                  );
+                  const b=x.b;const st=statusStyle(b.status);const avisar=pending.some((y:any)=>y.id===b.id);
+                  return(
+                    <div key={"c"+b.id} onClick={()=>setDetail(b)}
+                      style={{position:"absolute",top,height:h,left:2,right:2,borderRadius:6,cursor:"pointer",overflow:"hidden",zIndex:2,
+                        background:st.bg.replace(/18$|20$/,"2A"),borderLeft:`3px solid ${st.color}`,...sans,
+                        padding:semana?"2px 3px":"4px 8px",lineHeight:1.25,boxShadow:"0 1px 2px rgba(0,0,0,.06)"}}>
+                      {semana?(
+                        <div style={{fontSize:10,color:CH,fontWeight:700,wordBreak:"break-word"}}>{hhmm(b.time)}<br/>{firstName(b.client)}</div>
+                      ):(
+                        <>
+                          <div style={{fontSize:13.5,fontWeight:700,color:CH,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>
+                            {avisar&&"📩 "}{b.client} <span style={{fontWeight:500,color:MT}}>· {b.service}</span>
+                          </div>
+                          {h>40&&<div style={{fontSize:12.5,color:MT}}>{hhmm(x.ini/60)} – {hhmm(x.fin/60)} · {b.price}</div>}
+                        </>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    );
+  };
+
   if(!ready)return <div style={{background:BG,minHeight:"100vh"}}/>;
 
   return(
@@ -501,244 +610,74 @@ export function Panel({real}:{real?:PanelReal}){
 
       <div style={{maxWidth:1080,margin:"0 auto",padding:"20px 16px 150px"}}>
 
-        {/* ═════ VISTA DÍA ═════ */}
-        {view==="dia"&&(
-        <div className="fu">
-          {/* Día: flechas a los lados y la fecha en medio */}
-          <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",gap:8,marginBottom:16}}>
-            <button aria-label="Día anterior" style={{width:44,height:44,borderRadius:22,border:`1px solid ${G}55`,background:"white",display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer",flexShrink:0}}
-              onClick={()=>{const d=parseD(selDate);d.setDate(d.getDate()-1);setSelDate(toDS(d));}}><ChevronLeft size={22} color={G}/></button>
-            <div style={{textAlign:"center",minWidth:0}}>
-              <div style={{...sans,fontSize:20,fontWeight:700,lineHeight:1.2}}>{fmtD(selDate)}</div>
-              {selDate!==today
-                ?<button onClick={()=>setSelDate(today)} style={{...sans,fontSize:13,color:G,fontWeight:600,background:"none",border:"none",cursor:"pointer",marginTop:2}}>Volver a hoy</button>
-                :<div style={{...sans,fontSize:13,color:MT,marginTop:2}}>Hoy</div>}
-            </div>
-            <button aria-label="Día siguiente" style={{width:44,height:44,borderRadius:22,border:`1px solid ${G}55`,background:"white",display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer",flexShrink:0}}
-              onClick={()=>{const d=parseD(selDate);d.setDate(d.getDate()+1);setSelDate(toDS(d));}}><ChevronRight size={22} color={G}/></button>
-          </div>
-
-          {/* Stats */}
-          <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(150px,1fr))",
-            gap:2,background:`${G}22`,marginBottom:28}}>
-            {[
-              {n:dayBookings.length,l:"Citas del día",c:CH},
-              {n:freeCount,l:"Tiempo libre",c:GREEN},
-              {n:dayBookings.filter((b:any)=>b.status==="pendiente").length,l:"Sin confirmar",c:AMBER},
-              {n:`${revenue}€`,l:"Ingresos previstos",c:DR},
-            ].map(s=>(
-              <div key={s.l} className="card" style={{background:"white",padding:"22px 20px",
-                textAlign:"center",transition:"all .25s"}}>
-                <div style={{...serif,fontSize:34,fontWeight:400,color:s.c,lineHeight:1}}>{s.n}</div>
-                <div style={{...sans,fontSize:12.5,letterSpacing:"1.5px",color:MT,marginTop:7}}>
-                  {s.l.toUpperCase()}
-                </div>
-              </div>
-            ))}
-          </div>
-
-          {/* Agenda del día */}
-          {!(HOR[parseD(selDate).getDay()]||[]).length&&!dayBookings.length?(
-            <div style={{textAlign:"center",padding:"56px 24px",background:BG2,border:`1px dashed ${G}44`,borderRadius:16}}>
-              <div style={{...serif,fontSize:22,fontWeight:400,marginBottom:8}}>Cerrado</div>
-              <div style={{...sans,fontSize:14,color:MT}}>Este día no se abre. Disfruta el descanso.</div>
-            </div>
-          ):(
-          <div>
-            <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:12,gap:10}}>
-              <div style={{...sans,fontSize:15,fontWeight:700}}>{dayBookings.length?`${dayBookings.length} cita${dayBookings.length>1?"s":""}`:"Sin citas este día"}</div>
-              <button onClick={()=>setBlockModal({date:selDate,h:null})}
-                style={{...sans,display:"flex",alignItems:"center",gap:6,fontSize:13,color:MT,background:"white",
-                  border:`1px solid ${MT}44`,borderRadius:20,padding:"7px 12px",cursor:"pointer"}}>
-                <Ban size={15}/> Bloquear una hora
-              </button>
-            </div>
-            <div style={{display:"flex",flexDirection:"column",gap:8}}>
-              {agenda(selDate).map((x:any)=>{
-                const rango=`${hhmm(x.ini/60)} – ${hhmm(x.fin/60)}`;
-                if(x.tipo==="cita"){
-                  const b=x.b;const st=statusStyle(b.status);
-                  return(
-                    <div key={"c"+b.id} className="row" onClick={()=>setDetail(b)}
-                      style={{background:"white",borderRadius:14,padding:"14px 16px",cursor:"pointer",
-                        borderLeft:`4px solid ${st.color}`,boxShadow:"0 1px 2px rgba(0,0,0,.04)"}}>
-                      <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",gap:10}}>
-                        <div style={{...sans,fontSize:15,fontWeight:700,color:CH}}>{rango}</div>
-                        <span style={{...sans,fontSize:12.5,fontWeight:600,background:st.bg,color:st.color,
-                          padding:"4px 10px",borderRadius:20,whiteSpace:"nowrap"}}>{st.label}</span>
-                      </div>
-                      <div style={{...sans,fontSize:16,fontWeight:600,marginTop:6}}>{b.client}</div>
-                      <div style={{...sans,fontSize:14,color:MT,marginTop:2}}>
-                        {b.service} · <span style={{color:DR,fontWeight:600}}>{b.price}</span>
-                      </div>
-                      <div style={{...sans,fontSize:13,color:b.phone?MT:`${MT}99`,marginTop:2}}>{b.phone||"Sin teléfono"}</div>
-                      {b.notes&&<div style={{...sans,fontSize:13,color:AMBER,marginTop:6}}>⚠ {b.notes}</div>}
-                      {pending.some((x:any)=>x.id===b.id)&&(
-                        <div style={{...sans,fontSize:13,color:"#2563eb",marginTop:6,fontWeight:600}}>📩 Falta mandarle los detalles por WhatsApp</div>
-                      )}
-                    </div>
-                  );
-                }
-                if(x.tipo==="bloqueo"){
-                  return(
-                    <div key={"b"+x.ini} onClick={()=>unblock(selDate,x.b.time)}
-                      style={{background:`${RED}0C`,borderRadius:14,padding:"12px 16px",cursor:"pointer",
-                        borderLeft:`4px solid ${RED}`,display:"flex",justifyContent:"space-between",alignItems:"center",gap:10}}>
-                      <div>
-                        <div style={{...sans,fontSize:14,fontWeight:700,color:RED}}>{rango} · Bloqueado</div>
-                        <div style={{...sans,fontSize:13,color:MT}}>{x.b.reason}</div>
-                      </div>
-                      <span style={{...sans,fontSize:13.5,color:RED,whiteSpace:"nowrap"}}>Liberar ✕</span>
-                    </div>
-                  );
-                }
-                return null;
-              })}
-            </div>
-          </div>
-          )}
-        </div>
-        )}
-
-        {/* ═════ CALENDARIO: selector semana / mes ═════ */}
-        {view==="mes"&&(
-          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",background:"#E8DDD4",borderRadius:14,padding:4,marginBottom:16}}>
-            {(["semana","mes"] as const).map(m=>(
+        {/* ═════ AGENDA: selector día / semana / mes ═════ */}
+        {view==="agenda"&&(
+          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",background:"#E8DDD4",borderRadius:14,padding:4,marginBottom:14}}>
+            {(["dia","semana","mes"] as const).map(m=>(
               <button key={m} onClick={()=>setCalModo(m)}
                 style={{...sans,border:"none",borderRadius:11,padding:"10px 0",fontSize:15,fontWeight:700,cursor:"pointer",
                   background:calModo===m?"white":"transparent",color:calModo===m?CH:MT,boxShadow:calModo===m?"0 1px 4px rgba(0,0,0,.08)":"none"}}>
-                {m==="semana"?"Semana":"Mes"}
+                {m==="dia"?"Día":m==="semana"?"Semana":"Mes"}
               </button>
             ))}
           </div>
         )}
 
-        {/* ═════ VISTA SEMANA ═════ */}
-        {view==="mes"&&calModo==="semana"&&(
+        {/* ═════ DÍA ═════ */}
+        {view==="agenda"&&calModo==="dia"&&(
         <div className="fu">
-          <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",gap:8,marginBottom:16}}>
-            <button aria-label="Semana anterior" onClick={()=>{const d=parseD(selDate);d.setDate(d.getDate()-7);setSelDate(toDS(d));}} style={{width:44,height:44,borderRadius:22,border:`1px solid ${G}55`,background:"white",display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer",flexShrink:0}}><ChevronLeft size={22} color={G}/></button>
+          <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",gap:8,marginBottom:12}}>
+            <button aria-label="Día anterior" onClick={()=>{const d=parseD(selDate);d.setDate(d.getDate()-1);setSelDate(toDS(d));}} style={{width:42,height:42,borderRadius:21,border:`1px solid ${G}55`,background:"white",display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer",flexShrink:0}}><ChevronLeft size={22} color={G}/></button>
+            <div style={{textAlign:"center",minWidth:0}}>
+              <div style={{...sans,fontSize:19,fontWeight:700,lineHeight:1.2}}>{fmtD(selDate)}</div>
+              {selDate!==today
+                ?<button onClick={()=>setSelDate(today)} style={{...sans,fontSize:13,color:G,fontWeight:600,background:"none",border:"none",cursor:"pointer"}}>Volver a hoy</button>
+                :<div style={{...sans,fontSize:13,color:MT}}>Hoy</div>}
+            </div>
+            <button aria-label="Día siguiente" onClick={()=>{const d=parseD(selDate);d.setDate(d.getDate()+1);setSelDate(toDS(d));}} style={{width:42,height:42,borderRadius:21,border:`1px solid ${G}55`,background:"white",display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer",flexShrink:0}}><ChevronRight size={22} color={G}/></button>
+          </div>
+          <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",gap:8,marginBottom:12,flexWrap:"wrap"}}>
+            <div style={{...sans,fontSize:14,color:MT}}>
+              <b style={{color:CH}}>{dayBookings.length} cita{dayBookings.length===1?"":"s"}</b> · {freeCount} libre · <b style={{color:DR}}>{revenue}€</b>
+            </div>
+            <button onClick={()=>setBlockModal({date:selDate,min:null,dur:60})}
+              style={{...sans,display:"flex",alignItems:"center",gap:6,fontSize:13,color:MT,background:"white",
+                border:`1px solid ${MT}44`,borderRadius:20,padding:"7px 12px",cursor:"pointer"}}>
+              <Ban size={15}/> Bloquear horas
+            </button>
+          </div>
+          {(HOR[parseD(selDate).getDay()]||[]).length===0&&!dayBookings.length?(
+            <div style={{textAlign:"center",padding:"48px 24px",background:BG2,border:`1px dashed ${G}44`,borderRadius:16}}>
+              <div style={{...sans,fontSize:18,fontWeight:700,marginBottom:6}}>Cerrado</div>
+              <div style={{...sans,fontSize:14,color:MT}}>Este día no se abre.</div>
+            </div>
+          ):rejilla([selDate])}
+          <div style={{...sans,fontSize:12.5,color:MT,marginTop:10}}>Toca una media hora libre para apuntar una cita o bloquearla.</div>
+        </div>
+        )}
+
+        {/* ═════ SEMANA (de lunes a domingo, en horizontal) ═════ */}
+        {view==="agenda"&&calModo==="semana"&&(
+        <div className="fu">
+          <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",gap:8,marginBottom:12}}>
+            <button aria-label="Semana anterior" onClick={()=>{const d=parseD(selDate);d.setDate(d.getDate()-7);setSelDate(toDS(d));}} style={{width:42,height:42,borderRadius:21,border:`1px solid ${G}55`,background:"white",display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer",flexShrink:0}}><ChevronLeft size={22} color={G}/></button>
             <div style={{textAlign:"center"}}>
-              <div style={{...sans,fontSize:18,fontWeight:700}}>
-                Semana del {weekDays[0].getDate()} {MONTHS[weekDays[0].getMonth()].slice(0,3).toLowerCase()} al {weekDays[6].getDate()} {MONTHS[weekDays[6].getMonth()].slice(0,3).toLowerCase()}
+              <div style={{...sans,fontSize:17,fontWeight:700}}>
+                {weekDays[0].getDate()} {MONTHS[weekDays[0].getMonth()].slice(0,3).toLowerCase()} – {weekDays[6].getDate()} {MONTHS[weekDays[6].getMonth()].slice(0,3).toLowerCase()}
               </div>
-              {!weekDays.map(toDS).includes(today)&&(
-                <button onClick={()=>setSelDate(today)} style={{...sans,fontSize:13,color:G,fontWeight:600,background:"none",border:"none",cursor:"pointer"}}>Volver a esta semana</button>
-              )}
+              {(()=>{const w=weekDays.map(toDS);const n=bookings.filter((b:any)=>w.includes(b.date));
+                return <div style={{...sans,fontSize:13,color:MT}}>{n.length} citas · {n.reduce((s:number,b:any)=>s+(parseInt(b.price)||0),0)}€
+                  {!w.includes(today)&&<button onClick={()=>setSelDate(today)} style={{...sans,fontSize:13,color:G,fontWeight:600,background:"none",border:"none",cursor:"pointer"}}> · Esta semana</button>}</div>;})()}
             </div>
-            <button aria-label="Semana siguiente" onClick={()=>{const d=parseD(selDate);d.setDate(d.getDate()+7);setSelDate(toDS(d));}} style={{width:44,height:44,borderRadius:22,border:`1px solid ${G}55`,background:"white",display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer",flexShrink:0}}><ChevronRight size={22} color={G}/></button>
+            <button aria-label="Semana siguiente" onClick={()=>{const d=parseD(selDate);d.setDate(d.getDate()+7);setSelDate(toDS(d));}} style={{width:42,height:42,borderRadius:21,border:`1px solid ${G}55`,background:"white",display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer",flexShrink:0}}><ChevronRight size={22} color={G}/></button>
           </div>
-
-          {/* Weekly stats */}
-          <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(150px,1fr))",
-            gap:2,background:`${G}22`,marginBottom:26}}>
-            {(()=>{
-              const wDS=weekDays.map(toDS);
-              const wBks=bookings.filter((b:any)=>wDS.includes(b.date));
-              const wSlots=wDS.reduce((n:number,ds:string)=>n+getSlots(ds).length,0);
-              const wRev=wBks.reduce((s:number,b:any)=>s+(parseInt(b.price)||0),0);
-              const wPend=wBks.filter((b:any)=>b.status==="pendiente").length;
-              const wOcc=wSlots?Math.round((wBks.length/wSlots)*100):0;
-              return[
-                {n:wBks.length,l:"Citas esta semana",c:CH},
-                {n:`${wOcc}%`,l:"Ocupación total",c:wOcc>70?RED:wOcc>35?AMBER:GREEN},
-                {n:wPend,l:"Sin confirmar",c:AMBER},
-                {n:`${wRev}€`,l:"Ingresos previstos",c:DR},
-              ];
-            })().map((s:any)=>(
-              <div key={s.l} className="card" style={{background:"white",padding:"20px 18px",
-                textAlign:"center",transition:"all .25s"}}>
-                <div style={{...serif,fontSize:31,fontWeight:400,color:s.c,lineHeight:1}}>{s.n}</div>
-                <div style={{...sans,fontSize:12.5,letterSpacing:"1.5px",color:MT,marginTop:7}}>
-                  {s.l.toUpperCase()}
-                </div>
-              </div>
-            ))}
-          </div>
-
-          <div style={{overflowX:"auto",paddingBottom:8}}>
-            <div style={{display:"grid",gridTemplateColumns:"repeat(7,minmax(122px,1fr))",
-              gap:2,background:`${G}22`,minWidth:860}} className="semana-grid">
-              {weekDays.map(d=>{
-                const ds=toDS(d);
-                const sl=getSlots(ds);
-                const bks=bookings.filter((b:any)=>b.date===ds).sort((a:any,b:any)=>a.time-b.time);
-                const isToday=ds===today;
-                const closed=sl.length===0;
-                const occ=sl.length?Math.round(((sl.length-sl.filter((s:any)=>!s.booking&&!s.block).length)/sl.length)*100):0;
-                return(
-                  <div key={ds} className="semana-dia" onClick={()=>{setSelDate(ds);setView("dia");}}
-                    style={{background:isToday?`${G}14`:"white",cursor:"pointer",
-                      minHeight:250,display:"flex",flexDirection:"column"}}>
-                    <div style={{padding:"12px 10px",borderBottom:`1px solid ${G}22`,
-                      textAlign:"center",background:isToday?`${G}22`:BG}}>
-                      <div style={{...sans,fontSize:12.5,letterSpacing:"1.5px",
-                        color:isToday?DARK:MT,fontWeight:isToday?700:400}}>
-                        {DAYS[d.getDay()].toUpperCase()}
-                      </div>
-                      <div style={{...serif,fontSize:22,marginTop:2,
-                        color:isToday?DR:CH}}>{d.getDate()}</div>
-                      {!closed&&(
-                        <div style={{...sans,fontSize:12.5,color:occ>70?RED:occ>35?AMBER:GREEN,marginTop:3}}>
-                          {occ}% ocupado
-                        </div>
-                      )}
-                    </div>
-                    <div style={{flex:1,padding:"8px 7px",display:"flex",
-                      flexDirection:"column",gap:4}}>
-                      {closed?(
-                        <div style={{...sans,fontSize:11.5,color:`${MT}77`,
-                          textAlign:"center",padding:"20px 0"}}>Cerrado</div>
-                      ):bks.length===0?(
-                        <div style={{...sans,fontSize:11.5,color:GREEN,
-                          textAlign:"center",padding:"20px 0"}}>Día libre</div>
-                      ):bks.map((b:any)=>{
-                        const st=statusStyle(b.status);
-                        return(
-                          <div key={b.id} style={{background:st.bg,
-                            borderLeft:`2px solid ${st.color}`,padding:"6px 8px"}}>
-                            <div style={{...sans,fontSize:11.5,color:st.color,fontWeight:500}}>
-                              {hhmm(b.time)}
-                            </div>
-                            <div style={{...sans,fontSize:12.5,marginTop:1,
-                              overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>
-                              {b.client.split(" ")[0]}
-                            </div>
-                            <div style={{...sans,fontSize:12.5,color:MT,
-                              overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>
-                              {b.service}
-                            </div>
-                          </div>
-                        );
-                      })}
-                      {blocked.filter((b:any)=>b.date===ds).map((b:any)=>(
-                        <div key={b.time} style={{background:`${RED}12`,
-                          borderLeft:`2px solid ${RED}`,padding:"6px 8px"}}>
-                          <div style={{...sans,fontSize:11.5,color:RED}}>
-                            {hhmm(b.time)}
-                          </div>
-                          <div style={{...sans,fontSize:12.5,color:MT}}>{b.reason}</div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-
-          <div style={{display:"flex",gap:20,marginTop:20,flexWrap:"wrap",
-            ...sans,fontSize:12.5,color:MT}}>
-            <span style={{color:GREEN}}>■ Confirmada</span>
-            <span style={{color:AMBER}}>■ Pendiente</span>
-            <span style={{color:RED}}>■ Bloqueado por ti</span>
-            <span>Toca un día para ver el detalle</span>
-          </div>
+          {rejilla(weekDays.map(toDS))}
+          <div style={{...sans,fontSize:12.5,color:MT,marginTop:10}}>Toca un día para verlo entero, o una media hora libre para apuntar una cita.</div>
         </div>
         )}
 
         {/* ═════ VISTA MES ═════ */}
-        {view==="mes"&&calModo==="mes"&&(
+        {view==="agenda"&&calModo==="mes"&&(
         <div className="fu">
           <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",gap:8,marginBottom:16}}>
             <button aria-label="Mes anterior" onClick={()=>setCalM(new Date(yr,mo-1,1))} style={{width:44,height:44,borderRadius:22,border:`1px solid ${G}55`,background:"white",display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer",flexShrink:0}}><ChevronLeft size={22} color={G}/></button>
@@ -794,7 +733,7 @@ export function Panel({real}:{real?:PanelReal}){
               const isToday=ds===today;
               const occ=sl.length?((sl.length-sl.filter((s:any)=>!s.booking&&!s.block).length)/sl.length):0;
               return(
-                <div key={d} onClick={()=>{setSelDate(ds);setView("dia");}}
+                <div key={d} onClick={()=>{setSelDate(ds);setCalModo("dia");}}
                   className="row"
                   style={{background:closed?`${MT}0A`:isToday?`${G}1E`:"white",
                     minHeight:88,padding:"8px 9px",cursor:"pointer",
@@ -1026,7 +965,7 @@ export function Panel({real}:{real?:PanelReal}){
         })()}
 
         {/* ═════ RESUMEN ═════ */}
-        {view==="mes"&&calModo==="mes"&&(()=>{
+        {view==="resumen"&&(()=>{
           const pre=`${yr}-${String(mo+1).padStart(2,"0")}-`;
           const mBks=bookings.filter((b:any)=>b.date.startsWith(pre));
           const past=mBks.filter((b:any)=>b.date<today);
@@ -1043,8 +982,22 @@ export function Panel({real}:{real?:PanelReal}){
           const tot=sum(mBks)||1;
           return(
           <div className="fu">
-            <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",margin:"28px 0 12px",gap:12}}>
-              <div style={{...sans,fontSize:17,fontWeight:700}}>El mes en detalle</div>
+            <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",gap:8,marginBottom:14}}>
+              <button aria-label="Mes anterior" onClick={()=>setCalM(new Date(yr,mo-1,1))} style={{width:42,height:42,borderRadius:21,border:`1px solid ${G}55`,background:"white",display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer",flexShrink:0}}><ChevronLeft size={22} color={G}/></button>
+              <div style={{...sans,fontSize:19,fontWeight:700}}>Resumen de {MONTHS[mo].toLowerCase()}</div>
+              <button aria-label="Mes siguiente" onClick={()=>setCalM(new Date(yr,mo+1,1))} style={{width:42,height:42,borderRadius:21,border:`1px solid ${G}55`,background:"white",display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer",flexShrink:0}}><ChevronRight size={22} color={G}/></button>
+            </div>
+            {(()=>{const past=mBks.filter((b:any)=>b.date<today);const tk=past.length?Math.round(sum(past)/past.length):0;return(
+              <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8,marginBottom:16}}>
+                {[["Ya facturado",`${sum(past)}€`,DR],["Por cobrar",`${sum(mBks)-sum(past)}€`,AMBER],["Ticket medio",`${tk}€`,CH],["Clientas nuevas",nuevas,GREEN]].map(([l,n,c]:any)=>(
+                  <div key={l} style={{background:"white",borderRadius:14,padding:"14px 12px",textAlign:"center"}}>
+                    <div style={{...sans,fontSize:24,fontWeight:700,color:c}}>{n}</div>
+                    <div style={{...sans,fontSize:12.5,color:MT,marginTop:2}}>{l}</div>
+                  </div>
+                ))}
+              </div>);})()}
+            <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",margin:"8px 0 12px",gap:12}}>
+              <div style={{...sans,fontSize:17,fontWeight:700}}>Lo que más se hace</div>
               <button style={{...bO,padding:"9px 14px"}} onClick={()=>exportCSV(mBks,`citas-${yr}-${String(mo+1).padStart(2,"0")}.csv`)}>
                 Descargar Excel
               </button>
@@ -1270,48 +1223,80 @@ export function Panel({real}:{real?:PanelReal}){
       </div>);
       })()}
 
-      {/* ═════ HOJA BLOQUEAR ═════ */}
+      {/* ═════ HOJA BLOQUEAR (inicio y duración) ═════ */}
       {blockModal&&(()=>{
-        // Horas del horario de ese día que aún no tienen cita ni bloqueo
-        const libresH=(HOR[parseD(blockModal.date).getDay()]||[]).flatMap(({s:a,e:z}:any)=>Array.from({length:z-a},(_,i)=>a+i))
-          .filter((h:number)=>!ocupadoDia(blockModal.date).some(o=>o.ini<h*60+60&&o.fin>h*60));
+        const {date,min,dur}=blockModal;
+        const DUR=[30,60,90,120,180,240];
+        // Inicios posibles cada media hora: que quepa entero en el horario y no pise otra cosa
+        const inicios=huecosLibres(HOR,parseD(date),dur,ocupadoDia(date),30);
+        const valido=min!=null&&inicios.includes(min);
         const cerrar=()=>{setBlockModal(null);setBlockReason("");};
+        const chip=(on:boolean)=>({...sans,padding:"10px 0",fontSize:15,fontWeight:600,borderRadius:12,cursor:"pointer",
+          border:`1.5px solid ${on?RED:"#E2D6CB"}`,background:on?RED:"white",color:on?"#fff":CH} as const);
+        const durTxt=(d:number)=>d<60?`${d} min`:d%60?`${Math.floor(d/60)} h ${d%60}`:`${d/60} h`;
         return(
       <div onClick={cerrar} style={{position:"fixed",inset:0,background:"rgba(15,13,12,.55)",zIndex:500,display:"flex",alignItems:"flex-end",justifyContent:"center"}}>
         <div className="fu" onClick={(e:React.MouseEvent)=>e.stopPropagation()}
-          style={{background:BG,width:"100%",maxWidth:520,maxHeight:"90vh",overflowY:"auto",borderRadius:"22px 22px 0 0",boxShadow:"0 -10px 40px rgba(0,0,0,.25)",padding:"14px 20px 22px"}}>
+          style={{background:BG,width:"100%",maxWidth:520,maxHeight:"92vh",overflowY:"auto",borderRadius:"22px 22px 0 0",boxShadow:"0 -10px 40px rgba(0,0,0,.25)",padding:"14px 20px 22px"}}>
           <div style={{width:40,height:4,borderRadius:2,background:"#D4C9BE",margin:"0 auto 14px"}}/>
-          <div style={{...sans,fontSize:20,fontWeight:700}}>Bloquear una hora</div>
+          <div style={{...sans,fontSize:20,fontWeight:700}}>Bloquear horas</div>
           <div style={{...sans,fontSize:14,color:MT,marginTop:4,marginBottom:16}}>
-            {fmtD(blockModal.date)} · Esa hora deja de salir en la web y nadie podrá reservarla.
+            {fmtD(date)} · Ese rato deja de salir en la web y nadie podrá reservarlo.
           </div>
-          {libresH.length===0?(
-            <div style={{...sans,fontSize:14,color:MT,marginBottom:16}}>No quedan horas libres ese día.</div>
+          <div style={{...sans,fontSize:14,fontWeight:600,marginBottom:8}}>¿Cuánto tiempo?</div>
+          <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:8,marginBottom:16}}>
+            {DUR.map(d=>(
+              <button key={d} onClick={()=>setBlockModal((m:any)=>({...m,dur:d}))} style={chip(dur===d)}>{durTxt(d)}</button>
+            ))}
+          </div>
+          <div style={{...sans,fontSize:14,fontWeight:600,marginBottom:8}}>¿Desde qué hora?</div>
+          {inicios.length===0?(
+            <div style={{...sans,fontSize:14,color:MT,marginBottom:16}}>No hay {durTxt(dur)} seguidos libres ese día.</div>
           ):(
-            <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:8,marginBottom:18}}>
-              {libresH.map((h:number)=>{const on=blockModal.h===h;return(
-                <button key={h} onClick={()=>setBlockModal((m:any)=>({...m,h}))}
-                  style={{...sans,padding:"11px 0",fontSize:15,fontWeight:600,borderRadius:12,cursor:"pointer",
-                    border:`1.5px solid ${on?RED:"#E2D6CB"}`,background:on?RED:"white",color:on?"#fff":CH}}>{hhmm(h)}</button>
-              );})}
+            <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:8,marginBottom:16}}>
+              {inicios.map(m=>(
+                <button key={m} onClick={()=>setBlockModal((x:any)=>({...x,min:m}))} style={chip(min===m)}>{hhmm(m/60)}</button>
+              ))}
             </div>
           )}
           <div style={{...sans,fontSize:14,fontWeight:600,marginBottom:8}}>Motivo <span style={{fontWeight:400,color:MT}}>(solo lo ves tú)</span></div>
           <input style={{...inp,marginBottom:18,borderRadius:12,padding:"13px 14px"}} value={blockReason}
             onChange={(e:React.ChangeEvent<HTMLInputElement>)=>setBlockReason(e.target.value)}
             placeholder="Comida, formación, descanso…"/>
-          <button disabled={blockModal.h==null} onClick={doBlock}
+          <button disabled={!valido} onClick={doBlock}
             style={{...sans,width:"100%",padding:"15px",borderRadius:30,border:"none",fontSize:16,fontWeight:700,
-              background:RED,color:"#fff",cursor:"pointer",opacity:blockModal.h==null?.4:1}}>
-            {blockModal.h==null?"Elige la hora":`Bloquear las ${hhmm(blockModal.h)}`}
+              background:RED,color:"#fff",cursor:"pointer",opacity:valido?1:.4}}>
+            {valido?`Bloquear de ${hhmm(min/60)} a ${hhmm((min+dur)/60)}`:"Elige desde qué hora"}
           </button>
         </div>
       </div>);
       })()}
 
+      {/* ═════ HOJA DE UNA MEDIA HORA LIBRE ═════ */}
+      {hueco&&(
+        <div onClick={()=>setHueco(null)} style={{position:"fixed",inset:0,background:"rgba(15,13,12,.45)",zIndex:500,display:"flex",alignItems:"flex-end",justifyContent:"center"}}>
+          <div className="fu" onClick={(e:React.MouseEvent)=>e.stopPropagation()}
+            style={{background:BG,width:"100%",maxWidth:520,borderRadius:"22px 22px 0 0",padding:"14px 20px 26px"}}>
+            <div style={{width:40,height:4,borderRadius:2,background:"#D4C9BE",margin:"0 auto 14px"}}/>
+            <div style={{...sans,fontSize:20,fontWeight:700,marginBottom:2}}>{hhmm(hueco.min/60)} · libre</div>
+            <div style={{...sans,fontSize:14,color:MT,marginBottom:16}}>{fmtD(hueco.date)}</div>
+            <button onClick={()=>{openNew(hueco.date,hueco.min);setHueco(null);}}
+              style={{...sans,width:"100%",padding:"15px",borderRadius:30,border:"none",fontSize:16,fontWeight:700,background:G,color:"#fff",cursor:"pointer",marginBottom:10,
+                display:"flex",alignItems:"center",justifyContent:"center",gap:8}}>
+              <Plus size={20}/> Nueva cita a las {hhmm(hueco.min/60)}
+            </button>
+            <button onClick={()=>{setBlockModal({date:hueco.date,min:hueco.min,dur:60});setHueco(null);}}
+              style={{...sans,width:"100%",padding:"14px",borderRadius:30,border:`1.5px solid ${RED}66`,fontSize:15,fontWeight:700,background:"white",color:RED,cursor:"pointer",
+                display:"flex",alignItems:"center",justifyContent:"center",gap:8}}>
+              <Ban size={18}/> Bloquear desde las {hhmm(hueco.min/60)}
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* ═════ BOTÓN NUEVA CITA (siempre a la vista) ═════ */}
-      {!newBk&&!detail&&!blockModal&&!mas&&(
-        <button onClick={()=>openNew(view==="dia"?selDate:undefined)} aria-label="Nueva cita"
+      {!newBk&&!detail&&!blockModal&&!mas&&!hueco&&(
+        <button onClick={()=>openNew(view==="agenda"&&calModo==="dia"?selDate:undefined)} aria-label="Nueva cita"
           style={{...sans,position:"fixed",right:16,bottom:"calc(80px + env(safe-area-inset-bottom))",zIndex:300,display:"flex",alignItems:"center",gap:8,
             background:G,color:"#fff",border:"none",borderRadius:30,padding:"15px 22px",fontSize:16,fontWeight:700,
             boxShadow:"0 10px 28px rgba(184,146,42,.45)",cursor:"pointer"}}>
@@ -1323,10 +1308,10 @@ export function Panel({real}:{real?:PanelReal}){
       <nav style={{position:"fixed",left:0,right:0,bottom:0,zIndex:400,background:"white",borderTop:`1px solid ${G}33`,
         paddingBottom:"env(safe-area-inset-bottom)",boxShadow:"0 -4px 20px rgba(0,0,0,.05)"}}>
         <div style={{maxWidth:560,margin:"0 auto",display:"grid",gridTemplateColumns:"repeat(5,1fr)"}}>
-          {([["dia","Hoy",CalendarCheck],["mes","Calendario",CalendarDays],["avisos","Avisos",Bell],["clientas","Clientas",Users],["mas","Más",Menu]] as const).map(([id,l,Icon])=>{
+          {([["agenda","Agenda",CalendarDays],["avisos","Avisos",Bell],["clientas","Clientas",Users],["resumen","Resumen",ChartColumn],["mas","Más",Menu]] as const).map(([id,l,Icon])=>{
             const on=id==="mas"?mas||view==="todas":view===id&&!mas;
             return(
-              <button key={id} onClick={()=>{if(id==="mas"){setMas(true);return;}setMas(false);setView(id);if(id==="dia")setSelDate(today);window.scrollTo(0,0);}}
+              <button key={id} onClick={()=>{if(id==="mas"){setMas(true);return;}setMas(false);setView(id);if(id==="agenda"&&view==="agenda"){setCalModo("dia");setSelDate(today);}window.scrollTo(0,0);}}
                 style={{...sans,background:"none",border:"none",cursor:"pointer",padding:"9px 0 8px",display:"flex",flexDirection:"column",
                   alignItems:"center",gap:3,color:on?G:"#8A7A70",position:"relative"}}>
                 <Icon size={23} strokeWidth={on?2.4:1.8}/>
