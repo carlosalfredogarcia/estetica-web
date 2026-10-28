@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback } from "react";
 import { SERVICES, type Service } from "@/lib/data";
 import { useNegocio, categorias, huecosLibres, duracion, type Horario } from "@/components/negocio";
 import { db } from "@/lib/supabase";
-import { CalendarCheck, CalendarDays, Bell, Users, Menu, Plus, Ban, ChevronLeft, ChevronRight, ChartColumn, List, CalendarRange, ExternalLink, LogOut } from "lucide-react";
+import { CalendarCheck, CalendarDays, Bell, Users, Menu, Plus, Ban, ChevronLeft, ChevronRight, List, ExternalLink, LogOut } from "lucide-react";
 
 // Estética real (desde /panel, con la dueña ya dentro). Sin esto, el panel es la demo con datos inventados.
 export interface PanelReal {
@@ -155,8 +155,7 @@ const CSS=`
   ::-webkit-scrollbar{width:5px;height:5px}
   ::-webkit-scrollbar-thumb{background:${G}55;border-radius:3px}
   a{text-decoration:none}
-  html,body{overscroll-behavior:none;-webkit-tap-highlight-color:transparent;overflow-x:hidden;max-width:100%}
-  body{touch-action:pan-y}
+  html,body{-webkit-tap-highlight-color:transparent}
   @media(max-width:640px){.semana-grid{grid-template-columns:1fr!important;min-width:0!important}.semana-dia{min-height:0!important}}
   @media(max-width:640px){.hide-sm{display:none!important}}
 `;
@@ -173,6 +172,7 @@ function Lotus({size=32,color=G}:{size?:number,color?:string}){
 export function Panel({real}:{real?:PanelReal}){
   const [view,setView]=useState("dia");
   const [mas,setMas]=useState(false); // menú «Más» de la barra de abajo
+  const [calModo,setCalModo]=useState<"mes"|"semana">("mes"); // pestaña Calendario
   const demoNegocio=useNegocio();
   const NEGOCIO=real?{...demoNegocio,nombre:real.nombre}:demoNegocio;
   const HOR:any=real?real.horario:SCHED;
@@ -458,7 +458,7 @@ export function Panel({real}:{real?:PanelReal}){
   if(!ready)return <div style={{background:BG,minHeight:"100vh"}}/>;
 
   return(
-    <div style={{...sans,background:BG,minHeight:"100vh",color:CH,overflowX:"hidden"}}>
+    <div style={{...sans,background:BG,minHeight:"100vh",color:CH,overflowX:"clip"}}>
       <style dangerouslySetInnerHTML={{__html:CSS}}/>
 
       {/* TOAST */}
@@ -600,25 +600,33 @@ export function Panel({real}:{real?:PanelReal}){
         </div>
         )}
 
+        {/* ═════ CALENDARIO: selector semana / mes ═════ */}
+        {view==="mes"&&(
+          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",background:"#E8DDD4",borderRadius:14,padding:4,marginBottom:16}}>
+            {(["semana","mes"] as const).map(m=>(
+              <button key={m} onClick={()=>setCalModo(m)}
+                style={{...sans,border:"none",borderRadius:11,padding:"10px 0",fontSize:15,fontWeight:700,cursor:"pointer",
+                  background:calModo===m?"white":"transparent",color:calModo===m?CH:MT,boxShadow:calModo===m?"0 1px 4px rgba(0,0,0,.08)":"none"}}>
+                {m==="semana"?"Semana":"Mes"}
+              </button>
+            ))}
+          </div>
+        )}
+
         {/* ═════ VISTA SEMANA ═════ */}
-        {view==="semana"&&(
+        {view==="mes"&&calModo==="semana"&&(
         <div className="fu">
-          <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",
-            marginBottom:24,flexWrap:"wrap",gap:12}}>
-            <div>
-              <div style={{...sans,fontSize:12.5,letterSpacing:"3px",color:G,marginBottom:6}}>OCUPACIÓN SEMANAL</div>
-              <div style={{...serif,fontSize:30,fontWeight:300}}>
-                Semana del {weekDays[0].getDate()} al {weekDays[6].getDate()} de {MONTHS[weekDays[6].getMonth()]}
+          <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",gap:8,marginBottom:16}}>
+            <button aria-label="Semana anterior" onClick={()=>{const d=parseD(selDate);d.setDate(d.getDate()-7);setSelDate(toDS(d));}} style={{width:44,height:44,borderRadius:22,border:`1px solid ${G}55`,background:"white",display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer",flexShrink:0}}><ChevronLeft size={22} color={G}/></button>
+            <div style={{textAlign:"center"}}>
+              <div style={{...sans,fontSize:18,fontWeight:700}}>
+                Semana del {weekDays[0].getDate()} {MONTHS[weekDays[0].getMonth()].slice(0,3).toLowerCase()} al {weekDays[6].getDate()} {MONTHS[weekDays[6].getMonth()].slice(0,3).toLowerCase()}
               </div>
+              {!weekDays.map(toDS).includes(today)&&(
+                <button onClick={()=>setSelDate(today)} style={{...sans,fontSize:13,color:G,fontWeight:600,background:"none",border:"none",cursor:"pointer"}}>Volver a esta semana</button>
+              )}
             </div>
-            <div style={{display:"flex",gap:8}}>
-              <button style={{...bO,padding:"9px 15px"}}
-                onClick={()=>{const d=parseD(selDate);d.setDate(d.getDate()-7);setSelDate(toDS(d));}}>‹ Semana</button>
-              <button style={{...bO,padding:"9px 15px"}}
-                onClick={()=>setSelDate(today)}>Actual</button>
-              <button style={{...bO,padding:"9px 15px"}}
-                onClick={()=>{const d=parseD(selDate);d.setDate(d.getDate()+7);setSelDate(toDS(d));}}>Semana ›</button>
-            </div>
+            <button aria-label="Semana siguiente" onClick={()=>{const d=parseD(selDate);d.setDate(d.getDate()+7);setSelDate(toDS(d));}} style={{width:44,height:44,borderRadius:22,border:`1px solid ${G}55`,background:"white",display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer",flexShrink:0}}><ChevronRight size={22} color={G}/></button>
           </div>
 
           {/* Weekly stats */}
@@ -730,17 +738,12 @@ export function Panel({real}:{real?:PanelReal}){
         )}
 
         {/* ═════ VISTA MES ═════ */}
-        {view==="mes"&&(
+        {view==="mes"&&calModo==="mes"&&(
         <div className="fu">
-          <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:24}}>
-            <div>
-              <div style={{...sans,fontSize:12.5,letterSpacing:"3px",color:G,marginBottom:6}}>VISTA MENSUAL</div>
-              <div style={{...serif,fontSize:30,fontWeight:300}}>{MONTHS[mo]} {yr}</div>
-            </div>
-            <div style={{display:"flex",gap:8}}>
-              <button style={{...bO,padding:"9px 16px"}} onClick={()=>setCalM(new Date(yr,mo-1,1))}>‹</button>
-              <button style={{...bO,padding:"9px 16px"}} onClick={()=>setCalM(new Date(yr,mo+1,1))}>›</button>
-            </div>
+          <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",gap:8,marginBottom:16}}>
+            <button aria-label="Mes anterior" onClick={()=>setCalM(new Date(yr,mo-1,1))} style={{width:44,height:44,borderRadius:22,border:`1px solid ${G}55`,background:"white",display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer",flexShrink:0}}><ChevronLeft size={22} color={G}/></button>
+            <div style={{...sans,fontSize:20,fontWeight:700}}>{MONTHS[mo]} {yr}</div>
+            <button aria-label="Mes siguiente" onClick={()=>setCalM(new Date(yr,mo+1,1))} style={{width:44,height:44,borderRadius:22,border:`1px solid ${G}55`,background:"white",display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer",flexShrink:0}}><ChevronRight size={22} color={G}/></button>
           </div>
 
           <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(150px,1fr))",
@@ -752,11 +755,15 @@ export function Panel({real}:{real?:PanelReal}){
               for(let d=1;d<=dIM;d++)mSlots+=getSlots(`${pre}${String(d).padStart(2,"0")}`).length;
               const mRev=mBks.reduce((s:number,b:any)=>s+(parseInt(b.price)||0),0);
               const mOcc=mSlots?Math.round((mBks.length/mSlots)*100):0;
+              const ya=mBks.filter((b:any)=>b.date<today).reduce((s:number,b:any)=>s+(parseInt(b.price)||0),0);
+              const nuevas=clients.filter((c:any)=>c.first&&c.first.startsWith(pre)).length;
               return[
                 {n:mBks.length,l:"Citas del mes",c:CH},
-                {n:`${mOcc}%`,l:"Ocupación del mes",c:mOcc>70?RED:mOcc>35?AMBER:GREEN},
-                {n:mSlots-mBks.length,l:"Huecos libres",c:GREEN},
+                {n:`${mOcc}%`,l:"Ocupación",c:mOcc>70?RED:mOcc>35?AMBER:GREEN},
+                {n:Math.max(0,mSlots-mBks.length),l:"Huecos libres",c:GREEN},
                 {n:`${mRev}€`,l:"Facturación prevista",c:DR},
+                {n:`${ya}€`,l:"Ya facturado",c:DR},
+                {n:nuevas,l:"Clientas nuevas",c:GREEN},
               ];
             })().map((s:any)=>(
               <div key={s.l} className="card" style={{background:"white",padding:"20px 18px",
@@ -1019,7 +1026,7 @@ export function Panel({real}:{real?:PanelReal}){
         })()}
 
         {/* ═════ RESUMEN ═════ */}
-        {view==="resumen"&&(()=>{
+        {view==="mes"&&calModo==="mes"&&(()=>{
           const pre=`${yr}-${String(mo+1).padStart(2,"0")}-`;
           const mBks=bookings.filter((b:any)=>b.date.startsWith(pre));
           const past=mBks.filter((b:any)=>b.date<today);
@@ -1036,34 +1043,13 @@ export function Panel({real}:{real?:PanelReal}){
           const tot=sum(mBks)||1;
           return(
           <div className="fu">
-            <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:24,flexWrap:"wrap",gap:12}}>
-              <div>
-                <div style={{...sans,fontSize:12.5,letterSpacing:"3px",color:G,marginBottom:6}}>CÓMO VA EL NEGOCIO</div>
-                <div style={{...serif,fontSize:30,fontWeight:300}}>{MONTHS[mo]} {yr}</div>
-              </div>
-              <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>
-                <button style={{...bO,padding:"9px 16px"}} onClick={()=>setCalM(new Date(yr,mo-1,1))}>‹</button>
-                <button style={{...bO,padding:"9px 16px"}} onClick={()=>setCalM(new Date(yr,mo+1,1))}>›</button>
-                <button style={{...bP,padding:"9px 16px"}} onClick={()=>exportCSV(mBks,`citas-${yr}-${String(mo+1).padStart(2,"0")}.csv`)}>
-                  Descargar Excel (CSV)
-                </button>
-              </div>
+            <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",margin:"28px 0 12px",gap:12}}>
+              <div style={{...sans,fontSize:17,fontWeight:700}}>El mes en detalle</div>
+              <button style={{...bO,padding:"9px 14px"}} onClick={()=>exportCSV(mBks,`citas-${yr}-${String(mo+1).padStart(2,"0")}.csv`)}>
+                Descargar Excel
+              </button>
             </div>
-            <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(150px,1fr))",gap:2,background:`${G}22`,marginBottom:26}}>
-              {[
-                {n:`${sum(past)}€`,l:"Facturado",c:DR},
-                {n:`${sum(fut)}€`,l:"Por cobrar este mes",c:AMBER},
-                {n:`${past.length?Math.round(sum(past)/past.length):0}€`,l:"Ticket medio",c:CH},
-                {n:names.size,l:"Clientas distintas",c:CH},
-                {n:nuevas,l:"Clientas nuevas",c:GREEN},
-              ].map(x=>(
-                <div key={x.l} className="card" style={{background:"white",padding:"20px 18px",textAlign:"center",transition:"all .25s"}}>
-                  <div style={{...serif,fontSize:31,color:x.c,lineHeight:1}}>{x.n}</div>
-                  <div style={{...sans,fontSize:12.5,letterSpacing:"1.5px",color:MT,marginTop:7}}>{x.l.toUpperCase()}</div>
-                </div>
-              ))}
-            </div>
-            <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(300px,1fr))",gap:24}}>
+            <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(min(300px,100%),1fr))",gap:16}}>
               <div style={{background:"white",padding:22}}>
                 <div style={{...sans,fontSize:12.5,letterSpacing:"3px",color:G,marginBottom:16}}>TRATAMIENTOS QUE MÁS FACTURAN</div>
                 {top.length===0&&<div style={{...sans,fontSize:13,color:MT}}>Sin citas este mes</div>}
@@ -1338,7 +1324,7 @@ export function Panel({real}:{real?:PanelReal}){
         paddingBottom:"env(safe-area-inset-bottom)",boxShadow:"0 -4px 20px rgba(0,0,0,.05)"}}>
         <div style={{maxWidth:560,margin:"0 auto",display:"grid",gridTemplateColumns:"repeat(5,1fr)"}}>
           {([["dia","Hoy",CalendarCheck],["mes","Calendario",CalendarDays],["avisos","Avisos",Bell],["clientas","Clientas",Users],["mas","Más",Menu]] as const).map(([id,l,Icon])=>{
-            const on=id==="mas"?mas||["semana","todas","resumen"].includes(view):view===id&&!mas;
+            const on=id==="mas"?mas||view==="todas":view===id&&!mas;
             return(
               <button key={id} onClick={()=>{if(id==="mas"){setMas(true);return;}setMas(false);setView(id);if(id==="dia")setSelDate(today);window.scrollTo(0,0);}}
                 style={{...sans,background:"none",border:"none",cursor:"pointer",padding:"9px 0 8px",display:"flex",flexDirection:"column",
@@ -1362,9 +1348,7 @@ export function Panel({real}:{real?:PanelReal}){
             style={{background:BG,width:"100%",maxWidth:520,borderRadius:"22px 22px 0 0",padding:"14px 16px calc(84px + env(safe-area-inset-bottom))"}}>
             <div style={{width:40,height:4,borderRadius:2,background:"#D4C9BE",margin:"0 auto 14px"}}/>
             {([
-              ["semana","Vista semanal","Toda la semana de un vistazo",CalendarRange],
               ["todas","Todas las citas","La lista completa, de la más próxima a la más lejana",List],
-              ["resumen","Resumen del mes","Lo facturado, clientas nuevas y lo que más vende",ChartColumn],
             ] as const).map(([id,t,d,Icon])=>(
               <button key={id} onClick={()=>{setView(id);setMas(false);window.scrollTo(0,0);}}
                 style={{...sans,width:"100%",display:"flex",alignItems:"center",gap:14,padding:"14px 12px",background:"white",
