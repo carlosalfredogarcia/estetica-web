@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from "react";
 import { SERVICES, type Service } from "@/lib/data";
 import { useNegocio, categorias, huecosLibres, duracion, type Horario } from "@/components/negocio";
 import { db } from "@/lib/supabase";
+import { CalendarCheck, CalendarDays, Bell, Users, Menu, Plus, Ban, ChevronLeft, ChevronRight, ChartColumn, List, CalendarRange, ExternalLink, LogOut } from "lucide-react";
 
 // Estética real (desde /panel, con la dueña ya dentro). Sin esto, el panel es la demo con datos inventados.
 export interface PanelReal {
@@ -154,7 +155,9 @@ const CSS=`
   ::-webkit-scrollbar{width:5px;height:5px}
   ::-webkit-scrollbar-thumb{background:${G}55;border-radius:3px}
   a{text-decoration:none}
-  html,body{overscroll-behavior:none;-webkit-tap-highlight-color:transparent}
+  html,body{overscroll-behavior:none;-webkit-tap-highlight-color:transparent;overflow-x:hidden;max-width:100%}
+  body{touch-action:pan-y}
+  @media(max-width:640px){.semana-grid{grid-template-columns:1fr!important;min-width:0!important}.semana-dia{min-height:0!important}}
   @media(max-width:640px){.hide-sm{display:none!important}}
 `;
 
@@ -169,6 +172,7 @@ function Lotus({size=32,color=G}:{size?:number,color?:string}){
 
 export function Panel({real}:{real?:PanelReal}){
   const [view,setView]=useState("dia");
+  const [mas,setMas]=useState(false); // menú «Más» de la barra de abajo
   const demoNegocio=useNegocio();
   const NEGOCIO=real?{...demoNegocio,nombre:real.nombre}:demoNegocio;
   const HOR:any=real?real.horario:SCHED;
@@ -454,17 +458,17 @@ export function Panel({real}:{real?:PanelReal}){
   if(!ready)return <div style={{background:BG,minHeight:"100vh"}}/>;
 
   return(
-    <div style={{...sans,background:BG,minHeight:"100vh",color:CH}}>
+    <div style={{...sans,background:BG,minHeight:"100vh",color:CH,overflowX:"hidden"}}>
       <style dangerouslySetInnerHTML={{__html:CSS}}/>
 
       {/* TOAST */}
       {toast&&(
-        <div className="fu" style={{position:"fixed",bottom:20,left:16,right:16,margin:"0 auto",maxWidth:460,
+        <div className="fu" style={{position:"fixed",bottom:"calc(150px + env(safe-area-inset-bottom))",left:16,right:16,margin:"0 auto",maxWidth:460,
           zIndex:900,justifyContent:"space-between",
           background:DARK,color:"#fff",padding:"14px 26px",
           borderLeft:`3px solid ${G}`,
           ...sans,fontSize:14,boxShadow:"0 8px 28px rgba(0,0,0,.3)",display:"flex",alignItems:"center",gap:16,
-          maxWidth:"calc(100vw - 32px)",borderRadius:12}}>
+          borderRadius:12}}>
           <span>{toast}</span>
           {toastAccion&&(
             <button onClick={()=>{toastAccion.fn();setToast("");setToastAccion(null);}}
@@ -475,72 +479,43 @@ export function Panel({real}:{real?:PanelReal}){
         </div>
       )}
 
-      {/* HEADER */}
-      <header style={{background:"#FFFFFF",borderBottom:"2px solid #B8922A",
-        padding:"0 20px",height:64,display:"flex",alignItems:"center",gap:12,
+      {/* CABECERA */}
+      <header style={{background:"#FFFFFF",borderBottom:`1px solid ${G}44`,
+        padding:"0 16px",height:58,display:"flex",alignItems:"center",gap:12,
         justifyContent:"space-between",position:"sticky",top:0,zIndex:200}}>
-        <div style={{display:"flex",alignItems:"center",gap:10}}>
-          <div className="float"><Lotus size={24}/></div>
-          <div>
-            <div style={{...serif,fontSize:15,letterSpacing:"6px",color:"#1A1A1A",lineHeight:1,textTransform:"uppercase",whiteSpace:"nowrap"}}>{NEGOCIO.nombre}</div>
-            <div style={{...sans,fontSize:9,letterSpacing:"3px",color:G,marginTop:2}}>PANEL DE GESTIÓN</div>
+        <div style={{display:"flex",alignItems:"center",gap:10,minWidth:0}}>
+          <Lotus size={22}/>
+          <div style={{minWidth:0}}>
+            <div style={{...sans,fontSize:16,fontWeight:700,color:"#1A1A1A",lineHeight:1.1,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{NEGOCIO.nombre}</div>
+            <div style={{...sans,fontSize:11,letterSpacing:"2px",color:G,marginTop:2}}>PANEL DE GESTIÓN</div>
           </div>
         </div>
-        <div style={{display:"flex",alignItems:"center",gap:20}}>
-          {pending.length>0&&(
-            <div className="hide-sm" onClick={()=>setView("avisos")} style={{display:"flex",alignItems:"center",gap:7,cursor:"pointer",
-              background:`${AMBER}20`,padding:"6px 14px",borderRadius:20}}>
-              <div className="pulse" style={{width:6,height:6,borderRadius:"50%",background:AMBER}}/>
-              <span style={{...sans,fontSize:12.5,color:AMBER}}>
-                {pending.length} por avisar
-              </span>
-            </div>
-          )}
-          <button style={{...bP,padding:"9px 16px",whiteSpace:"nowrap"}} onClick={()=>openNew()}>+ Nueva cita</button>
-          {real&&(
-            <div style={{display:"flex",flexDirection:"column",alignItems:"flex-end",gap:2}}>
-              <a href={`/?s=${real.slug}`} target="_blank" rel="noreferrer" style={{...sans,fontSize:11.5,letterSpacing:"1px",color:G,whiteSpace:"nowrap"}}>VER MI WEB ↗</a>
-              <button onClick={real.onSalir} style={{...sans,fontSize:11.5,letterSpacing:"1px",color:MT,background:"none",border:"none",cursor:"pointer",padding:0}}>SALIR</button>
-            </div>
-          )}
-        </div>
+        {pending.length>0&&(
+          <button onClick={()=>setView("avisos")} style={{...sans,display:"flex",alignItems:"center",gap:7,cursor:"pointer",border:"none",
+            background:`${AMBER}20`,padding:"7px 12px",borderRadius:20,flexShrink:0}}>
+            <div className="pulse" style={{width:7,height:7,borderRadius:"50%",background:AMBER}}/>
+            <span style={{fontSize:13,fontWeight:600,color:AMBER,whiteSpace:"nowrap"}}>{pending.length} por avisar</span>
+          </button>
+        )}
       </header>
 
-      {/* TABS */}
-      <div style={{background:"#F5EDE4",borderBottom:"1px solid #B8922A33",
-        padding:"0 28px",display:"flex",gap:4,position:"sticky",top:64,zIndex:190,overflowX:"auto"}}>
-        {[["dia","Hoy / Por día"],["semana","Vista semanal"],["mes","Calendario"],["todas","Todas las citas"],["avisos","Avisos"],["clientas","Clientas"],["resumen","Resumen"]].map(([id,l])=>(
-          <button key={id} className="navbtn" onClick={()=>setView(id)}
-            style={{...sans,padding:"14px 20px",border:"none",background:"none",
-              cursor:"pointer",fontSize:12.5,letterSpacing:"1.5px",
-              color:view===id?G:"#1A1A1A55",
-              borderBottom:`2px solid ${view===id?G:"transparent"}`,
-              marginBottom:-1,fontWeight:view===id?500:400,transition:"color .2s",whiteSpace:"nowrap"}}>
-            {l.toUpperCase()}
-          </button>
-        ))}
-      </div>
-
-      <div style={{maxWidth:1080,margin:"0 auto",padding:"32px 24px 64px"}}>
+      <div style={{maxWidth:1080,margin:"0 auto",padding:"20px 16px 150px"}}>
 
         {/* ═════ VISTA DÍA ═════ */}
         {view==="dia"&&(
         <div className="fu">
-          {/* Date nav */}
-          <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",
-            marginBottom:24,flexWrap:"wrap",gap:12}}>
-            <div>
-              <div style={{...sans,fontSize:12.5,letterSpacing:"3px",color:G,marginBottom:6}}>AGENDA DEL DÍA</div>
-              <div style={{...serif,fontSize:30,fontWeight:300,lineHeight:1.1}}>{fmtD(selDate)}</div>
+          {/* Día: flechas a los lados y la fecha en medio */}
+          <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",gap:8,marginBottom:16}}>
+            <button aria-label="Día anterior" style={{width:44,height:44,borderRadius:22,border:`1px solid ${G}55`,background:"white",display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer",flexShrink:0}}
+              onClick={()=>{const d=parseD(selDate);d.setDate(d.getDate()-1);setSelDate(toDS(d));}}><ChevronLeft size={22} color={G}/></button>
+            <div style={{textAlign:"center",minWidth:0}}>
+              <div style={{...sans,fontSize:20,fontWeight:700,lineHeight:1.2}}>{fmtD(selDate)}</div>
+              {selDate!==today
+                ?<button onClick={()=>setSelDate(today)} style={{...sans,fontSize:13,color:G,fontWeight:600,background:"none",border:"none",cursor:"pointer",marginTop:2}}>Volver a hoy</button>
+                :<div style={{...sans,fontSize:13,color:MT,marginTop:2}}>Hoy</div>}
             </div>
-            <div style={{display:"flex",gap:8}}>
-              <button style={{...bO,padding:"9px 15px"}}
-                onClick={()=>{const d=parseD(selDate);d.setDate(d.getDate()-1);setSelDate(toDS(d));}}>‹ Anterior</button>
-              <button style={{...bO,padding:"9px 15px"}}
-                onClick={()=>setSelDate(today)}>Hoy</button>
-              <button style={{...bO,padding:"9px 15px"}}
-                onClick={()=>{const d=parseD(selDate);d.setDate(d.getDate()+1);setSelDate(toDS(d));}}>Siguiente ›</button>
-            </div>
+            <button aria-label="Día siguiente" style={{width:44,height:44,borderRadius:22,border:`1px solid ${G}55`,background:"white",display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer",flexShrink:0}}
+              onClick={()=>{const d=parseD(selDate);d.setDate(d.getDate()+1);setSelDate(toDS(d));}}><ChevronRight size={22} color={G}/></button>
           </div>
 
           {/* Stats */}
@@ -570,8 +545,13 @@ export function Panel({real}:{real?:PanelReal}){
             </div>
           ):(
           <div>
-            <div style={{...sans,fontSize:13.5,color:MT,marginBottom:12}}>
-              Toca una cita para ver el detalle, o un rato libre para apuntar una cita o bloquearlo.
+            <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:12,gap:10}}>
+              <div style={{...sans,fontSize:15,fontWeight:700}}>{dayBookings.length?`${dayBookings.length} cita${dayBookings.length>1?"s":""}`:"Sin citas este día"}</div>
+              <button onClick={()=>setBlockModal({date:selDate,h:null})}
+                style={{...sans,display:"flex",alignItems:"center",gap:6,fontSize:13,color:MT,background:"white",
+                  border:`1px solid ${MT}44`,borderRadius:20,padding:"7px 12px",cursor:"pointer"}}>
+                <Ban size={15}/> Bloquear una hora
+              </button>
             </div>
             <div style={{display:"flex",flexDirection:"column",gap:8}}>
               {agenda(selDate).map((x:any)=>{
@@ -612,20 +592,7 @@ export function Panel({real}:{real?:PanelReal}){
                     </div>
                   );
                 }
-                return(
-                  <div key={"l"+x.ini} style={{border:`1.5px dashed ${GREEN}66`,borderRadius:14,padding:"10px 12px 10px 16px",
-                    display:"flex",justifyContent:"space-between",alignItems:"center",gap:10,background:`${GREEN}08`}}>
-                    <div style={{...sans,fontSize:14,color:GREEN,fontWeight:600}}>Libre · {rango}</div>
-                    <div style={{display:"flex",gap:6}}>
-                      <button onClick={()=>openNew(selDate,x.ini)}
-                        style={{...sans,fontSize:13,fontWeight:600,background:GREEN,color:"#fff",border:"none",
-                          borderRadius:20,padding:"8px 14px",cursor:"pointer"}}>+ Cita</button>
-                      <button onClick={()=>setBlockModal({date:selDate,h:Math.floor(x.ini/60)})}
-                        style={{...sans,fontSize:13,background:"white",color:MT,border:`1px solid ${MT}44`,
-                          borderRadius:20,padding:"8px 12px",cursor:"pointer"}}>Bloquear</button>
-                    </div>
-                  </div>
-                );
+                return null;
               })}
             </div>
           </div>
@@ -683,7 +650,7 @@ export function Panel({real}:{real?:PanelReal}){
 
           <div style={{overflowX:"auto",paddingBottom:8}}>
             <div style={{display:"grid",gridTemplateColumns:"repeat(7,minmax(122px,1fr))",
-              gap:2,background:`${G}22`,minWidth:860}}>
+              gap:2,background:`${G}22`,minWidth:860}} className="semana-grid">
               {weekDays.map(d=>{
                 const ds=toDS(d);
                 const sl=getSlots(ds);
@@ -692,7 +659,7 @@ export function Panel({real}:{real?:PanelReal}){
                 const closed=sl.length===0;
                 const occ=sl.length?Math.round(((sl.length-sl.filter((s:any)=>!s.booking&&!s.block).length)/sl.length)*100):0;
                 return(
-                  <div key={ds} onClick={()=>{setSelDate(ds);setView("dia");}}
+                  <div key={ds} className="semana-dia" onClick={()=>{setSelDate(ds);setView("dia");}}
                     style={{background:isToday?`${G}14`:"white",cursor:"pointer",
                       minHeight:250,display:"flex",flexDirection:"column"}}>
                     <div style={{padding:"12px 10px",borderBottom:`1px solid ${G}22`,
@@ -1317,46 +1284,107 @@ export function Panel({real}:{real?:PanelReal}){
       </div>);
       })()}
 
-      {/* ═════ MODAL BLOQUEAR ═════ */}
-      {blockModal&&(
-      <div onClick={()=>{setBlockModal(null);setBlockReason("");}}
-        style={{position:"fixed",inset:0,background:"rgba(15,13,12,.7)",
-          backdropFilter:"blur(4px)",zIndex:500,display:"flex",
-          alignItems:"center",justifyContent:"center",padding:20}}>
+      {/* ═════ HOJA BLOQUEAR ═════ */}
+      {blockModal&&(()=>{
+        // Horas del horario de ese día que aún no tienen cita ni bloqueo
+        const libresH=(HOR[parseD(blockModal.date).getDay()]||[]).flatMap(({s:a,e:z}:any)=>Array.from({length:z-a},(_,i)=>a+i))
+          .filter((h:number)=>!ocupadoDia(blockModal.date).some(o=>o.ini<h*60+60&&o.fin>h*60));
+        const cerrar=()=>{setBlockModal(null);setBlockReason("");};
+        return(
+      <div onClick={cerrar} style={{position:"fixed",inset:0,background:"rgba(15,13,12,.55)",zIndex:500,display:"flex",alignItems:"flex-end",justifyContent:"center"}}>
         <div className="fu" onClick={(e:React.MouseEvent)=>e.stopPropagation()}
-          style={{background:BG,maxWidth:400,width:"100%",
-            boxShadow:"0 24px 60px rgba(0,0,0,.4)"}}>
-          <div style={{background:DARK,padding:"22px 26px",borderBottom:`2px solid ${G}`}}>
-            <div style={{...sans,fontSize:12.5,letterSpacing:"3px",color:G,marginBottom:8}}>
-              HUECO LIBRE
-            </div>
-            <div style={{...serif,fontSize:24,color:"#fff",fontWeight:300}}>
-              {String(blockModal.h).padStart(2,"0")}:00h
-            </div>
-            <div style={{...sans,fontSize:13.5,color:"#ffffff66",marginTop:4}}>
-              {fmtD(blockModal.date)}
-            </div>
+          style={{background:BG,width:"100%",maxWidth:520,maxHeight:"90vh",overflowY:"auto",borderRadius:"22px 22px 0 0",boxShadow:"0 -10px 40px rgba(0,0,0,.25)",padding:"14px 20px 22px"}}>
+          <div style={{width:40,height:4,borderRadius:2,background:"#D4C9BE",margin:"0 auto 14px"}}/>
+          <div style={{...sans,fontSize:20,fontWeight:700}}>Bloquear una hora</div>
+          <div style={{...sans,fontSize:14,color:MT,marginTop:4,marginBottom:16}}>
+            {fmtD(blockModal.date)} · Esa hora deja de salir en la web y nadie podrá reservarla.
           </div>
-          <div style={{padding:26}}>
-            <button style={{...bP,width:"100%",marginBottom:22}}
-              onClick={()=>openNew(blockModal.date,blockModal.h*60)}>+ Apuntar una cita a esta hora</button>
-            <div style={{...sans,fontSize:13,color:MT,lineHeight:1.8,marginBottom:20}}>
-              O bloquéala: al bloquear esta hora dejará de aparecer como disponible en la web.
-              Los clientes no podrán reservarla.
+          {libresH.length===0?(
+            <div style={{...sans,fontSize:14,color:MT,marginBottom:16}}>No quedan horas libres ese día.</div>
+          ):(
+            <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:8,marginBottom:18}}>
+              {libresH.map((h:number)=>{const on=blockModal.h===h;return(
+                <button key={h} onClick={()=>setBlockModal((m:any)=>({...m,h}))}
+                  style={{...sans,padding:"11px 0",fontSize:15,fontWeight:600,borderRadius:12,cursor:"pointer",
+                    border:`1.5px solid ${on?RED:"#E2D6CB"}`,background:on?RED:"white",color:on?"#fff":CH}}>{hhmm(h)}</button>
+              );})}
             </div>
-            <label style={{...sans,display:"block",fontSize:11.5,letterSpacing:"2px",
-              color:MT,marginBottom:8}}>MOTIVO (SOLO LO VES TÚ)</label>
-            <input style={{...inp,marginBottom:22}} value={blockReason}
-              onChange={(e:React.ChangeEvent<HTMLInputElement>)=>setBlockReason(e.target.value)}
-              placeholder="Ej: comida, formación, descanso..."/>
-            <div style={{display:"flex",gap:10}}>
-              <button style={{...bO,flex:1}}
-                onClick={()=>{setBlockModal(null);setBlockReason("");}}>Cancelar</button>
-              <button style={{...bP,flex:1}} onClick={doBlock}>Bloquear hora</button>
-            </div>
+          )}
+          <div style={{...sans,fontSize:14,fontWeight:600,marginBottom:8}}>Motivo <span style={{fontWeight:400,color:MT}}>(solo lo ves tú)</span></div>
+          <input style={{...inp,marginBottom:18,borderRadius:12,padding:"13px 14px"}} value={blockReason}
+            onChange={(e:React.ChangeEvent<HTMLInputElement>)=>setBlockReason(e.target.value)}
+            placeholder="Comida, formación, descanso…"/>
+          <button disabled={blockModal.h==null} onClick={doBlock}
+            style={{...sans,width:"100%",padding:"15px",borderRadius:30,border:"none",fontSize:16,fontWeight:700,
+              background:RED,color:"#fff",cursor:"pointer",opacity:blockModal.h==null?.4:1}}>
+            {blockModal.h==null?"Elige la hora":`Bloquear las ${hhmm(blockModal.h)}`}
+          </button>
+        </div>
+      </div>);
+      })()}
+
+      {/* ═════ BOTÓN NUEVA CITA (siempre a la vista) ═════ */}
+      {!newBk&&!detail&&!blockModal&&!mas&&(
+        <button onClick={()=>openNew(view==="dia"?selDate:undefined)} aria-label="Nueva cita"
+          style={{...sans,position:"fixed",right:16,bottom:"calc(80px + env(safe-area-inset-bottom))",zIndex:300,display:"flex",alignItems:"center",gap:8,
+            background:G,color:"#fff",border:"none",borderRadius:30,padding:"15px 22px",fontSize:16,fontWeight:700,
+            boxShadow:"0 10px 28px rgba(184,146,42,.45)",cursor:"pointer"}}>
+          <Plus size={22}/> Nueva cita
+        </button>
+      )}
+
+      {/* ═════ BARRA DE ABAJO ═════ */}
+      <nav style={{position:"fixed",left:0,right:0,bottom:0,zIndex:400,background:"white",borderTop:`1px solid ${G}33`,
+        paddingBottom:"env(safe-area-inset-bottom)",boxShadow:"0 -4px 20px rgba(0,0,0,.05)"}}>
+        <div style={{maxWidth:560,margin:"0 auto",display:"grid",gridTemplateColumns:"repeat(5,1fr)"}}>
+          {([["dia","Hoy",CalendarCheck],["mes","Calendario",CalendarDays],["avisos","Avisos",Bell],["clientas","Clientas",Users],["mas","Más",Menu]] as const).map(([id,l,Icon])=>{
+            const on=id==="mas"?mas||["semana","todas","resumen"].includes(view):view===id&&!mas;
+            return(
+              <button key={id} onClick={()=>{if(id==="mas"){setMas(true);return;}setMas(false);setView(id);if(id==="dia")setSelDate(today);window.scrollTo(0,0);}}
+                style={{...sans,background:"none",border:"none",cursor:"pointer",padding:"9px 0 8px",display:"flex",flexDirection:"column",
+                  alignItems:"center",gap:3,color:on?G:"#8A7A70",position:"relative"}}>
+                <Icon size={23} strokeWidth={on?2.4:1.8}/>
+                <span style={{fontSize:11.5,fontWeight:on?700:500}}>{l}</span>
+                {id==="avisos"&&pending.length>0&&(
+                  <span style={{position:"absolute",top:5,left:"calc(50% + 6px)",minWidth:18,height:18,borderRadius:9,background:RED,color:"#fff",
+                    fontSize:11,fontWeight:700,display:"flex",alignItems:"center",justifyContent:"center",padding:"0 5px"}}>{pending.length}</span>
+                )}
+              </button>
+            );
+          })}
+        </div>
+      </nav>
+
+      {/* ═════ MENÚ «MÁS» ═════ */}
+      {mas&&(
+        <div onClick={()=>setMas(false)} style={{position:"fixed",inset:0,background:"rgba(15,13,12,.45)",zIndex:450,display:"flex",alignItems:"flex-end",justifyContent:"center"}}>
+          <div className="fu" onClick={(e:React.MouseEvent)=>e.stopPropagation()}
+            style={{background:BG,width:"100%",maxWidth:520,borderRadius:"22px 22px 0 0",padding:"14px 16px calc(84px + env(safe-area-inset-bottom))"}}>
+            <div style={{width:40,height:4,borderRadius:2,background:"#D4C9BE",margin:"0 auto 14px"}}/>
+            {([
+              ["semana","Vista semanal","Toda la semana de un vistazo",CalendarRange],
+              ["todas","Todas las citas","La lista completa, de la más próxima a la más lejana",List],
+              ["resumen","Resumen del mes","Lo facturado, clientas nuevas y lo que más vende",ChartColumn],
+            ] as const).map(([id,t,d,Icon])=>(
+              <button key={id} onClick={()=>{setView(id);setMas(false);window.scrollTo(0,0);}}
+                style={{...sans,width:"100%",display:"flex",alignItems:"center",gap:14,padding:"14px 12px",background:"white",
+                  border:"none",borderRadius:14,marginBottom:8,cursor:"pointer",textAlign:"left"}}>
+                <Icon size={24} color={G}/>
+                <div><div style={{fontSize:16,fontWeight:700,color:CH}}>{t}</div><div style={{fontSize:13,color:MT}}>{d}</div></div>
+              </button>
+            ))}
+            {real&&(
+              <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8,marginTop:6}}>
+                <a href={`/?s=${real.slug}`} target="_blank" rel="noreferrer"
+                  style={{...sans,display:"flex",alignItems:"center",justifyContent:"center",gap:8,padding:"13px",borderRadius:14,
+                    border:`1px solid ${G}66`,color:G,fontSize:15,fontWeight:600}}><ExternalLink size={17}/> Ver mi web</a>
+                <button onClick={real.onSalir}
+                  style={{...sans,display:"flex",alignItems:"center",justifyContent:"center",gap:8,padding:"13px",borderRadius:14,
+                    border:`1px solid ${MT}55`,background:"none",color:MT,fontSize:15,fontWeight:600,cursor:"pointer"}}><LogOut size={17}/> Salir</button>
+              </div>
+            )}
           </div>
         </div>
-      </div>
       )}
     </div>
   );
