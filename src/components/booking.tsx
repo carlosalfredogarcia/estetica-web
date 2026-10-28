@@ -1,21 +1,17 @@
 "use client";
 
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, useCallback } from "react";
 import { ChevronLeft, ChevronRight, Check } from "lucide-react";
-import { SERVICES, SCHEDULE_MAP, DAYS, MONTHS, WHATSAPP } from "@/lib/data";
-import { useNegocio } from "@/components/negocio";
+import { DAYS, MONTHS } from "@/lib/data";
+import { useSalon, categorias } from "@/components/negocio";
+import { db } from "@/lib/supabase";
 import { Reveal } from "@/components/reveal";
 import { SectionHeading } from "@/components/section-heading";
 import { cn } from "@/lib/utils";
 
 type Step = 1 | 2 | 3;
-type Category = "Facial" | "Corporal" | "Láser";
-
-const TABS: { id: Category; label: string }[] = [
-  { id: "Facial", label: "Faciales" },
-  { id: "Corporal", label: "Corporales" },
-  { id: "Láser", label: "Láser" },
-];
+const ds = (d: Date) =>
+  `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 
 function buildTimeSlots(slots: { s: number; e: number }[]): string[] {
   const times: string[] = [];
@@ -29,7 +25,7 @@ function buildTimeSlots(slots: { s: number; e: number }[]): string[] {
 
 export function Booking() {
   const [step, setStep] = useState<Step>(1);
-  const [catTab, setCatTab] = useState<Category>("Facial");
+  const [catElegida, setCatTab] = useState<string>("");
   const [selectedService, setSelectedService] = useState("");
   const [calendarDate, setCalendarDate] = useState(() => {
     const d = new Date();
@@ -41,12 +37,23 @@ export function Booking() {
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
   const [confirmed, setConfirmed] = useState(false);
-  const NEGOCIO = useNegocio();
+  const [enviando, setEnviando] = useState(false);
+  const [error, setError] = useState("");
+  // Horas ya ocupadas (citas y bloqueos) de la estética real: "2026-11-02|10"
+  const [ocupadas, setOcupadas] = useState<Set<string>>(new Set());
+  const salon = useSalon();
+  const NEGOCIO = salon.negocio;
+  const WHATSAPP = NEGOCIO.whatsapp;
+  const SERVICES = salon.servicios;
+  const SCHEDULE_MAP = salon.horario;
+  const real = salon.modo === "real";
+  const TABS = categorias(SERVICES);
+  const catTab = TABS.some((t) => t.id === catElegida) ? catElegida : TABS[0]?.id ?? "";
 
   /* --- Pre-select service from card click --- */
   useEffect(() => {
     function handleSelect(e: Event) {
-      const { name, cat } = (e as CustomEvent<{ name: string; cat: Category }>).detail;
+      const { name, cat } = (e as CustomEvent<{ name: string; cat: string }>).detail;
       setStep(1);
       setCatTab(cat);
       setSelectedService(name);
@@ -70,6 +77,19 @@ export function Booking() {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
 
+  const cargarOcupadas = useCallback(async () => {
+    if (!real || !salon.slug) return;
+    const desde = new Date(calYear, calMonth, 1);
+    const hasta = new Date(calYear, calMonth + 1, 0);
+    const { data } = await db().rpc("horas_ocupadas", { p_slug: salon.slug, p_desde: ds(desde), p_hasta: ds(hasta) });
+    setOcupadas(new Set((data ?? []).map((r: { fecha: string; hora: number }) => `${r.fecha}|${r.hora}`)));
+  }, [real, salon.slug, calYear, calMonth]);
+
+  useEffect(() => {
+    const t = setTimeout(cargarOcupadas, 0);
+    return () => clearTimeout(t);
+  }, [cargarOcupadas, step]);
+
   function isAvailable(day: number) {
     const d = new Date(calYear, calMonth, day);
     if (d < today) return false;
@@ -81,7 +101,13 @@ export function Booking() {
     const dow = day.getDay();
     const slots = SCHEDULE_MAP[dow];
     if (!slots) return [];
-    return buildTimeSlots(slots);
+    const ahora = new Date();
+    const esHoy = ds(day) === ds(ahora);
+    return buildTimeSlots(slots).filter((t) => {
+      const h = parseInt(t);
+      if (esHoy && h <= ahora.getHours()) return false;
+      return !ocupadas.has(`${ds(day)}|${h}`);
+    });
   }
 
   /* --- WhatsApp confirm --- */
@@ -98,9 +124,35 @@ export function Booking() {
     return `https://wa.me/${WHATSAPP}?text=${encodeURIComponent(bookingMessage())}`;
   }
 
-  function handleConfirm() {
+  async function handleConfirm() {
     if (!selectedService || !selectedDay || !selectedTime || !name) return;
-    window.open(bookingWhatsappUrl(), "_blank", "noopener,noreferrer");
+    setError("");
+    if (!real) {
+      window.open(bookingWhatsappUrl(), "_blank", "noopener,noreferrer");
+      setConfirmed(true);
+      return;
+    }
+    // Estética real: la reserva se guarda y le aparece a la dueña en su panel
+    if (phone.replace(/\D/g, "").length < 9) return setError("Pon tu teléfono para que podamos confirmarte la cita.");
+    setEnviando(true);
+    const { error: e } = await db().rpc("reservar", {
+      p_slug: salon.slug,
+      p_fecha: ds(selectedDay),
+      p_hora: parseInt(selectedTime),
+      p_tratamiento: selectedService,
+      p_nombre: name.trim(),
+      p_telefono: phone.trim(),
+    });
+    setEnviando(false);
+    if (e) {
+      setError(e.message || "No se pudo guardar la reserva. Inténtalo de nuevo.");
+      if (/disponible|cerrado/i.test(e.message)) {
+        setSelectedTime("");
+        cargarOcupadas();
+        setStep(2);
+      }
+      return;
+    }
     setConfirmed(true);
   }
 
@@ -176,7 +228,9 @@ export function Booking() {
               <div className="space-y-2">
                 <h3 className="font-serif text-2xl font-light">¡Reserva recibida!</h3>
                 <p className="text-sm font-sans text-muted-foreground max-w-md mx-auto">
-                  Te hemos abierto WhatsApp con tu reserva: pulsa enviar y te la confirmamos enseguida.
+                  {real
+                    ? "Ya la tenemos apuntada. Te escribiremos por WhatsApp para confirmártela."
+                    : "Te hemos abierto WhatsApp con tu reserva: pulsa enviar y te la confirmamos enseguida."}
                 </p>
               </div>
               <div className="border-t border-[var(--gold)]/20 pt-6 grid sm:grid-cols-3 gap-4 text-sm">
@@ -202,7 +256,7 @@ export function Booking() {
                   rel="noopener noreferrer"
                   className="btn-gold px-8 py-3 text-xs font-sans tracking-[0.2em] uppercase"
                 >
-                  ¿No se abrió? Enviar por WhatsApp
+                  {real ? "Escribirnos por WhatsApp" : "¿No se abrió? Enviar por WhatsApp"}
                 </a>
                 <button
                   onClick={downloadIcs}
@@ -432,6 +486,9 @@ export function Booking() {
                     {DAYS[selectedDay.getDay()]} {selectedDay.getDate()} de{" "}
                     {MONTHS[selectedDay.getMonth()]}
                   </p>
+                  {getTimeSlots(selectedDay).length === 0 && (
+                    <p className="text-sm font-sans text-muted-foreground">No quedan horas libres ese día. Prueba con otro.</p>
+                  )}
                   <div className="flex flex-wrap gap-2">
                     {getTimeSlots(selectedDay).map((time) => (
                       <button
@@ -516,7 +573,7 @@ export function Booking() {
                 </div>
                 <div>
                   <label className="text-xs font-sans tracking-[0.15em] uppercase text-muted-foreground block mb-2">
-                    Teléfono (opcional)
+                    {real ? "Teléfono *" : "Teléfono (opcional)"}
                   </label>
                   <input
                     type="tel"
@@ -536,19 +593,22 @@ export function Booking() {
                   ← Volver
                 </button>
                 <button
-                  disabled={!name.trim()}
+                  disabled={!name.trim() || enviando}
                   onClick={handleConfirm}
                   className={cn(
                     "btn-gold px-8 py-3 text-xs font-sans tracking-[0.2em] uppercase inline-flex items-center gap-2",
-                    !name.trim() && "opacity-40 pointer-events-none"
+                    (!name.trim() || enviando) && "opacity-40 pointer-events-none"
                   )}
                 >
-                  Confirmar reserva →
+                  {enviando ? "Guardando…" : "Confirmar reserva →"}
                 </button>
               </div>
 
+              {error && <p className="text-sm font-sans text-[#b42318]">{error}</p>}
               <p className="text-xs font-sans text-muted-foreground">
-                Al confirmar se abrirá WhatsApp con tu reserva para que nos la envíes.
+                {real
+                  ? "Al confirmar, tu reserva queda apuntada y te escribimos por WhatsApp para confirmártela."
+                  : "Al confirmar se abrirá WhatsApp con tu reserva para que nos la envíes."}
               </p>
             </div>
           </Reveal>

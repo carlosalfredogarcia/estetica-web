@@ -1,8 +1,10 @@
-import { SERVICES } from "@/lib/data";
+"use client";
+
+import { useSalon } from "@/components/negocio";
 
 // Franja de títulos que pasa como los créditos de una película
 export function Marquee() {
-  const names = SERVICES.map((s) => s.name);
+  const names = useSalon().servicios.map((s) => s.name);
   return (
     <div className="relative py-6 border-y border-border overflow-hidden bg-[var(--secondary)]" aria-hidden>
       <div className="marquee">

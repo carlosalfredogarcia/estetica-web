@@ -1,9 +1,12 @@
-import { SCHEDULE } from "@/lib/data";
+"use client";
+
+import { useSalon, horarioTexto } from "@/components/negocio";
 import { Reveal } from "@/components/reveal";
 import { SectionHeading } from "@/components/section-heading";
 import { OpenNow } from "@/components/open-now";
 
 export function Schedule() {
+  const SCHEDULE = horarioTexto(useSalon().horario);
   return (
     <section id="horario" className="py-20 lg:py-28 px-6 lg:px-8">
       <div className="max-w-7xl mx-auto">

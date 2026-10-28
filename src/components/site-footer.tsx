@@ -1,11 +1,10 @@
 "use client";
 
-import { WHATSAPP } from "@/lib/data";
 import { WhatsAppIcon, InstagramIcon } from "@/components/brand-icons";
 import { NegocioTexto, useNegocio } from "@/components/negocio";
 
 export function SiteFooter() {
-  const INSTAGRAM = useNegocio().instagram;
+  const { instagram: INSTAGRAM, whatsapp: WHATSAPP } = useNegocio();
   const year = new Date().getFullYear();
 
   return (

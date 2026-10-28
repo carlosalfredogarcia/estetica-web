@@ -1,5 +1,6 @@
 import { SiteHeader } from "@/components/site-header";
 import { CinemaIntro } from "@/components/cinema-intro";
+import { EstadoSalon } from "@/components/estado-salon";
 import { Hero } from "@/components/hero";
 import { Marquee } from "@/components/marquee";
 import { Intro } from "@/components/intro";
@@ -50,6 +51,7 @@ export default function Home() {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
+      <EstadoSalon />
       <CinemaIntro />
       <div className="film-grain" aria-hidden />
       <SiteHeader />

@@ -2,13 +2,12 @@
 
 import { useEffect, useRef } from "react";
 import { ArrowUpRight } from "lucide-react";
-import { WHATSAPP } from "@/lib/data";
 import { OpenNow } from "@/components/open-now";
-import { NegocioTexto } from "@/components/negocio";
+import { NegocioTexto, useNegocio } from "@/components/negocio";
 
-function whatsappUrl(msg?: string) {
+function whatsappUrl(wa: string, msg?: string) {
   const text = msg ? encodeURIComponent(msg) : "";
-  return `https://wa.me/${WHATSAPP}${text ? `?text=${text}` : ""}`;
+  return `https://wa.me/${wa}${text ? `?text=${text}` : ""}`;
 }
 
 // Fotos que flotan en el espacio, cada una a una profundidad distinta
@@ -19,6 +18,7 @@ const FLOATING = [
 ];
 
 export function Hero() {
+  const wa = useNegocio().whatsapp;
   const sceneRef = useRef<HTMLDivElement>(null);
   const bgRef = useRef<HTMLDivElement>(null);
 
@@ -140,7 +140,7 @@ export function Hero() {
             </a>
           </div>
           <a
-            href={whatsappUrl("Hola, me gustaría obtener más información sobre vuestros tratamientos.")}
+            href={whatsappUrl(wa, "Hola, me gustaría obtener más información sobre vuestros tratamientos.")}
             target="_blank"
             rel="noopener noreferrer"
             className="inline-block mt-6 text-xs font-sans tracking-[0.2em] uppercase text-foreground/60 hover:text-[var(--gold)] transition-colors"

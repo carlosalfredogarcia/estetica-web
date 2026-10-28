@@ -1,13 +1,13 @@
 "use client";
 
-import { WHATSAPP, telefonoBonito } from "@/lib/data";
+import { telefonoBonito } from "@/lib/data";
 import { WhatsAppIcon, InstagramIcon } from "@/components/brand-icons";
 import { Reveal } from "@/components/reveal";
 import { SectionHeading } from "@/components/section-heading";
 import { useNegocio } from "@/components/negocio";
 
 export function Contact() {
-  const INSTAGRAM = useNegocio().instagram;
+  const { instagram: INSTAGRAM, whatsapp: WHATSAPP } = useNegocio();
   return (
     <section
       id="contacto"
@@ -39,7 +39,7 @@ export function Contact() {
               <div>
                 <p className="font-serif text-lg font-light mb-1">WhatsApp</p>
                 <p className="text-xs font-sans text-muted-foreground tracking-wide">
-                  {telefonoBonito()}
+                  {telefonoBonito(WHATSAPP)}
                 </p>
               </div>
               <span className="text-xs font-sans tracking-[0.15em] uppercase text-[var(--gold)] group-hover:underline">

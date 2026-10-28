@@ -2,19 +2,11 @@
 
 import { useState } from "react";
 import { ArrowUpRight } from "lucide-react";
-import { SERVICES, WHATSAPP } from "@/lib/data";
 import { Reveal } from "@/components/reveal";
 import { SectionHeading } from "@/components/section-heading";
 import { cn } from "@/lib/utils";
 import { Tilt } from "@/components/tilt";
-
-type Category = "Facial" | "Corporal" | "Láser";
-
-const TABS: { id: Category; label: string }[] = [
-  { id: "Facial", label: "Faciales" },
-  { id: "Corporal", label: "Corporales" },
-  { id: "Láser", label: "Láser" },
-];
+import { useSalon, categorias } from "@/components/negocio";
 
 // Cuánto se ahorra con un bono frente a pagar sesión a sesión
 export function bonoSaving(price: string, promo?: string) {
@@ -28,14 +20,13 @@ export function bonoSaving(price: string, promo?: string) {
   return { n, total, perSession: Math.round((total / n) * 100) / 100, saving, pct: Math.round((saving / (unit * n)) * 100) };
 }
 
-function whatsappUrl(msg: string) {
-  return `https://wa.me/${WHATSAPP}?text=${encodeURIComponent(msg)}`;
-}
-
 export function Services() {
-  const [active, setActive] = useState<Category>("Facial");
-
-  const filtered = SERVICES.filter((s) => s.cat === active);
+  const { servicios, negocio } = useSalon();
+  const TABS = categorias(servicios);
+  const [elegida, setActive] = useState<string>("");
+  const active = TABS.some((t) => t.id === elegida) ? elegida : TABS[0]?.id ?? "";
+  const filtered = servicios.filter((s) => s.cat === active);
+  const whatsappUrl = (msg: string) => `https://wa.me/${negocio.whatsapp}?text=${encodeURIComponent(msg)}`;
 
   return (
     <section id="servicios" className="py-20 lg:py-28 px-6 lg:px-8">

@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { SCHEDULE_MAP, DAYS } from "@/lib/data";
+import { DAYS } from "@/lib/data";
+import { useSalon, type Horario } from "@/components/negocio";
 
 // Hora actual en Málaga, sea cual sea el país desde el que se mira la web
 function madridNow() {
@@ -19,7 +20,7 @@ function madridNow() {
 
 const hh = (h: number) => `${String(h).padStart(2, "0")}:00`;
 
-function status() {
+function status(SCHEDULE_MAP: Horario) {
   const { dow, h } = madridNow();
   const today = SCHEDULE_MAP[dow];
   const current = today?.find((s) => h >= s.s && h < s.e);
@@ -35,15 +36,17 @@ function status() {
 }
 
 export function OpenNow({ className }: { className?: string }) {
+  const { horario, modo } = useSalon();
   const [st, setSt] = useState<{ open: boolean; text: string } | null>(null);
   useEffect(() => {
-    const first = setTimeout(() => setSt(status()), 0);
-    const id = setInterval(() => setSt(status()), 60000);
+    const first = setTimeout(() => setSt(status(horario)), 0);
+    const id = setInterval(() => setSt(status(horario)), 60000);
     return () => {
       clearTimeout(first);
       clearInterval(id);
     };
-  }, []);
+  }, [horario]);
+  if (modo === "cargando") return null;
   if (!st) return null;
   return (
     <p className={className}>

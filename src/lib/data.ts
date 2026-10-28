@@ -12,7 +12,7 @@ export const COLORS = {
 } as const;
 
 export interface Service {
-  cat: "Facial" | "Corporal" | "Láser";
+  cat: string; // Facial · Corporal · Láser (o las que tenga cada estética)
   name: string;
   price: string;
   promo?: string;

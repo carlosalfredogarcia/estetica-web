@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
-import { WHATSAPP } from "@/lib/data";
 import { WhatsAppIcon, InstagramIcon } from "@/components/brand-icons";
 import { NegocioTexto, useNegocio } from "@/components/negocio";
 
@@ -15,7 +14,7 @@ const NAV_LINKS = [
 ];
 
 export function SiteHeader() {
-  const INSTAGRAM = useNegocio().instagram;
+  const { instagram: INSTAGRAM, whatsapp: WHATSAPP } = useNegocio();
   const [scrolled, setScrolled] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
 

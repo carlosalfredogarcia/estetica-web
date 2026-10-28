@@ -1,17 +1,21 @@
+"use client";
+
 import { Reveal } from "@/components/reveal";
 import { SectionHeading } from "@/components/section-heading";
 import { Tilt } from "@/components/tilt";
-import { SERVICES } from "@/lib/data";
-import { NegocioTexto } from "@/components/negocio";
+import { NegocioTexto, useSalon, categorias } from "@/components/negocio";
 
-const count = (cat: string) => String(SERVICES.filter((s) => s.cat === cat).length);
-const STATS = [
-  { value: count("Facial"), label: "Tratamientos Faciales" },
-  { value: count("Corporal"), label: "Tratamientos Corporales" },
-  { value: count("Láser"), label: "Zonas Láser" },
-];
+const ETIQUETA: Record<string, string> = {
+  Facial: "Tratamientos Faciales",
+  Corporal: "Tratamientos Corporales",
+  Láser: "Zonas Láser",
+};
 
 export function Intro() {
+  const { servicios } = useSalon();
+  const STATS = categorias(servicios)
+    .slice(0, 3)
+    .map((c) => ({ value: String(servicios.filter((s) => s.cat === c.id).length), label: ETIQUETA[c.id] ?? c.label }));
   return (
     <section className="py-20 lg:py-28 px-6 lg:px-8 bg-[var(--secondary)] overflow-hidden">
       <div className="max-w-7xl mx-auto grid lg:grid-cols-2 gap-12 lg:gap-20 items-center">
