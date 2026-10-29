@@ -35,7 +35,7 @@ export function Calculadora() {
         <p className="text-xs font-sans tracking-[0.2em] uppercase text-muted-foreground mb-2">Se te escapan al mes</p>
         <p className="font-serif text-6xl font-light text-[var(--gold)] tabular-nums">{eur(alMes)}</p>
         <p className="text-sm font-sans text-muted-foreground mt-4">
-          {alMes >= 25
+          {alMes >= 30
             ? `Con que el servicio te salve una sola cita al mes, ya se paga solo.`
             : "Aun así, tu web te trae clientas nuevas y te ahorra tiempo cada día."}
         </p>

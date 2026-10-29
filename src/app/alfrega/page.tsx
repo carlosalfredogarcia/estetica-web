@@ -22,14 +22,14 @@ const INCLUYE = [
 const PLANES = [
   {
     nombre: "Fundadora",
-    precio: "25",
+    precio: "30",
     nota: "Solo para las 10 primeras estéticas, y para siempre",
     items: ["Todo lo del plan Esencial", "El mismo precio mientras sigas conmigo"],
     destacado: true,
   },
   {
     nombre: "Esencial",
-    precio: "30",
+    precio: "35",
     nota: "Para tener la agenda en orden",
     items: ["Tu web con reservas online", "Panel de citas y clientas", "Recordatorios con un toque", "Soporte por WhatsApp"],
   },
