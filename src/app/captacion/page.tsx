@@ -78,10 +78,14 @@ export default function Captacion() {
     setTimeout(() => setAviso(""), 2400);
   };
 
-  const enlaceWeb = (s: { salon: string; zona: string; instagram?: string }) =>
-    `${origen}/?salon=${encodeURIComponent(s.salon)}${s.zona ? `&ciudad=${encodeURIComponent(s.zona)}` : ""}${
-      s.instagram ? `&ig=${encodeURIComponent(s.instagram.replace(/^@/, ""))}` : ""}`;
-  const enlacePanel = (s: { salon: string; zona: string; instagram?: string }) => enlaceWeb(s).replace("/?", "/admin?");
+  // Su web de muestra con su nombre, su Instagram y su WhatsApp (las reservas de prueba le llegan a ella)
+  type Enlace = { salon: string; zona: string; instagram?: string; telefono?: string };
+  const enlaceWeb = (s: Enlace) => {
+    const tel = (s.telefono ?? "").replace(/\D/g, "");
+    return `${origen}/?salon=${encodeURIComponent(s.salon)}${s.zona ? `&ciudad=${encodeURIComponent(s.zona)}` : ""}${
+      s.instagram ? `&ig=${encodeURIComponent(s.instagram.replace(/^@/, ""))}` : ""}${tel ? `&tel=${tel}` : ""}`;
+  };
+  const enlacePanel = (s: Enlace) => enlaceWeb(s).replace("/?", "/admin?");
 
   const msgSeguimiento = (s: Salon) =>
     `Hola${s.duena ? ` ${s.duena}` : ""}, soy Carlos, el de la web y el dispensador 😊 ¿Pudiste verla con calma? Aquí la tienes: ${enlaceWeb(s)}\n\nSi te animas, esta semana te la dejo lista con tus tratamientos y precios.`;

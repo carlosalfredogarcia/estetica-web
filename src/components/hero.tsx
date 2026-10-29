@@ -22,7 +22,7 @@ export function Hero() {
   return (
     <section
       id="inicio"
-      className="relative min-h-[100svh] flex flex-col justify-end pb-16 sm:pb-24 px-6 lg:px-8 overflow-hidden bg-[var(--background)]"
+      className="relative min-h-[100svh] flex flex-col justify-end pt-24 pb-16 sm:pb-24 px-6 lg:px-8 overflow-hidden bg-[var(--background)]"
     >
       {/* Fondo: la sala, con movimiento lento de cámara */}
       <div className="absolute inset-0" aria-hidden>
@@ -66,11 +66,20 @@ export function Hero() {
 
       <div className="relative z-10 max-w-7xl mx-auto w-full">
         <div className="max-w-2xl">
-          <p className="text-xs font-sans font-medium tracking-[0.4em] uppercase text-[var(--gold)] mb-6 tab-enter" style={{ animationDelay: "200ms" }}>
-            Estética avanzada · <NegocioTexto campo="ciudad" />
-          </p>
+          {/* El nombre de la estética, bien grande: es lo primero que tiene que ver */}
+          <div className="mb-8 tab-enter" style={{ animationDelay: "200ms" }}>
+            <p className="font-serif text-4xl sm:text-5xl lg:text-6xl font-medium leading-[1.05] text-[var(--gold)] text-balance">
+              <NegocioTexto campo="nombre" />
+            </p>
+            <div className="flex items-center gap-3 mt-4">
+              <span className="h-px w-10 bg-[var(--gold)]" />
+              <p className="text-[11px] sm:text-xs font-sans font-medium tracking-[0.3em] uppercase text-foreground/70">
+                Estética avanzada · <NegocioTexto campo="ciudad" />
+              </p>
+            </div>
+          </div>
 
-          <h1 className="font-serif text-6xl sm:text-7xl lg:text-8xl xl:text-9xl font-light leading-[0.95] tracking-wide mb-8 tab-enter" style={{ animationDelay: "350ms" }}>
+          <h1 className="font-serif text-5xl sm:text-7xl lg:text-8xl xl:text-9xl font-light leading-[0.95] tracking-wide mb-8 tab-enter" style={{ animationDelay: "350ms" }}>
             Tu piel,
             <br />
             <em className="italic gold-shine pr-2">redefinida</em>

@@ -6,7 +6,7 @@ import { PanelCtx } from "./ctx";
 import { cn } from "@/lib/utils";
 import { Cifras, Segmentos } from "./ui";
 import {
-  C, type Cita, type Bloqueo, DIAS, MESES, toDS, parseD, sumarDias, hhmm, fechaLarga, horasTxt, euros, nombrePila, estadoCita,
+  C, type Cita, type Bloqueo, DIAS, MESES, toDS, parseD, sumarDias, hhmm, fechaLarga, euros, nombrePila, estadoCita,
 } from "./tema";
 
 function Flecha({ izq, onClick, label }: { izq?: boolean; onClick: () => void; label: string }) {
@@ -84,7 +84,6 @@ function VistaDia() {
           items={[
             { n: k.n, l: k.n === 1 ? "cita" : "citas" },
             { n: `${k.pct}%`, l: "ocupación", color: k.pct > 80 ? C.rojo : k.pct > 40 ? C.ambar : C.verde },
-            { n: horasTxt(k.libre), l: "libre", color: C.verde },
             { n: euros(k.ingresos), l: "previsto", color: "#8B2252" },
           ]}
         />
@@ -141,7 +140,6 @@ function VistaSemana() {
         items={[
           { n: k.n, l: "citas" },
           { n: `${k.pct}%`, l: "ocupación", color: k.pct > 80 ? C.rojo : k.pct > 40 ? C.ambar : C.verde },
-          { n: horasTxt(k.libre), l: "libre", color: C.verde },
           { n: euros(k.ingresos), l: "previsto", color: "#8B2252" },
         ]}
       />
@@ -169,7 +167,6 @@ function VistaMes() {
         items={[
           { n: k.n, l: "citas" },
           { n: `${k.pct}%`, l: "ocupación", color: k.pct > 80 ? C.rojo : k.pct > 40 ? C.ambar : C.verde },
-          { n: horasTxt(k.libre), l: "libre", color: C.verde },
           { n: euros(k.ingresos), l: "previsto", color: "#8B2252" },
         ]}
       />

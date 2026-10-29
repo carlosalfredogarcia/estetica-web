@@ -32,23 +32,32 @@ const FOTO: Record<string, string> = {
   Láser: "images/tratamientos/laser-piernas.webp",
 };
 
-// Web de muestra para cada estética: ?salon=Estética Rosa&ciudad=Marbella&ig=esteticarosa
-// cambia el nombre, la ciudad y el Instagram solo en ese enlace (se recuerda mientras dure la visita).
+// Web de muestra para cada estética: ?salon=Estética Rosa&ciudad=Marbella&ig=esteticarosa&tel=600000000
+// cambia el nombre, la ciudad, el Instagram y el WhatsApp solo en ese enlace (se recuerda mientras dure la visita).
 function leerDemo(q: URLSearchParams): Salon {
-  let salon = "", ciudad = "", ig = "";
+  let salon = "", ciudad = "", ig = "", tel = "";
   try {
     salon = q.get("salon")?.trim() ?? "";
     ciudad = q.get("ciudad")?.trim() ?? "";
     ig = q.get("ig")?.trim().replace(/^@/, "") ?? "";
-    if (salon) sessionStorage.setItem(KEY, JSON.stringify({ salon, ciudad, ig }));
+    tel = q.get("tel")?.replace(/\D/g, "") ?? "";
+    if (salon) sessionStorage.setItem(KEY, JSON.stringify({ salon, ciudad, ig, tel }));
     else {
       const g = JSON.parse(sessionStorage.getItem(KEY) || "null");
-      if (g) ({ salon, ciudad, ig = "" } = g);
+      if (g) ({ salon, ciudad, ig = "", tel = "" } = g);
     }
   } catch {}
+  // Un móvil español de 9 cifras lleva delante el 34 para WhatsApp
+  if (tel.length === 9) tel = "34" + tel;
   return {
     ...DEMO,
-    negocio: { ...NEGOCIO, nombre: salon || NEGOCIO.nombre, ciudad: ciudad || NEGOCIO.ciudad, instagram: ig || NEGOCIO.instagram },
+    negocio: {
+      ...NEGOCIO,
+      nombre: salon || NEGOCIO.nombre,
+      ciudad: ciudad || NEGOCIO.ciudad,
+      instagram: ig || NEGOCIO.instagram,
+      whatsapp: tel.length >= 11 ? tel : NEGOCIO.whatsapp,
+    },
   };
 }
 

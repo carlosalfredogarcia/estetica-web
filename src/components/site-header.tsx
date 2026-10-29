@@ -35,9 +35,13 @@ export function SiteHeader() {
     >
       <div className="max-w-7xl mx-auto px-6 lg:px-8 h-16 flex items-center justify-between">
         {/* Logo */}
+        {/* En el móvil el nombre ya sale grande en la portada: aquí aparece al bajar */}
         <a
           href="#inicio"
-          className="font-serif text-xl tracking-[0.15em] uppercase font-light flex-shrink-0"
+          className={cn(
+            "font-serif text-base md:text-xl tracking-[0.12em] md:tracking-[0.15em] uppercase font-light min-w-0 truncate mr-3 transition-opacity duration-300",
+            scrolled ? "opacity-100" : "opacity-0 md:opacity-100"
+          )}
         >
           <NegocioTexto campo="nombre" />
         </a>
