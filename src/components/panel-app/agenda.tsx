@@ -6,7 +6,7 @@ import { PanelCtx } from "./ctx";
 import { cn } from "@/lib/utils";
 import { Cifras, Segmentos } from "./ui";
 import {
-  C, type Cita, type Bloqueo, DIAS, MESES, toDS, parseD, sumarDias, hhmm, fechaLarga, euros, nombrePila, estadoCita,
+  C, type Cita, type Bloqueo, DIAS, MESES, toDS, parseD, sumarDias, hhmm, fechaLarga, horasTxt, euros, nombrePila, estadoCita,
 } from "./tema";
 
 function Flecha({ izq, onClick, label }: { izq?: boolean; onClick: () => void; label: string }) {
@@ -84,6 +84,7 @@ function VistaDia() {
           items={[
             { n: k.n, l: k.n === 1 ? "cita" : "citas" },
             { n: `${k.pct}%`, l: "ocupación", color: k.pct > 80 ? C.rojo : k.pct > 40 ? C.ambar : C.verde },
+            { n: horasTxt(k.libre), l: "libre", color: C.verde },
             { n: euros(k.ingresos), l: "previsto", color: "#8B2252" },
           ]}
         />
@@ -140,6 +141,7 @@ function VistaSemana() {
         items={[
           { n: k.n, l: "citas" },
           { n: `${k.pct}%`, l: "ocupación", color: k.pct > 80 ? C.rojo : k.pct > 40 ? C.ambar : C.verde },
+          { n: horasTxt(k.libre), l: "libre", color: C.verde },
           { n: euros(k.ingresos), l: "previsto", color: "#8B2252" },
         ]}
       />
@@ -167,6 +169,7 @@ function VistaMes() {
         items={[
           { n: k.n, l: "citas" },
           { n: `${k.pct}%`, l: "ocupación", color: k.pct > 80 ? C.rojo : k.pct > 40 ? C.ambar : C.verde },
+          { n: horasTxt(k.libre), l: "libre", color: C.verde },
           { n: euros(k.ingresos), l: "previsto", color: "#8B2252" },
         ]}
       />
@@ -251,7 +254,8 @@ function Rejilla({ dias }: { dias: string[] }) {
   const abierto = (ds: string, m: number) =>
     (P.HOR[parseD(ds).getDay()] || []).some(({ s, e }: { s: number; e: number }) => m >= s * 60 && m < e * 60);
   const minAhora = ahora.getHours() * 60 + ahora.getMinutes();
-  const cols = `${semana ? 34 : 48}px repeat(${dias.length},minmax(0,1fr))`;
+  // En el día no hay columna de horas: cada cita lleva su hora y los huecos libres la enseñan en pequeño
+  const cols = semana ? `34px repeat(${dias.length},minmax(0,1fr))` : "minmax(0,1fr)";
 
   return (
     <div className="bg-white rounded-2xl shadow-[0_1px_2px_rgba(0,0,0,0.04)] overflow-hidden">
@@ -287,18 +291,18 @@ function Rejilla({ dias }: { dias: string[] }) {
         </div>
       )}
       <div className="grid" style={{ gridTemplateColumns: cols }}>
-        {/* Horas */}
-        <div>
+        {/* Horas (solo en la semana) */}
+        {semana && <div>
           {filas.map((m) => (
             <div
               key={m}
               className="pr-1.5 text-right tabular-nums"
               style={{ height: FILA, fontSize: semana ? 10.5 : 12.5, color: C.gris, fontWeight: m % 60 === 0 ? 700 : 400, lineHeight: "14px", paddingTop: 2 }}
             >
-              {m % 60 === 0 || !semana ? hhmm(m / 60) : ""}
+              {m % 60 === 0 ? hhmm(m / 60) : ""}
             </div>
           ))}
-        </div>
+        </div>}
         {/* Días */}
         {dias.map((ds) => {
           const citas: Cita[] = P.citasDe(ds);
@@ -310,7 +314,7 @@ function Rejilla({ dias }: { dias: string[] }) {
             height: Math.max(FILA - 2, (dur / 30) * FILA - 2),
           });
           return (
-            <div key={ds} className="relative border-l border-[#EFE7DF]">
+            <div key={ds} className={cn("relative", semana && "border-l border-[#EFE7DF]")}>
               {filas.map((m) => {
                 const ab = abierto(ds, m);
                 const pasado = ds < P.today || (ds === P.today && m + 30 <= minAhora);
@@ -326,7 +330,11 @@ function Rejilla({ dias }: { dias: string[] }) {
                       borderTop: `1px solid ${m % 60 === 0 ? "#EAE1D8" : "#F5F0EA"}`,
                       background: ab ? "transparent" : "repeating-linear-gradient(45deg,#F7F2ED,#F7F2ED 4px,#F1EAE2 4px,#F1EAE2 8px)",
                     }}
-                  />
+                  >
+                    {!semana && ab && !pasado && !lleno(m) && (
+                      <span className="block pl-3 pt-1.5 text-[12px] tabular-nums text-[#B5A89C]">{hhmm(m / 60)}</span>
+                    )}
+                  </div>
                 );
               })}
               {ds === P.today && minAhora >= ini && minAhora <= fin && (
