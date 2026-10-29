@@ -23,8 +23,8 @@ const PLANES = [
   {
     nombre: "Fundadora",
     precio: "30",
-    nota: "Solo para las 10 primeras estéticas, y para siempre",
-    items: ["Todo lo del plan Esencial", "El mismo precio mientras sigas conmigo"],
+    nota: "Precio especial para las 10 primeras estéticas",
+    items: ["Todo lo del plan Esencial", "Plazas limitadas: solo 10 estéticas"],
     destacado: true,
   },
   {

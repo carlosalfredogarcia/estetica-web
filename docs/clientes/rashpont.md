@@ -2,7 +2,7 @@
 
 Estética y peluquería. Primera clienta interesada (visita de finales de octubre de 2026).
 
-- Plan: Fundadora, **30 € al mes para siempre** (una de las 10 primeras). Primer mes gratis desde el día de la entrega.
+- Plan: Fundadora, **30 € al mes** (precio especial de las 10 primeras). Primer mes gratis desde el día de la entrega.
 - Identificador de su web (slug): `rashpont` → https://estetica-web-six.vercel.app/?s=rashpont
 - Su panel: https://estetica-web-six.vercel.app/panel (entra con su correo y su contraseña)
 
