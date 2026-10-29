@@ -94,7 +94,7 @@ export function HojaCita({ cita }: { cita: Cita }) {
   const st = estadoCita(c.status);
   const porAvisar = P.porAvisar.some((x: Cita) => x.id === c.id);
   const acciones = [
-    { k: "conf", txt: "Enviar detalles", Icono: Send, m: P.msg.detalles(c) },
+    { k: "conf", txt: "Enviar confirmación", Icono: Send, m: P.msg.detalles(c) },
     { k: "rec", txt: "Recordar cita", Icono: Bell, m: P.msg.recordar(c) },
     { k: "res", txt: "Pedir reseña", Icono: Star, m: P.msg.resena(c) },
     { k: "", txt: "Escribir", Icono: MessageCircle, m: "" },
@@ -132,7 +132,7 @@ export function HojaCita({ cita }: { cita: Cita }) {
             </span>
             {porAvisar && (
               <span className="text-[12px] font-bold px-2.5 py-1 rounded-full" style={{ color: C.azul, background: "#E7EEFB" }}>
-                Falta mandarle los detalles
+                Falta enviarle la confirmación
               </span>
             )}
             {c.origen === "web" && <span className="text-[12px] font-semibold px-2.5 py-1 rounded-full bg-white text-[#8A7A70]">Reservó en la web</span>}

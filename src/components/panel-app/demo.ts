@@ -55,7 +55,7 @@ const NOTE_POOL=[
 ];
 
 
-// Citas de ejemplo alrededor de hoy (desde el mes pasado hasta dentro de 3 semanas),
+// Citas de ejemplo alrededor de hoy (desde el mes pasado hasta dentro de dos meses),
 // respetando el horario. Sirven para enseñar el panel; se pueden borrar en «Resumen».
 export function generarDemo(hoy:Date){
   let seed=987654321;
@@ -63,20 +63,22 @@ export function generarDemo(hoy:Date){
   const out:any[]=[];
   let id=1;
   const start=new Date(hoy.getFullYear(),hoy.getMonth()-1,1);
-  const end=new Date(hoy);end.setDate(end.getDate()+21);
+  // Hasta el final del mes que viene a dos meses vista (en octubre, todo diciembre)
+  const end=new Date(hoy.getFullYear(),hoy.getMonth()+3,0);
   for(const dt=new Date(start);dt<=end;dt.setDate(dt.getDate()+1)){
     const sc=(SCHED as any)[dt.getDay()];
     if(!sc)continue;
     const ds=toDS(dt);
     const ahead=Math.round((dt.getTime()-hoy.getTime())/86400000);
     // Ocupación: alta en el pasado y los próximos días, más baja cuanto más lejos
-    const fill=ahead<0?0.78:ahead<=3?0.8:ahead<=10?0.55:0.3;
+    const fill=ahead<0?0.78:ahead<=3?0.8:ahead<=10?0.65:0.6;
     for(const{s,e}of sc){
       for(let h=s;h<e;h++){
         if(rnd()>fill)continue;
         const n=NAMES[Math.floor(rnd()*NAMES.length)];
         const sv=POOL[Math.floor(rnd()*POOL.length)];
-        const status=(ahead>=0&&rnd()>0.75)?"pendiente":"confirmada";
+        // Sin confirmar, solo algunas de la próxima semana (las que salen en «Avisos»)
+        const status=(rnd()>0.75&&ahead>=0&&ahead<=7)?"pendiente":"confirmada";
         const notes=rnd()>0.86?NOTE_POOL[Math.floor(rnd()*NOTE_POOL.length)]:"";
         out.push({id:id++,date:ds,time:h,dur:60,client:n[0],phone:n[1],
           service:sv.s,price:sv.p+"€",status,notes});
@@ -97,3 +99,47 @@ export function demoBlocked(hoy:Date){
   ];
 }
 
+
+// Donde el panel de muestra guarda sus datos en este móvil
+export const DEMO_STORE="estetica-panel-v2";
+// Reservas hechas en la web de muestra que el panel de muestra aún no ha recogido
+const NUEVAS="alfrega-demo-nuevas";
+
+export type ReservaDemo={date:string;time:number;dur:number;client:string;phone:string;service:string;price:string};
+
+// La web de muestra deja aquí la reserva para que aparezca en el panel de muestra del mismo móvil
+export function guardarReservaDemo(r:ReservaDemo){
+  try{
+    const l=JSON.parse(localStorage.getItem(NUEVAS)||"[]");
+    l.push(r);
+    localStorage.setItem(NUEVAS,JSON.stringify(l));
+  }catch{}
+}
+
+// El panel de muestra las recoge (y las borra de la cola)
+export function recogerReservasDemo():ReservaDemo[]{
+  try{
+    const l=JSON.parse(localStorage.getItem(NUEVAS)||"[]");
+    localStorage.removeItem(NUEVAS);
+    return Array.isArray(l)?l:[];
+  }catch{return [];}
+}
+
+// Horas ya ocupadas en el panel de muestra, para que la web de muestra no las ofrezca: { "2026-11-02": [{ini, fin}] }
+export function ocupadoDemo(hoy:Date){
+  let citas:any[]=[],bloq:any[]=[];
+  try{
+    const g=JSON.parse(localStorage.getItem(DEMO_STORE)||"null");
+    citas=g?.bookings??generarDemo(hoy);
+    bloq=g?.blocked??demoBlocked(hoy);
+  }catch{citas=generarDemo(hoy);bloq=demoBlocked(hoy);}
+  try{
+    citas=citas.concat(JSON.parse(localStorage.getItem(NUEVAS)||"[]"));
+  }catch{}
+  const m:Record<string,{ini:number;fin:number}[]>={};
+  for(const c of [...citas.filter((c)=>c.status!=="cancelada"),...bloq]){
+    const ini=Math.round(c.time*60);
+    (m[c.date]??=[]).push({ini,fin:ini+(c.dur||60)});
+  }
+  return m;
+}

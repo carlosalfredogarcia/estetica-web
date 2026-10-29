@@ -12,7 +12,7 @@ const wa = (msg: string) => `https://wa.me/${ALFREGA.whatsapp}?text=${encodeURIC
 
 const INCLUYE = [
   ["Tu web, con tu nombre", "Tus tratamientos, tus precios y tus fotos. Bonita en el móvil, que es donde te buscan."],
-  ["Reservas a tu WhatsApp", "La clienta elige tratamiento, día y hora, y te llega el mensaje listo. Sin comisiones por reserva."],
+  ["Reservas las 24 horas", "La clienta elige tratamiento, día y hora, y la cita entra sola en tu agenda. Sin comisiones por reserva."],
   ["Tu agenda en el móvil", "El día, la semana y el mes de un vistazo, con los huecos libres y lo que vas a facturar."],
   ["Recordatorios con un toque", "Cada tarde avisas a las clientas de mañana. Menos citas a las que no viene nadie."],
   ["Fichas de clientas", "Cuántas veces vino, cuánto gastó, su tratamiento habitual y notas como alergias o bonos."],
@@ -29,14 +29,14 @@ const PLANES = [
   },
   {
     nombre: "Esencial",
-    precio: "35",
+    precio: "30",
     nota: "Para tener la agenda en orden",
     items: ["Tu web con reservas online", "Panel de citas y clientas", "Recordatorios con un toque", "Soporte por WhatsApp"],
   },
   {
     nombre: "Pro",
-    precio: "55",
-    nota: "Para que vuelvan más clientas",
+    precio: "",
+    nota: "Muy pronto. Para que vuelvan más clientas",
     items: ["Todo lo del Esencial", "Recordatorios automáticos por WhatsApp", "Fidelización: bonos y cumpleaños", "Campañas e informes"],
   },
 ];
@@ -45,7 +45,8 @@ const PREGUNTAS = [
   ["¿Hay permanencia?", "No. Te quedas porque te sirve; si un mes no te convence, lo dejas."],
   ["¿Cobras comisión por cada reserva?", "Ninguna. Pagas la cuota y ya está."],
   ["¿Tengo que saber de ordenadores?", "No. Yo lo monto todo con tus tratamientos y precios. Tú solo miras tu agenda."],
-  ["¿Cuánto tarda?", "En pocos días tienes tu web lista. Antes de publicarla la revisamos juntos."],
+  ["¿Cuánto tarda?", "En una semana tienes tu web lista. Antes de publicarla la revisamos juntos."],
+  ["¿Puedo probarlo antes de pagar?", "Sí: el primer mes es gratis. Si no te convence, lo dejas y no pagas nada."],
   ["¿Hay plan anual?", "Sí: pagando el año entero tienes 2 meses gratis."],
 ];
 
@@ -124,7 +125,7 @@ export default function Alfrega() {
             <p className="text-xs font-sans tracking-[0.2em] uppercase text-[var(--gold)] mb-3">Precios</p>
             <h2 className="font-serif text-4xl sm:text-5xl font-light mb-3">Claros y sin sorpresas</h2>
             <p className="text-sm font-sans text-muted-foreground mb-12">
-              Montaje gratis · Sin permanencia · Sin comisiones · Plan anual con 2 meses gratis
+              Primer mes gratis · Montaje gratis · Sin permanencia · Sin comisiones · Plan anual con 2 meses gratis
             </p>
             <div className="grid md:grid-cols-3 gap-6">
               {PLANES.map((p) => (
@@ -138,11 +139,15 @@ export default function Alfrega() {
                     </span>
                   )}
                   <p className="text-xs font-sans tracking-[0.2em] uppercase text-[var(--gold)] mb-4">{p.nombre}</p>
-                  <p className="font-serif text-6xl font-light tabular-nums">
-                    {p.precio}
-                    <span className="text-2xl">&nbsp;€</span>
-                    <span className="text-base font-sans text-muted-foreground"> /mes</span>
-                  </p>
+                  {p.precio ? (
+                    <p className="font-serif text-6xl font-light tabular-nums">
+                      {p.precio}
+                      <span className="text-2xl">&nbsp;€</span>
+                      <span className="text-base font-sans text-muted-foreground"> /mes</span>
+                    </p>
+                  ) : (
+                    <p className="font-serif text-5xl font-light leading-[1.2]">Muy pronto</p>
+                  )}
                   <p className="text-sm font-sans text-muted-foreground mt-2 mb-6">{p.nota}</p>
                   <ul className="space-y-3 flex-1">
                     {p.items.map((i) => (
@@ -153,12 +158,12 @@ export default function Alfrega() {
                     ))}
                   </ul>
                   <a
-                    href={wa(`Hola Carlos, me interesa el plan ${p.nombre}.`)}
+                    href={wa(p.precio ? `Hola Carlos, me interesa el plan ${p.nombre}.` : `Hola Carlos, avísame cuando esté el plan ${p.nombre}.`)}
                     target="_blank"
                     rel="noopener noreferrer"
                     className={`mt-8 text-center px-6 py-3 text-xs font-sans tracking-[0.2em] uppercase ${p.destacado ? "btn-gold" : "btn-elegant border border-foreground"}`}
                   >
-                    Lo quiero
+                    {p.precio ? "Lo quiero" : "Avísame"}
                   </a>
                 </div>
               ))}

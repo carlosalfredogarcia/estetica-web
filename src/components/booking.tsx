@@ -5,6 +5,7 @@ import { ChevronLeft, ChevronRight, Check, Clock, CalendarDays, User } from "luc
 import { DAYS, MONTHS } from "@/lib/data";
 import { useSalon, categorias, duracion, huecosLibres, hhmm } from "@/components/negocio";
 import { db } from "@/lib/supabase";
+import { guardarReservaDemo, ocupadoDemo } from "@/components/panel-app/demo";
 import { SectionHeading } from "@/components/section-heading";
 import { cn } from "@/lib/utils";
 
@@ -75,7 +76,14 @@ export function Booking() {
   }, []);
 
   const cargarOcupado = useCallback(async () => {
-    if (!real || !salon.slug) return;
+    if (!real) {
+      // Web de muestra: no ofrece las horas que ya están ocupadas en el panel de muestra
+      const h = new Date();
+      h.setHours(0, 0, 0, 0);
+      setOcupado(ocupadoDemo(h));
+      return;
+    }
+    if (!salon.slug) return;
     const desde = new Date(mes.getFullYear(), mes.getMonth(), 1);
     const hasta = new Date(mes.getFullYear(), mes.getMonth() + 1, 0);
     const { data } = await db().rpc("horas_ocupadas", { p_slug: salon.slug, p_desde: ds(desde), p_hasta: ds(hasta) });
@@ -114,13 +122,7 @@ export function Booking() {
   const fechaLarga = (d: Date) => `${DAYS[d.getDay()]} ${d.getDate()} de ${MONTHS[d.getMonth()].toLowerCase()}`;
   const fin = inicio != null ? inicio + dur : 0;
 
-  /* --- Mensaje y calendario de la clienta --- */
-  function mensaje() {
-    if (!dia || inicio == null) return "";
-    return `Hola! Me gustaría reservar:\n\n*Tratamiento:* ${servicio}\n*Fecha:* ${fechaLarga(dia)} de ${dia.getFullYear()}\n*Hora:* ${hhmm(inicio)}h\n*Nombre:* ${nombre.trim()}\n*Teléfono:* ${telefono.trim()}`;
-  }
-  const waUrl = () => `https://wa.me/${negocio.whatsapp}?text=${encodeURIComponent(mensaje())}`;
-
+  /* --- Calendario de la clienta --- */
   function descargarIcs() {
     if (!dia || inicio == null) return;
     const ini = new Date(dia);
@@ -162,9 +164,13 @@ export function Booking() {
     if (!telOk) return setError("Escribe tu teléfono (9 cifras) para poder confirmarte la cita.");
     setError("");
     if (!real) {
-      // Web de muestra: la reserva llega por WhatsApp
-      window.open(waUrl(), "_blank", "noopener,noreferrer");
+      // Web de muestra: la reserva aparece en el panel de muestra de este mismo móvil
+      guardarReservaDemo({
+        date: ds(dia), time: inicio / 60, dur, client: nombre.trim(), phone: telefono.trim(),
+        service: servicio, price: `${parseInt(elegido.price) || 0}€`,
+      });
       setHecho(true);
+      setMover((n) => n + 1);
       return;
     }
     setEnviando(true);
@@ -229,7 +235,7 @@ export function Booking() {
     ? salon.confirmarAuto
       ? "En breve te llegará un WhatsApp con los detalles de tu cita. Si no puedes venir, avísanos con 24 horas."
       : "Ya la tenemos apuntada. En breve te llegará un WhatsApp para confirmártela."
-    : "Te hemos abierto WhatsApp con tu reserva: pulsa enviar y te la confirmamos enseguida.";
+    : "Esta es una web de muestra: tu reserva ya ha llegado al panel de la dueña. Míralo tú misma.";
 
   return (
     <section id="reservar" className="py-20 lg:py-28 px-4 sm:px-6 lg:px-8">
@@ -263,14 +269,20 @@ export function Booking() {
                 <button onClick={descargarIcs} className="btn-gold px-6 py-3.5 rounded-full text-sm font-medium">
                   Añadir a mi calendario
                 </button>
-                <a
-                  href={real ? `https://wa.me/${negocio.whatsapp}` : waUrl()}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="px-6 py-3.5 rounded-full text-sm font-medium border border-foreground/30"
-                >
-                  {real ? "Escribirnos por WhatsApp" : "¿No se abrió? Enviar por WhatsApp"}
-                </a>
+                {real ? (
+                  <a
+                    href={`https://wa.me/${negocio.whatsapp}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="px-6 py-3.5 rounded-full text-sm font-medium border border-foreground/30"
+                  >
+                    Escribirnos por WhatsApp
+                  </a>
+                ) : (
+                  <a href="/admin" className="px-6 py-3.5 rounded-full text-sm font-medium border border-foreground/30">
+                    Ver la reserva en el panel
+                  </a>
+                )}
               </div>
               <button onClick={otra} className="text-sm text-muted-foreground underline underline-offset-4">
                 Hacer otra reserva

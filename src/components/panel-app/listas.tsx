@@ -94,14 +94,14 @@ export function Avisos() {
       <Titulo titulo="Avisos" sub="Cada botón abre WhatsApp con el mensaje ya escrito: solo tienes que enviarlo." />
       <Grupo
         titulo="Reservas nuevas"
-        ayuda="Mándales los detalles de su cita (la web les dice que les llegará un WhatsApp)."
+        ayuda="Envíales la confirmación de su cita (la web les dice que les llegará un WhatsApp)."
         items={P.porAvisar}
         fila={(b: Cita) => (
           <Fila
             key={b.id}
             b={b}
             clave={`conf-${b.id}`}
-            txt="Enviar detalles"
+            txt="Enviar confirmación"
             mensaje={P.msg.detalles(b)}
             sub={`${fechaCorta(b.date)} · ${hhmm(b.time)} · ${b.service}`}
             alEnviar={() => b.status === "pendiente" && P.cambiarEstado(b.id, "confirmada")}

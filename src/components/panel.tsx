@@ -6,7 +6,7 @@ import { SERVICES, type Service } from "@/lib/data";
 import { useNegocio, huecosLibres, duracion, type Horario } from "@/components/negocio";
 import { db } from "@/lib/supabase";
 import { cn } from "@/lib/utils";
-import { SCHED, generarDemo, demoBlocked } from "./panel-app/demo";
+import { SCHED, generarDemo, demoBlocked, DEMO_STORE, recogerReservasDemo } from "./panel-app/demo";
 import { PanelCtx } from "./panel-app/ctx";
 import { C, type Cita, type Bloqueo, toDS, parseD, hhmm, fechaLarga, nombrePila, precio } from "./panel-app/tema";
 import { Agenda } from "./panel-app/agenda";
@@ -34,7 +34,7 @@ const deBloqueo = (b: any): Bloqueo => ({
   id: b.id, date: b.fecha, time: b.hora + (b.minuto || 0) / 60, dur: b.duracion_min || 60, reason: b.motivo || "",
 });
 
-const STORE = "estetica-panel-v1";
+const STORE = DEMO_STORE;
 type Vista = "agenda" | "avisos" | "clientas" | "resumen" | "todas";
 // Lo que se edita en la hoja de cita: una cita nueva o una existente
 export interface Borrador {
@@ -153,6 +153,30 @@ export function Panel({ real }: { real?: PanelReal }) {
       document.removeEventListener("visibilitychange", foco);
     };
   }, [salonId, cargarDB]);
+
+  // Panel de muestra: recoge las reservas hechas en la web de muestra de este mismo móvil
+  useEffect(() => {
+    if (!ready || salonId) return;
+    const recoger = () => {
+      const nuevas = recogerReservasDemo();
+      if (!nuevas.length) return;
+      const citas = nuevas.map((r, i): Cita => ({ ...r, id: Date.now() + i, status: "pendiente", notes: "", origen: "web" }));
+      setBookings((prev) => [...prev, ...citas]);
+      const ultima = citas[citas.length - 1];
+      avisar(citas.length > 1 ? `${citas.length} reservas nuevas` : `Nueva reserva de ${nombrePila(ultima.client)}`, {
+        txt: "Ver",
+        fn: () => setDetalle(ultima),
+      });
+    };
+    recoger();
+    const foco = () => document.visibilityState === "visible" && recoger();
+    document.addEventListener("visibilitychange", foco);
+    window.addEventListener("storage", recoger);
+    return () => {
+      document.removeEventListener("visibilitychange", foco);
+      window.removeEventListener("storage", recoger);
+    };
+  }, [ready, salonId, avisar]);
 
   useEffect(() => {
     if (!ready) return;
