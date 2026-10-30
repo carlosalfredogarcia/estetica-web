@@ -2,6 +2,7 @@
 
 Copia literal sacada con la extensión de Chrome el 30 oct 2026.
 Booksy no asigna profesional a ningún servicio en la ficha pública.
+El fijo 951 738 324 que sale en algún texto NO se pone en la web por ahora.
 
 ### RITUAL DE HIGIENE ANTIEDAD Y FIRMEZA PREMIUM
 - Categoría: RECUPERACION DÉRMICA

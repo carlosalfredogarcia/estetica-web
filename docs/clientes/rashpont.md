@@ -15,6 +15,9 @@ Quieren ver una primera versión de la web en la próxima visita.
 - **Dominio:** a nombre de la tienda (DonDominio o Cloudflare, solo dominio, sin hosting). La web sigue en Vercel.
 
 - Plan: Fundadora, **30 € al mes** (precio especial de las 10 primeras). Primer mes gratis desde el día de la entrega.
+  - Entra en Fundadora: los bonos se **enseñan** en la ficha de cada tratamiento (precio y sesiones, como texto).
+  - Es **Pro** (cobrar aparte): vender y controlar bonos en el panel (sesiones gastadas y caducidad),
+    felicitación de cumpleaños, recordatorios automáticos por WhatsApp, campañas e informes.
 - Identificador de su web (slug): `rashpont` → https://estetica-web-six.vercel.app/?s=rashpont
 - Su panel: https://estetica-web-six.vercel.app/panel (entra con su correo y su contraseña)
 
@@ -45,7 +48,6 @@ Quieren ver una primera versión de la web en la próxima visita.
 - **Estética:** Raquel · WhatsApp **643 044 577** (el de su Instagram, wa.link/plhu8o).
 - **Barbería:** Andrés (en Booksy sale como «ANDREE») · WhatsApp **600 220 380**. Por ahora solo él.
 - **Dirección:** C. José Moreno Carbonero, 2, 29640 Fuengirola. Razón social: Rash Pont S.L.
-- **Teléfono fijo:** 951 738 324 (sale en las descripciones de Booksy).
 - **Descripciones completas de Booksy:** `rashpont-descripciones/` (parte 1 de 3 recibida; son 70 servicios).
   Booksy ha cambiado las categorías: Recuperación dérmica, Redensificación térmica, Corrección de textura…
   Muchas descripciones traen bonos con precio: se enseñarán en la tarjeta como «Bonos».
