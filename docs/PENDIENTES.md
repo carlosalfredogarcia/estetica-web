@@ -10,7 +10,7 @@
       Todas las webs comparten el mismo código (catálogo, ficha, agenda, opiniones…) y cada cliente es solo una
       carpeta con su ficha: nombre, colores, intro elegida, logo, fotos, textos y tratamientos.
       Un arreglo o una mejora se hace una vez y llega a todas. Intros disponibles: sello, puertas y oro líquido.
-- [ ] **Extra «Bonos y cumpleaños»** (+10 €/mes, Fundadora pasa a 40 €): vender bonos desde el panel, contar
+- [ ] **Extra «Bonos y fidelización»** (150 € de alta + 15 €/mes; ver `docs/clientes/rashpont-propuesta-extras.md`): vender bonos desde el panel, contar
       sesiones y caducidad, y aviso de cumpleaños. Hace falta pedir el cumpleaños (día y mes, opcional y con
       permiso de la clienta) en la reserva o apuntarlo en su ficha.
 - [ ] **Campañas e informes**: para más adelante. Campaña sencilla = el panel saca una lista de clientas
@@ -28,6 +28,13 @@
 - [ ] Fotos: las de Gemini (`docs/clientes/rashpont-imagenes.md`) o fotos reales del local, de Raquel y de Andrés.
 - [ ] Logo en buena calidad (PNG o SVG).
 - [ ] Dominio a nombre de la tienda (datos en `docs/clientes/rashpont.md`) y hacer que abra directamente la portada.
+
+- [ ] Detalle menor de la base de datos: si alguien forzara una reserva en domingo (cerrado), el error sale en inglés
+      («cannot extract elements from a scalar») en vez de «Ese día u hora está cerrado». La web nunca ofrece domingos.
+      Arreglarlo en una migración 007 cuando haya otro cambio de base de datos.
+- [x] Pruebas de solapes (30 oct): 469 comprobaciones con citas de 30, 45, 60, 90, 120 y 135 min, horas bloqueadas,
+      cierre, domingo, dos reservas a la vez, cancelar y mover citas desde el panel. Ningún solape.
+      Se repiten con `node scripts/pruebas-solapes.cjs` sobre una base de datos local (instrucciones en el archivo).
 
 ## De la web de muestra
 

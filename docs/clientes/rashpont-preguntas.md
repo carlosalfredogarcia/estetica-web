@@ -30,6 +30,8 @@ Marca cada una cuando tengas la respuesta y apúntala al lado.
 - [ ] **Tratamientos sin descripción** (en la web llevan un texto corto mío): masaje cervical y de cráneo,
       masaje deportivo (¿qué incluye cada opción?), circuito spa con cava, masaje sueco, Lomi Lomi y algunas depilaciones.
       ¿Quiere añadir algo?
+- [ ] **Textos largos.** Las descripciones de Booksy son muy largas. En la web cada tratamiento lleva un resumen corto
+      y el texto completo al pulsar «Ver más». ¿Quiere que le resuma también el texto completo para que se lea más fácil?
 - [ ] **Primera valoración gratis.** ¿Sigue siendo gratis? (En la web lo pone.)
 - [ ] **Orden de los grupos.** En la web hay 51 tratamientos (79 opciones para reservar) en 6 grupos y en este orden:
       1. Rostro y antiedad (13) · 2. Manchas, acné y espalda (4) · 3. Cuerpo y figura (12) · 4. Masajes (9) ·
@@ -37,7 +39,7 @@ Marca cada una cuando tengas la respuesta y apúntala al lado.
       ¿Le parece bien el orden? ¿Quiere otro primero, cambiar algún nombre o mover algún tratamiento de grupo?
 - [ ] **Destacados.** De cada grupo se ven primero 3 tratamientos marcados como «Destacado». ¿Cuáles quiere destacar?
 - [ ] **Bonos.** En la web, cada bono tiene un botón «Lo quiero» que le escribe por WhatsApp; se paga en el centro.
-      ¿Le vale así? (Vender y controlar bonos desde el panel es el extra «Bonos y cumpleaños».)
+      ¿Le vale así? Cada bono enseña lo que se ahorra. (Vender y controlar bonos desde el panel es el extra «Bonos y fidelización», ver `rashpont-propuesta-extras.md`.)
 
 ### Tienda de productos
 
