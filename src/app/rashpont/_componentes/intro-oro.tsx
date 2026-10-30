@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 
 // Intro de cine «Oro líquido»: una gota de sérum (ellas), un corte de tijera (ellos)
 // y el polvo dorado que se une en el sello. Sale la primera vez de cada visita
-// (o siempre con ?intro=1) y se puede saltar.
+// (o siempre con ?intro=oro) y se puede saltar.
 export function IntroOro() {
   const raiz = useRef<HTMLDivElement>(null);
   const [estado, setEstado] = useState<"espera" | "juega" | "fuera" | "nada">("espera");
@@ -15,7 +15,7 @@ export function IntroOro() {
       visto = sessionStorage.getItem("rp-intro") === "1";
       sessionStorage.setItem("rp-intro", "1");
     } catch {}
-    const forzar = new URLSearchParams(location.search).get("intro") === "1";
+    const forzar = new URLSearchParams(location.search).has("intro");
     const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
     const t = setTimeout(() => setEstado((visto && !forzar) || reduce ? "nada" : "juega"), 0);
     return () => clearTimeout(t);

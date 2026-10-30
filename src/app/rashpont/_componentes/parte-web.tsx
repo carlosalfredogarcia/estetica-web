@@ -93,7 +93,7 @@ export function ParteWeb({ parte, tratamientos }: { parte: Parte; tratamientos: 
 
         {/* Tratamientos */}
         <section id="tratamientos" className="rp-sec" style={{ scrollMarginTop: 60 }}>
-          <div className="rp-in" style={{ display: "grid", gap: 32 }}>
+          <div className="rp-in" style={{ display: "grid", gap: 32, gridTemplateColumns: "minmax(0, 1fr)" }}>
             <div style={{ display: "grid", gap: 12 }}>
               <p className="rp-eyebrow">{estetica ? "Tratamientos" : "Servicios"}</p>
               <h2 className="rp-titulo" style={{ fontSize: "clamp(34px, 6vw, 58px)" }}>

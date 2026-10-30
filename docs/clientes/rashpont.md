@@ -43,7 +43,7 @@ Quieren ver una primera versión de la web en la próxima visita.
 
 ## La web (primera versión, 30 oct 2026)
 
-- Portada: `/rashpont` (con la intro «Oro líquido»; se repite con `/rashpont?intro=1`).
+- Portada: `/rashpont` con la intro del sello dorado (`?intro=sello` la repite, `?intro=oro` enseña la de oro líquido).
 - Estética: `/rashpont/estetica` · Barbería: `/rashpont/barberia`.
 - Código: `src/app/rashpont/`. Catálogo, precios, bonos y reseñas en `src/app/rashpont/_datos/catalogo.ts`.
   Las descripciones completas se leen al construir desde `docs/clientes/rashpont-descripciones/*.md`.
