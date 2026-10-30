@@ -20,7 +20,8 @@ const PASOS = [
   { n: 3 as Step, t: "Tus datos", icon: Check },
 ];
 
-export function Booking() {
+// enVentana: va dentro de una ventana encima de la página; no mueve la página de detrás
+export function Booking({ enVentana = false }: { enVentana?: boolean } = {}) {
   const salon = useSalon();
   const { negocio, servicios, horario } = salon;
   const real = salon.modo === "real";
@@ -47,8 +48,8 @@ export function Booking() {
   const caja = useRef<HTMLDivElement>(null);
   const [mover, setMover] = useState(0); // cada cambio vuelve a enseñar el bloque de reserva
   useEffect(() => {
-    if (mover) caja.current?.scrollIntoView({ behavior: "smooth", block: "start" });
-  }, [mover]);
+    if (mover && !enVentana) caja.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }, [mover, enVentana]);
 
   const elegido = servicios.find((s) => s.name === servicio);
   const dur = duracion(elegido?.dur);

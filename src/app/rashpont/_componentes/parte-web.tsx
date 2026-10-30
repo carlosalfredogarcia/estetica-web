@@ -1,5 +1,8 @@
 "use client";
 
+import { useEffect, useState } from "react";
+import { X } from "lucide-react";
+
 import { Booking } from "@/components/booking";
 import { fijarSalon } from "@/components/negocio";
 import { Catalogo } from "./catalogo";
@@ -19,6 +22,52 @@ function servicios(parte: Parte, tratamientos: Tratamiento[]) {
       desc: t.resumen,
       img: t.img.includes("/") ? t.img : undefined,
     }))
+  );
+}
+
+// Abre la ventana de reserva sin tratamiento elegido (desde la cabecera o la portada)
+const abrirReserva = () => window.dispatchEvent(new Event("rashpont:reservar"));
+
+// La agenda de siempre, en una ventana negra y dorada encima de la página.
+// Se abre al pulsar «Reservar» (con el tratamiento ya elegido) y al cerrarla sigues donde estabas.
+function VentanaReserva({ titulo }: { titulo: string }) {
+  const [abierta, setAbierta] = useState(false);
+  useEffect(() => {
+    const abrir = () => setAbierta(true);
+    addEventListener("estetica:select-service", abrir);
+    addEventListener("rashpont:reservar", abrir);
+    return () => {
+      removeEventListener("estetica:select-service", abrir);
+      removeEventListener("rashpont:reservar", abrir);
+    };
+  }, []);
+  useEffect(() => {
+    if (!abierta) return;
+    const tecla = (e: KeyboardEvent) => e.key === "Escape" && setAbierta(false);
+    addEventListener("keydown", tecla);
+    const antes = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      removeEventListener("keydown", tecla);
+      document.body.style.overflow = antes;
+    };
+  }, [abierta]);
+
+  return (
+    <div className="rp-reserva-fondo" hidden={!abierta} onClick={() => setAbierta(false)}>
+      <div className="rp-reserva" role="dialog" aria-modal="true" aria-label={`Reservar · ${titulo}`} onClick={(e) => e.stopPropagation()}>
+        <div className="rp-reserva-cab">
+          <button className="rp-volver" type="button" onClick={() => setAbierta(false)}>← Volver</button>
+          <span className="rp-eyebrow" style={{ minWidth: 0, textAlign: "center" }}>Reservar · {titulo}</span>
+          <button className="rp-ficha-cerrar" style={{ position: "static" }} type="button" onClick={() => setAbierta(false)} aria-label="Cerrar">
+            <X className="w-4 h-4" />
+          </button>
+        </div>
+        <div className="rp-reserva-in">
+          <Booking enVentana />
+        </div>
+      </div>
+    </div>
   );
 }
 
@@ -43,12 +92,11 @@ export function ParteWeb({ parte, tratamientos }: { parte: Parte; tratamientos: 
       <Cabecera
         enlaces={[
           { href: "#tratamientos", texto: estetica ? "Tratamientos" : "Servicios" },
-          { href: "#reservar", texto: "Reservar" },
           { href: "#opiniones", texto: "Opiniones" },
           { href: `/rashpont/${otra}`, texto: otra === "barberia" ? "Barbería" : "Estética" },
         ]}
         accion={
-          <a className="rp-btn rp-btn-sm rp-btn-oro" href="#reservar">Reservar</a>
+          <button className="rp-btn rp-btn-sm rp-btn-oro" type="button" onClick={abrirReserva}>Reservar</button>
         }
       />
 
@@ -75,7 +123,7 @@ export function ParteWeb({ parte, tratamientos }: { parte: Parte; tratamientos: 
                 {estetica && <span className="rp-nude" style={{ fontFamily: "var(--rp-label)", fontStyle: "normal", fontSize: 12, letterSpacing: ".2em", textTransform: "uppercase", marginLeft: 14 }}>Primera valoración gratis</span>}
               </p>
               <div className="rp-sube" style={{ display: "flex", gap: 12, flexWrap: "wrap", "--d": ".3s" } as React.CSSProperties}>
-                <a className="rp-btn rp-btn-oro" href="#reservar">Reservar cita</a>
+                <button className="rp-btn rp-btn-oro" type="button" onClick={abrirReserva}>Reservar cita</button>
                 <a className="rp-btn" href={wa} target="_blank" rel="noopener noreferrer">
                   <IconoWhatsApp className="w-4 h-4" /> WhatsApp
                 </a>
@@ -114,10 +162,6 @@ export function ParteWeb({ parte, tratamientos }: { parte: Parte; tratamientos: 
           </div>
         </section>
 
-        {/* Agenda (la de siempre, sobre crema como sus flyers) */}
-        <div className="rp-crema">
-          <Booking />
-        </div>
 
         {/* Opiniones */}
         <section id="opiniones" className="rp-sec" style={{ background: "#0e0d0b" }}>
@@ -156,6 +200,7 @@ export function ParteWeb({ parte, tratamientos }: { parte: Parte; tratamientos: 
       </main>
 
       <Pie />
+      <VentanaReserva titulo={n.titulo} />
       <a className="rp-wa" href={wa} target="_blank" rel="noopener noreferrer" aria-label={`WhatsApp de ${n.titulo}`}>
         <IconoWhatsApp className="w-6 h-6" />
       </a>

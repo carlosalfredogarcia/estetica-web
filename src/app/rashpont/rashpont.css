@@ -244,6 +244,26 @@
 @keyframes rp-aparece { from { opacity: 0; } }
 @keyframes rp-sube { from { opacity: 0; transform: translateY(24px) scale(0.98); } }
 
+/* Ventana de reserva: la agenda de siempre, en negro y dorado */
+.rp-reserva-fondo { position: fixed; inset: 0; z-index: 70; background: rgba(0, 0, 0, 0.72); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); display: grid; place-items: center; padding: 16px; animation: rp-aparece 0.3s ease; }
+.rp-reserva-fondo[hidden] { display: none; }
+.rp-reserva { width: min(100%, 720px); max-height: calc(100dvh - 32px); display: grid; grid-template-rows: auto minmax(0, 1fr); background: #100e0c; border: 1px solid var(--rp-line); border-radius: 6px; box-shadow: 0 40px 120px -40px rgba(201, 169, 110, 0.35); animation: rp-sube 0.4s cubic-bezier(0.2, 0.7, 0.2, 1); overflow: hidden; }
+.rp-reserva-cab { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 12px 14px; border-bottom: 1px solid rgba(201, 169, 110, 0.16); }
+.rp-reserva-in { overflow-y: auto; overscroll-behavior: contain; }
+@media (max-width: 640px) {
+  .rp-reserva-fondo { padding: 0; place-items: end stretch; }
+  .rp-reserva { width: 100%; max-height: 92dvh; border-radius: 16px 16px 0 0; border-bottom: 0; padding-bottom: env(safe-area-inset-bottom, 0px); }
+}
+.rp-reserva #reservar { padding: 0 !important; }
+.rp-reserva #reservar > div { max-width: none; }
+.rp-reserva #reservar > div > div:first-child { display: none; }
+.rp-reserva #reservar > div > div:last-child { border: 0; border-radius: 0; box-shadow: none; }
+.rp-reserva .bg-white, .rp-reserva .bg-white\/70, .rp-reserva .bg-white\/95 { background: #100e0c; }
+.rp-reserva .bg-foreground { background: var(--rp-gold); }
+.rp-reserva .text-white, .rp-reserva .btn-gold { color: var(--rp-ink); }
+.rp-reserva .text-\[\#b42318\] { color: #ff9a8a; }
+.rp-reserva input, .rp-reserva textarea { color: var(--rp-cream); }
+
 /* Reseñas */
 .rp-resenas { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 250px), 1fr)); gap: 20px; }
 .rp-resena { border: 1px solid rgba(201, 169, 110, 0.16); padding: 26px 22px; display: grid; gap: 14px; align-content: start; background: rgba(243, 237, 227, 0.02); }
