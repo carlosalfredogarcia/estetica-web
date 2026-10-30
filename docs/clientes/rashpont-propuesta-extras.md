@@ -37,7 +37,8 @@ Preguntas que hay que hacerle antes de dar precio: ver `rashpont-preguntas.md` (
 ## Si lo quiere todo
 
 **Paquete completo: 250 € de alta + 55 €/mes** (Fundadora + bonos + escaparate).
-Sale más barato que por separado (30 + 15 + 10 = 55 €/mes y 300–400 € de alta) y es más fácil de decir.
+Al mes es lo mismo que por separado (30 + 15 + 10 = 55 €); lo que se ahorra es el alta (por separado serían 300–400 €).
+Es más fácil de decir y de cerrar en una sola visita.
 
 ## Números de su web
 
