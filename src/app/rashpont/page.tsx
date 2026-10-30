@@ -1,4 +1,4 @@
-import { IntroOro } from "./_componentes/intro-oro";
+import { Intro } from "./_componentes/intro";
 import { Sello, IconoGotero, IconoTijeras } from "./_componentes/marca";
 import { Cabecera, Pie, Visitanos } from "./_componentes/comunes";
 import { NEGOCIOS, RESENAS } from "./_datos/catalogo";
@@ -8,7 +8,7 @@ export default function RashPont() {
   const resenas = [RESENAS.estetica[0], RESENAS.barberia[0], RESENAS.estetica[1], RESENAS.barberia[1]];
   return (
     <>
-      <IntroOro />
+      <Intro />
       <Cabecera
         enlaces={[
           { href: "/rashpont/estetica", texto: "Estética" },

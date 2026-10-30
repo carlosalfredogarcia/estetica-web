@@ -68,6 +68,7 @@ export function Catalogo({
         <div className="rp-card-foto" onClick={() => setFicha(t)}>
           <Foto t={t} />
           {t.destacado && <span className="rp-sello-card">Destacado</span>}
+          {t.bonos && <span className="rp-sello-card rp-sello-bono">Bonos</span>}
           <div className="rp-card-dato">
             <span className="rp-precio">{desde && <small>desde</small>}{precio}</span>
             <span className="rp-min">{minutos(t)}</span>
@@ -94,8 +95,8 @@ export function Catalogo({
   const visibles = grupo === "todos" ? grupos : grupos.filter((g) => g.id === grupo);
 
   return (
-    <div style={{ display: "grid", gap: 28 }}>
-      <div style={{ display: "grid", gap: 16 }}>
+    <div style={{ display: "grid", gap: 28, gridTemplateColumns: "minmax(0, 1fr)" }}>
+      <div style={{ display: "grid", gap: 16, gridTemplateColumns: "minmax(0, 1fr)" }}>
         <label className="rp-buscar">
           <Search aria-hidden="true" />
           <input
@@ -136,7 +137,7 @@ export function Catalogo({
           const todo = grupo !== "todos" || abiertos.includes(g.id);
           const ver = todo ? lista : lista.slice(0, POR_GRUPO);
           return (
-            <section key={g.id} style={{ display: "grid", gap: 18, paddingTop: 12 }} aria-labelledby={`g-${g.id}`}>
+            <section key={g.id} style={{ display: "grid", gap: 18, paddingTop: 12, gridTemplateColumns: "minmax(0, 1fr)" }} aria-labelledby={`g-${g.id}`}>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", gap: 12, flexWrap: "wrap", borderBottom: "1px solid rgba(201,169,110,.16)", paddingBottom: 12 }}>
                 <h3 id={`g-${g.id}`} className="rp-titulo" style={{ fontSize: "clamp(26px, 4vw, 34px)" }}>{g.nombre}</h3>
                 <span className="rp-nude" style={{ fontSize: 13 }}>{g.frase} · {lista.length} {palabra}</span>
@@ -219,9 +220,21 @@ function Ficha({ t, grupo, whatsapp, cerrar }: { t: Tratamiento; grupo: string; 
             <div style={{ display: "grid", gap: 10 }}>
               <p className="rp-eyebrow">Bonos</p>
               {t.bonos.map((b) => (
-                <p key={b} className="rp-bono">{b}</p>
+                <div key={b} className="rp-bono-fila">
+                  <p className="rp-bono">{b}</p>
+                  <a
+                    className="rp-leer"
+                    href={`https://wa.me/${whatsapp}?text=${encodeURIComponent(`Hola, me interesa el bono «${b}» de ${t.nombre}. ¿Me dais más información?`)}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    Lo quiero
+                  </a>
+                </div>
               ))}
-              <p className="rp-nude" style={{ fontSize: 12 }}>Pregunta por los bonos en el centro o por WhatsApp.</p>
+              <p className="rp-nude" style={{ fontSize: 12 }}>
+                Los bonos se piden por WhatsApp y se pagan en el centro. La primera sesión del bono la puedes reservar aquí arriba.
+              </p>
             </div>
           )}
 

@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Montserrat } from "next/font/google";
 import "./rashpont.css";
 
@@ -7,6 +7,15 @@ const montserrat = Montserrat({
   variable: "--font-montserrat",
   display: "swap",
 });
+
+// Como una app: sin zoom en el móvil (igual que el panel) y la barra del navegador en negro
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
+  themeColor: "#0B0B0B",
+};
 
 export const metadata: Metadata = {
   title: "Rash Pont · Estética regenerativa y barbería en Fuengirola",

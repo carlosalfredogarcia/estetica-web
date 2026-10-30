@@ -7,7 +7,8 @@ Web publicada en Vercel: **https://estetica-web-six.vercel.app**
 | Qué | Enlace |
 |---|---|
 | Portada (con intro) | https://estetica-web-six.vercel.app/rashpont |
-| Portada viendo la intro otra vez | https://estetica-web-six.vercel.app/rashpont?intro=1 |
+| Portada con la intro del sello (la que lleva) | https://estetica-web-six.vercel.app/rashpont?intro=sello |
+| Portada con la intro de oro líquido | https://estetica-web-six.vercel.app/rashpont?intro=oro |
 | Estética (Raquel) | https://estetica-web-six.vercel.app/rashpont/estetica |
 | Barbería (Andrés) | https://estetica-web-six.vercel.app/rashpont/barberia |
 | Panel (Raquel y Andrés entran con su correo) | https://estetica-web-six.vercel.app/panel |
@@ -17,9 +18,9 @@ Cuentas del panel:
 - Barbería: `reyserramirez8@gmail.com` (Andrés).
 
 Intros para enseñar (páginas sueltas en claude.ai):
-- Sello dorado: https://claude.ai/artifact/TdY6jtTh8kV3LwDWsktfBF
+- Sello dorado (la que lleva la web): https://claude.ai/artifact/TdY6jtTh8kV3LwDWsktfBF
 - Puertas «para ellas / para ellos»: https://claude.ai/artifact/M3XTes4VrSuVqXhCdZPjCb
-- Oro líquido (la que lleva la web): https://claude.ai/artifact/Wez4WqT2NZ9Db9kD86zAvN
+- Oro líquido: https://claude.ai/artifact/Wez4WqT2NZ9Db9kD86zAvN
 
 ## Tus cosas (ALFREGA)
 

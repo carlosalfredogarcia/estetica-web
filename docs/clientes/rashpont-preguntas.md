@@ -7,6 +7,8 @@ Marca cada una cuando tengas la respuesta y apúntala al lado.
 - [ ] **Horario.** En Instagram pone lunes a sábado de 10:00 a 21:00. En Booksy pone viernes hasta las 20:00 y
       sábado hasta las 15:30. ¿Cuál es el bueno? ¿Es el mismo para estética y para barbería?
       (En la web está ahora de lunes a sábado de 10:00 a 21:00.)
+- [ ] **Intro de la web.** La web enseña la del sello dorado. También está la de oro líquido
+      (`/rashpont?intro=oro`). ¿Cuál prefieren?
 - [ ] **Reservas.** ¿Las reservas de la web quedan confirmadas al momento o preferís confirmarlas vosotros?
       (Ahora se confirman solas.)
 - [ ] **No presentarse.** ¿Cobráis algo si alguien no viene o cancela tarde? ¿Con cuánto tiempo hay que avisar?
@@ -29,6 +31,13 @@ Marca cada una cuando tengas la respuesta y apúntala al lado.
       masaje deportivo (¿qué incluye cada opción?), circuito spa con cava, masaje sueco, Lomi Lomi y algunas depilaciones.
       ¿Quiere añadir algo?
 - [ ] **Primera valoración gratis.** ¿Sigue siendo gratis? (En la web lo pone.)
+- [ ] **Orden de los grupos.** En la web hay 51 tratamientos (79 opciones para reservar) en 6 grupos y en este orden:
+      1. Rostro y antiedad (13) · 2. Manchas, acné y espalda (4) · 3. Cuerpo y figura (12) · 4. Masajes (9) ·
+      5. Spa y bienestar (7) · 6. Depilación (6).
+      ¿Le parece bien el orden? ¿Quiere otro primero, cambiar algún nombre o mover algún tratamiento de grupo?
+- [ ] **Destacados.** De cada grupo se ven primero 3 tratamientos marcados como «Destacado». ¿Cuáles quiere destacar?
+- [ ] **Bonos.** En la web, cada bono tiene un botón «Lo quiero» que le escribe por WhatsApp; se paga en el centro.
+      ¿Le vale así? (Vender y controlar bonos desde el panel es el extra «Bonos y cumpleaños».)
 
 ### Tienda de productos
 
@@ -55,3 +64,5 @@ Las opciones y los precios están en `rashpont-tienda.md`.
 - [ ] **¿Trabaja alguien más en la barbería?**
 - [ ] **Corte de puntas de mujer y ondulación permanente.** Están en la barbería: ¿los hace él?
 - [ ] **Fotos** de cortes y barbas que haya hecho.
+- [ ] **Orden de los grupos.** En la web hay 19 servicios en 6 grupos: Cortes (4) · Rituales (2) · Barba (3) ·
+      Facial (2) · Color (4) · Detalles (4). ¿Le parece bien el orden? ¿Cuáles quiere destacar?

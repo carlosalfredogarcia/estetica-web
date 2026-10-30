@@ -78,7 +78,8 @@ export function Pie() {
         <span style={{ display: "flex", gap: 20, flexWrap: "wrap" }}>
           <a className="rp-nude" href="/rashpont/estetica">Estética</a>
           <a className="rp-nude" href="/rashpont/barberia">Barbería</a>
-          <a className="rp-nude" href="/rashpont?intro=1">Ver la intro</a>
+          <a className="rp-nude" href="/rashpont?intro=sello">Intro sello</a>
+          <a className="rp-nude" href="/rashpont?intro=oro">Intro oro</a>
           <a className="rp-nude" href="/panel">Acceso profesionales</a>
         </span>
       </div>
