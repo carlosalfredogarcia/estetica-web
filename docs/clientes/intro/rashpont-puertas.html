@@ -1,0 +1,310 @@
+<title>Rash Pont Puertas</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=Montserrat:wght@300;400;500&display=swap">
+<style>
+/* Layout: dos hojas de puerta a pantalla completa (ellas a la izquierda, ellos a la derecha) que se abren y se cierran sobre una sala de luz; al cerrarse, el sello se une en el centro. */
+:root {
+  --ink: #0B0B0B;
+  --ink-2: #1A1712;
+  --gold: #C9A96E;
+  --gold-deep: #A8874F;
+  --gold-light: #F0DDB2;
+  --cream: #F3EDE3;
+  --nude: #B89A7A;
+  --line: rgba(201,169,110,.5);
+  --display: "Cormorant Garamond", "Cormorant", Garamond, "Times New Roman", serif;
+  --label: "Montserrat", "Helvetica Neue", Arial, sans-serif;
+  --seal: min(30vmin, 200px);
+  color-scheme: dark;
+}
+html, body { height: 100%; }
+body { background: var(--ink); color: var(--cream); font-family: var(--label); overflow: hidden; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+.screen { position: fixed; inset: 0; overflow: hidden; background: var(--ink); }
+.screen.shake { animation: shake .45s cubic-bezier(.3,0,.3,1); }
+@keyframes shake { 0%{transform:translate(0,0)} 15%{transform:translate(-6px,3px)} 30%{transform:translate(5px,-4px)} 45%{transform:translate(-4px,2px)} 60%{transform:translate(3px,-1px)} 80%{transform:translate(-1px,1px)} 100%{transform:none} }
+
+/* La página que hay detrás */
+.home { position: absolute; inset: 0; display: grid; align-content: center; justify-items: center; gap: clamp(18px, 4vh, 36px); text-align: center; background: radial-gradient(ellipse 80% 60% at 50% 30%, #241e16 0%, var(--ink) 70%); padding-inline: max(16px, env(safe-area-inset-left, 0px)); overflow: auto; padding-block: 12vh; }
+.home .eyebrow { font-size: 10px; letter-spacing: .45em; margin-right: -.45em; text-transform: uppercase; color: var(--nude); }
+.home h1 { margin: 0; font-family: var(--display); font-weight: 300; font-size: clamp(46px, 12vw, 104px); letter-spacing: .2em; margin-right: -.2em; text-transform: uppercase; line-height: 1; }
+.home .lead { margin: 0; font-family: var(--display); font-style: italic; font-size: clamp(18px, 4vw, 24px); color: var(--cream); opacity: .85; max-width: 32ch; }
+.home .pair { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; width: min(100%, 720px); margin-top: 8px; }
+.card { display: grid; gap: 8px; justify-items: center; padding: clamp(18px, 4vw, 34px) 12px; border: 1px solid var(--line); border-radius: 2px; background: linear-gradient(180deg, rgba(201,169,110,.07), rgba(201,169,110,0)); min-width: 0; }
+.card small { font-size: 9px; letter-spacing: .4em; text-transform: uppercase; color: var(--nude); }
+.card strong { font-family: var(--display); font-weight: 300; font-size: clamp(22px, 5vw, 32px); letter-spacing: .18em; text-transform: uppercase; }
+.card span { font-size: 12px; color: var(--nude); }
+.card .cta { margin-top: 6px; font-size: 9px; letter-spacing: .35em; text-transform: uppercase; color: var(--ink); background: var(--gold); padding: 9px 14px; border-radius: 999px; }
+.home .note { font-size: 11px; color: var(--nude); opacity: .7; }
+
+/* La sala de luz que se ve entre las puertas */
+.room { position: absolute; inset: 0; display: grid; place-items: center; background: radial-gradient(ellipse 34% 70% at 50% 50%, #FFF4DC 0%, #E9CF9C 22%, #A8874F 48%, #2a2218 78%, var(--ink) 100%); transition: opacity 1.2s ease; }
+.room.gone { opacity: 0; pointer-events: none; }
+.room .rays { position: absolute; inset: -20%; background: repeating-conic-gradient(from 0deg at 50% 50%, rgba(255,244,220,.10) 0deg 4deg, transparent 4deg 13deg); mask-image: radial-gradient(circle, #000 0%, transparent 55%); -webkit-mask-image: radial-gradient(circle, #000 0%, transparent 55%); animation: turn 60s linear infinite; }
+@keyframes turn { to { transform: rotate(360deg); } }
+.say { position: absolute; font-family: var(--display); font-style: italic; font-weight: 400; font-size: clamp(26px, 6vw, 44px); color: var(--ink-2); opacity: 0; filter: blur(8px); transition: opacity .9s ease, filter .9s ease; white-space: nowrap; }
+.say.on { opacity: 1; filter: blur(0); }
+.name { position: absolute; display: flex; font-family: var(--display); font-weight: 500; font-size: clamp(30px, 8vw, 62px); letter-spacing: .3em; margin-right: -.3em; text-transform: uppercase; color: var(--ink-2); white-space: nowrap; }
+.name span { display: inline-block; opacity: 0; transform: translateY(12px); filter: blur(10px); transition: opacity .8s ease, transform 1s cubic-bezier(.2,.7,.2,1), filter .8s ease; transition-delay: calc(var(--i) * 80ms); }
+.name.on span { opacity: 1; transform: none; filter: blur(0); }
+
+/* Las puertas */
+.doors { position: absolute; inset: 0; perspective: 1500px; perspective-origin: 50% 50%; transition: transform 1.8s cubic-bezier(.6,0,.2,1); pointer-events: none; }
+.doors.through { transform: scale(1.35); }
+.leaf { position: absolute; top: 0; bottom: 0; width: 50%; overflow: hidden; backface-visibility: hidden; transition: transform 1.2s cubic-bezier(.45,0,.2,1); background:
+    repeating-linear-gradient(90deg, rgba(255,255,255,.012) 0 2px, transparent 2px 7px),
+    linear-gradient(180deg, #15130f 0%, #0c0b09 100%);
+  box-shadow: inset 0 0 120px rgba(0,0,0,.8); }
+.leaf.l { left: 0; transform-origin: left center; }
+.leaf.r { right: 0; transform-origin: right center; }
+.leaf::after { content: ""; position: absolute; top: 0; bottom: 0; width: 2px; background: linear-gradient(180deg, transparent, var(--gold) 20%, var(--gold) 80%, transparent); opacity: .55; }
+.leaf.l::after { right: 0; } .leaf.r::after { left: 0; }
+.leaf .frame { position: absolute; top: 6%; bottom: 6%; border: 1px solid rgba(201,169,110,.35); }
+.leaf.l .frame { left: 12%; right: 9%; } .leaf.r .frame { right: 12%; left: 9%; }
+.leaf .frame::before { content: ""; position: absolute; inset: 9px; border: 1px solid rgba(201,169,110,.18); }
+.leaf .frame::after { content: ""; position: absolute; left: 50%; top: 9px; bottom: 9px; width: 1px; background: linear-gradient(180deg, transparent, rgba(201,169,110,.12) 30%, rgba(201,169,110,.12) 70%, transparent); }
+.crest { position: absolute; top: 13%; display: grid; justify-items: center; gap: clamp(8px, 1.6vh, 14px); text-align: center; opacity: .32; transition: opacity 1s ease, filter 1s ease; }
+.leaf.l .crest { left: 12%; right: 9%; } .leaf.r .crest { right: 12%; left: 9%; }
+.lit .crest { opacity: 1; filter: drop-shadow(0 0 10px rgba(201,169,110,.35)); }
+.crest small { font-size: clamp(8px, 1.9vw, 10px); letter-spacing: .45em; margin-right: -.45em; text-transform: uppercase; color: var(--nude); }
+.crest svg { width: min(15vmin, 84px); height: auto; overflow: visible; }
+.crest svg * { fill: none; stroke: var(--gold); stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
+.crest strong { font-family: var(--display); font-weight: 300; font-size: clamp(18px, 4.6vw, 30px); letter-spacing: .24em; margin-right: -.24em; text-transform: uppercase; color: var(--cream); }
+.half { position: absolute; top: 50%; width: var(--seal); height: var(--seal); transform: translateY(-50%); }
+.leaf.l .half { right: calc(var(--seal) / -2); } .leaf.r .half { left: calc(var(--seal) / -2); }
+.half circle { fill: #0f0d0a; stroke: var(--gold); stroke-width: 1.4; }
+.half .in { fill: none; stroke: var(--gold); stroke-width: .7; opacity: .5; }
+.half text { font-family: var(--display); font-style: italic; font-weight: 300; font-size: 92px; fill: var(--gold); letter-spacing: -4px; }
+.lit .half circle:first-child { filter: drop-shadow(0 0 8px rgba(201,169,110,.6)); }
+
+/* Delante de las puertas */
+#dust { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
+.seam { position: absolute; left: 50%; top: 0; bottom: 0; width: 2px; transform: translateX(-50%); background: linear-gradient(180deg, transparent, #FFF4DC 30%, #FFF4DC 70%, transparent); opacity: 0; filter: blur(1px); pointer-events: none; }
+.seam.idle { opacity: .35; animation: breathe 2.4s ease-in-out infinite; }
+@keyframes breathe { 50% { opacity: .7; } }
+.seam.flash { animation: flash 1.2s ease-out forwards; }
+@keyframes flash { 0%{opacity:1; box-shadow: 0 0 60px 30px rgba(255,244,220,.8)} 100%{opacity:0; box-shadow: 0 0 0 0 rgba(255,244,220,0)} }
+.burst { position: absolute; left: 50%; top: 50%; width: 120vmax; height: 120vmax; transform: translate(-50%,-50%) scale(0); border-radius: 50%; background: radial-gradient(circle, rgba(240,221,178,.35), transparent 50%); opacity: 0; pointer-events: none; }
+.burst.go { animation: burst 1.4s cubic-bezier(.2,.7,.2,1) forwards; }
+@keyframes burst { 0%{opacity:1; transform:translate(-50%,-50%) scale(0)} 100%{opacity:0; transform:translate(-50%,-50%) scale(1)} }
+.front { position: absolute; left: 0; right: 0; top: calc(50% + var(--seal) / 2 + 22px); display: grid; justify-items: center; gap: 12px; text-align: center; pointer-events: none; opacity: 0; transform: translateY(10px); transition: opacity 1s ease, transform 1s ease; }
+.front.on { opacity: 1; transform: none; }
+.front .brand { font-family: var(--display); font-weight: 300; font-size: clamp(26px, 6.6vw, 46px); letter-spacing: .32em; margin-right: -.32em; text-transform: uppercase; background: linear-gradient(100deg, var(--gold-deep), var(--gold) 35%, var(--gold-light) 50%, var(--gold) 65%, var(--gold-deep)); background-size: 250% 100%; -webkit-background-clip: text; background-clip: text; color: transparent; animation: sheen 3.5s ease-in-out infinite; }
+@keyframes sheen { 0%,100% { background-position: 100% 0; } 50% { background-position: 0 0; } }
+.front .duo { font-size: 10px; letter-spacing: .45em; margin-right: -.45em; text-transform: uppercase; color: var(--nude); }
+.tap { position: absolute; left: 0; right: 0; bottom: calc(13vh + env(safe-area-inset-bottom, 0px)); text-align: center; font-size: 10px; letter-spacing: .5em; margin-right: -.5em; text-transform: uppercase; color: var(--gold); opacity: 0; transition: opacity .8s ease; pointer-events: none; }
+.tap.on { opacity: 1; animation: pulse 2s ease-in-out infinite; }
+@keyframes pulse { 50% { opacity: .35; } }
+.bar { position: absolute; left: 0; right: 0; height: 9vh; background: #000; z-index: 20; transition: transform 1.4s cubic-bezier(.7,0,.2,1); pointer-events: none; }
+.bar.top { top: 0; } .bar.bottom { bottom: 0; }
+.screen.open .bar.top { transform: translateY(-100%); }
+.screen.open .bar.bottom { transform: translateY(100%); }
+.hit { position: absolute; inset: 0; cursor: pointer; z-index: 15; background: transparent; border: 0; padding: 0; margin: 0; appearance: none; -webkit-appearance: none; }
+.hit[hidden] { display: none; }
+
+.ctrl { position: fixed; z-index: 50; bottom: calc(14px + env(safe-area-inset-bottom, 0px)); right: max(16px, env(safe-area-inset-right, 0px)); display: flex; gap: 8px; }
+.btn { all: unset; cursor: pointer; font-family: var(--label); font-size: 9px; letter-spacing: .35em; text-transform: uppercase; color: var(--nude); padding: 10px 14px; border: 1px solid rgba(184,154,122,.3); border-radius: 999px; background: rgba(11,11,11,.6); backdrop-filter: blur(6px); }
+.btn:hover, .btn:focus-visible { color: var(--gold); border-color: var(--gold); }
+[hidden] { display: none !important; }
+@media (max-width: 520px) { .home .pair { grid-template-columns: 1fr; } }
+@media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition-duration: .01ms !important; transition-delay: 0s !important; } }
+</style>
+
+<div class="screen" id="screen">
+  <main class="home" aria-label="Portada de Rash Pont">
+    <span class="eyebrow">Fuengirola · Estética regenerativa y barbería</span>
+    <h1>Rash Pont</h1>
+    <p class="lead">Un espacio donde la belleza y el bienestar se encuentran.</p>
+    <div class="pair">
+      <div class="card"><small>Para ellas</small><strong>Estética</strong><span>Con Raquel · facial, corporal y spa</span><span class="cta">Reservar</span></div>
+      <div class="card"><small>Para ellos</small><strong>Barbería</strong><span>Con Andrés · corte, barba y rituales</span><span class="cta">Reservar</span></div>
+    </div>
+    <p class="note">Aquí sigue la web completa.</p>
+  </main>
+
+  <div class="room" id="room" aria-hidden="true">
+    <div class="rays"></div>
+    <p class="say" id="say1">Es amor propio.</p>
+    <p class="say" id="say2">Es autocuidado.</p>
+    <p class="name" id="name"></p>
+  </div>
+
+  <div class="doors" id="doors" aria-hidden="true">
+    <div class="leaf l" id="leafL">
+      <div class="frame"></div>
+      <div class="crest">
+        <small>Para ellas</small>
+        <svg viewBox="-50 -50 100 100">
+          <rect x="-24" y="-38" width="10" height="13" rx="5"/><rect x="-26" y="-25" width="14" height="6" rx="1"/>
+          <rect x="-32" y="-19" width="26" height="46" rx="4"/><line x1="-25" y1="2" x2="-13" y2="2"/>
+          <path d="M20 -12 C20 -12 11 1 11 7 a9 9 0 0 0 18 0 C29 1 20 -12 20 -12Z"/>
+        </svg>
+        <strong>Estética</strong>
+      </div>
+      <svg class="half" viewBox="0 0 260 260"><circle cx="130" cy="130" r="126"/><circle class="in" cx="130" cy="130" r="112"/><text x="130" y="160" text-anchor="middle">rp</text></svg>
+    </div>
+    <div class="leaf r" id="leafR">
+      <div class="frame"></div>
+      <div class="crest">
+        <small>Para ellos</small>
+        <svg viewBox="-50 -50 100 100">
+          <line x1="-17" y1="-32" x2="7" y2="9"/><line x1="17" y1="-32" x2="-7" y2="9"/>
+          <circle cx="-11" cy="17" r="8.5"/><circle cx="11" cy="17" r="8.5"/>
+          <line x1="26" y1="-36" x2="26" y2="-24"/><line x1="20" y1="-30" x2="32" y2="-30"/>
+        </svg>
+        <strong>Barbería</strong>
+      </div>
+      <svg class="half" viewBox="0 0 260 260"><circle cx="130" cy="130" r="126"/><circle class="in" cx="130" cy="130" r="112"/><text x="130" y="160" text-anchor="middle">rp</text></svg>
+    </div>
+  </div>
+
+  <canvas id="dust" aria-hidden="true"></canvas>
+  <div class="seam" id="seam"></div>
+  <div class="burst" id="burst"></div>
+  <div class="front" id="front" aria-hidden="true">
+    <span class="brand">Rash Pont</span>
+    <span class="duo">Para ellas · Para ellos</span>
+  </div>
+  <p class="tap" id="tap">Toca para entrar</p>
+  <div class="bar top"></div>
+  <div class="bar bottom"></div>
+  <button class="hit" id="hit" type="button" aria-label="Entrar en Rash Pont" hidden></button>
+</div>
+
+<div class="ctrl">
+  <button class="btn" id="skip" type="button">Saltar</button>
+  <button class="btn" id="replay" type="button" hidden>Ver otra vez</button>
+</div>
+
+<script>
+(() => {
+  const $ = (s) => document.querySelector(s);
+  const screen = $('#screen'), doors = $('#doors'), L = $('#leafL'), R = $('#leafR');
+  const room = $('#room'), say1 = $('#say1'), say2 = $('#say2'), nameEl = $('#name');
+  const seam = $('#seam'), burst = $('#burst'), front = $('#front'), tap = $('#tap'), hit = $('#hit');
+  const skip = $('#skip'), replay = $('#replay');
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  'RASH PONT'.split('').forEach((ch, i) => {
+    const s = document.createElement('span');
+    s.textContent = ch === ' ' ? ' ' : ch;
+    s.style.setProperty('--i', i);
+    nameEl.appendChild(s);
+  });
+
+  // Ángulo de apertura de las dos hojas (0 = cerradas)
+  function swing(deg, ms, ease = 'cubic-bezier(.45,0,.2,1)') {
+    [L, R].forEach((el) => { el.style.transition = `transform ${ms}ms ${ease}`; });
+    L.style.transform = `rotateY(${deg}deg)`;
+    R.style.transform = `rotateY(${-deg}deg)`;
+  }
+
+  // ---- Polvo dorado ----
+  const cv = $('#dust'), ctx = cv.getContext('2d');
+  let W = 0, H = 0, motes = [], sparks = [];
+  const DPR = Math.min(devicePixelRatio || 1, 2);
+  function size() {
+    W = cv.clientWidth; H = cv.clientHeight;
+    cv.width = W * DPR; cv.height = H * DPR; ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+    motes = Array.from({ length: Math.round(Math.min(90, W * H / 12000)) }, () => mote(true));
+  }
+  function mote(any) {
+    return { x: Math.random() * W, y: any ? Math.random() * H : H + 8, r: Math.random() * 1.3 + .3, vy: -(Math.random() * .22 + .05), vx: (Math.random() - .5) * .1, a: Math.random() * .45 + .1, t: Math.random() * 6 };
+  }
+  function shower() {
+    for (let i = 0; i < 140; i++) {
+      const up = Math.random() < .5 ? -1 : 1;
+      sparks.push({ x: W / 2 + (Math.random() - .5) * 6, y: H / 2 + (Math.random() - .5) * H * .8, vx: (Math.random() - .5) * 9, vy: up * Math.random() * 1.2, r: Math.random() * 1.8 + .4, life: 1 });
+    }
+  }
+  function tick() {
+    ctx.clearRect(0, 0, W, H);
+    for (const m of motes) {
+      m.x += m.vx; m.y += m.vy; m.t += .02;
+      if (m.y < -8) Object.assign(m, mote(false));
+      ctx.fillStyle = `rgba(232,208,160,${m.a * (.6 + .4 * Math.sin(m.t))})`;
+      ctx.beginPath(); ctx.arc(m.x, m.y, m.r, 0, 7); ctx.fill();
+    }
+    sparks = sparks.filter((s) => s.life > 0);
+    for (const s of sparks) {
+      s.x += s.vx; s.y += s.vy; s.vx *= .95; s.vy *= .95; s.life -= .012;
+      ctx.fillStyle = `rgba(246,231,196,${Math.max(0, s.life)})`;
+      ctx.beginPath(); ctx.arc(s.x, s.y, s.r, 0, 7); ctx.fill();
+    }
+    requestAnimationFrame(tick);
+  }
+  size(); addEventListener('resize', size);
+  if (!reduce) requestAnimationFrame(tick);
+
+  // ---- Guion ----
+  let run = 0; const timers = [];
+  const wait = (ms, me) => new Promise((ok, ko) => timers.push(setTimeout(() => (me === run ? ok() : ko()), ms)));
+
+  function reset() {
+    timers.splice(0).forEach(clearTimeout);
+    screen.classList.remove('open', 'shake');
+    doors.classList.remove('through', 'lit'); doors.style.visibility = '';
+    room.classList.remove('gone');
+    [say1, say2, nameEl, front, tap].forEach((e) => e.classList.remove('on'));
+    seam.className = 'seam'; burst.classList.remove('go');
+    hit.hidden = true;
+    swing(0, 1);
+  }
+
+  // Las dos hojas se juntan: ¡pum!
+  function united(withImpact) {
+    swing(0, withImpact ? 380 : 1, 'cubic-bezier(.7,0,1,.6)');
+    const land = () => {
+      doors.classList.add('lit');
+      if (withImpact) {
+        screen.classList.remove('shake'); void screen.offsetWidth; screen.classList.add('shake');
+        seam.className = 'seam flash'; burst.classList.add('go'); shower();
+      }
+      [say1, say2, nameEl].forEach((e) => e.classList.remove('on'));
+      front.classList.add('on');
+    };
+    return land;
+  }
+  function ready() { tap.classList.add('on'); hit.hidden = false; skip.hidden = true; replay.hidden = false; }
+
+  async function play() {
+    const me = ++run; reset();
+    skip.hidden = false; replay.hidden = true;
+    try {
+      await wait(500, me); seam.className = 'seam idle';
+      await wait(700, me);
+      swing(36, 1500); seam.className = 'seam';
+      await wait(500, me); say1.classList.add('on');
+      await wait(1500, me); swing(6, 1100); say1.classList.remove('on');
+      await wait(1100, me);
+      swing(42, 1500);
+      await wait(500, me); say2.classList.add('on');
+      await wait(1500, me); swing(6, 1100); say2.classList.remove('on');
+      await wait(1100, me);
+      swing(72, 1900, 'cubic-bezier(.3,0,.2,1)');
+      await wait(500, me); nameEl.classList.add('on');
+      await wait(2300, me);
+      const land = united(true);
+      await wait(380, me); land();
+      await wait(1300, me); ready();
+    } catch (_) { /* saltado o repetido */ }
+  }
+
+  function enter() {
+    hit.hidden = true; tap.classList.remove('on'); front.classList.remove('on');
+    seam.className = 'seam flash';
+    swing(108, 1700, 'cubic-bezier(.6,0,.2,1)');
+    doors.classList.add('through');
+    screen.classList.add('open');
+    room.classList.add('gone');
+    setTimeout(() => { doors.style.visibility = 'hidden'; }, 1800);
+  }
+
+  hit.addEventListener('click', enter);
+  skip.addEventListener('click', () => { run++; reset(); united(false)(); ready(); });
+  replay.addEventListener('click', play);
+
+  if (reduce) { united(false)(); ready(); } else play();
+})();
+</script>
