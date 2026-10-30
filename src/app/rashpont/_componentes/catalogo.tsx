@@ -160,8 +160,7 @@ export function Catalogo({
               {entero ? (
                 <div className="rp-barra-grupo rp-barra-fija">
                   <button className="rp-volver" type="button" onClick={recoger}>← Volver</button>
-                  <h3 id={`t-${g.id}`} className="rp-titulo" style={{ fontSize: "clamp(20px, 4vw, 28px)", minWidth: 0 }}>{g.nombre}</h3>
-                  <button className="rp-leer" type="button" onClick={recoger} style={{ color: "var(--rp-gold)" }}>Recoger ↑</button>
+                  <h3 id={`t-${g.id}`} className="rp-titulo" style={{ fontSize: "clamp(20px, 4vw, 28px)", minWidth: 0, textAlign: "right" }}>{g.nombre}</h3>
                 </div>
               ) : (
                 <div className="rp-grupo-cab">
@@ -180,7 +179,7 @@ export function Catalogo({
                 <>
                   <div className="rp-grid">{lista.map(tarjeta)}</div>
                   <div className="rp-mas">
-                    <button className="rp-btn" type="button" onClick={recoger}>Recoger {g.nombre.toLowerCase()} ↑</button>
+                    <button className="rp-volver" type="button" onClick={recoger}>← Volver</button>
                   </div>
                 </>
               ) : (
@@ -273,7 +272,15 @@ function Ficha({ t, grupo, whatsapp, cerrar }: { t: Tratamiento; grupo: string; 
               <p className="rp-eyebrow">Bonos</p>
               {t.bonos.map((b) => (
                 <div key={b} className="rp-bono-fila">
-                  <p className="rp-bono">{b}</p>
+                  <p className="rp-bono">
+                    {b.startsWith("Ahorras") ? (
+                      <>
+                        <strong className="rp-ahorro">{b.split(" · ")[0]}</strong> {b.split(" · ").slice(1).join(" · ")}
+                      </>
+                    ) : (
+                      b
+                    )}
+                  </p>
                   <a
                     className="rp-leer"
                     href={`https://wa.me/${whatsapp}?text=${encodeURIComponent(`Hola, me interesa el bono «${b}» de ${t.nombre}. ¿Me dais más información?`)}`}
@@ -301,7 +308,7 @@ function Ficha({ t, grupo, whatsapp, cerrar }: { t: Tratamiento; grupo: string; 
             <a className="rp-btn" href={wa} target="_blank" rel="noopener noreferrer">
               <IconoWhatsApp className="w-4 h-4" /> Preguntar por WhatsApp
             </a>
-            <button className="rp-btn" type="button" onClick={cerrar}>← Volver</button>
+            <button className="rp-volver" type="button" onClick={cerrar}>← Volver</button>
           </div>
         </div>
       </div>
