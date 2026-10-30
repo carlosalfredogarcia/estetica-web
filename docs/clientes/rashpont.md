@@ -73,6 +73,16 @@ Quieren ver una primera versión de la web en la próxima visita.
   y al pulsarla se abre con la descripción completa.
 - **Intro:** tres propuestas en `intro/` (sello dorado, puertas y oro líquido). Por ahora gusta más el sello.
 
+## Dominio (decidir en la reunión)
+
+- Nombre: `rashpont.es` o `rashpont.com` (mirar cuál está libre). Unos 10–15 € al año.
+- Dónde: **DonDominio** (sirve para `.es`; Cloudflare no vende `.es`).
+- A nombre de la tienda. Datos que hacen falta:
+  - Titular: Rash Pont S.L. y su **CIF** (para `.es` es obligatorio un NIF/CIF español).
+  - Dirección fiscal completa, correo y teléfono de contacto.
+  - Quién paga: con su tarjeta, o lo pagas tú y se lo cobras en la factura del alta.
+- Después: conectarlo en Vercel (unos 10 minutos) y ajustar la web para que el dominio abra la portada.
+
 ## Preguntas pendientes para el cliente
 
 - [ ] **Horario:** Instagram dice lunes a sábado de 10:00 a 21:00; Booksy dice viernes hasta
