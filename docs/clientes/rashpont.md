@@ -53,7 +53,7 @@ Quieren ver una primera versión de la web en la próxima visita.
 - **Web:** se enseñan todos los tratamientos, ordenados para que la clienta no se pierda
   (grupos por lo que quiere mejorar, buscador y «ver más»). Cada tarjeta lleva un resumen
   y al pulsarla se abre con la descripción completa.
-- **Intro:** dos propuestas hechas (sello dorado y puertas «para ellas / para ellos»).
+- **Intro:** tres propuestas en `intro/` (sello dorado, puertas y oro líquido). Por ahora gusta más el sello.
 
 ## Preguntas pendientes para el cliente
 
