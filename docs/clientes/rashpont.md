@@ -35,6 +35,12 @@ Quieren ver una primera versión de la web en la próxima visita.
 - [ ] Fotos: local, equipo, máquinas; 3 mejores reseñas
 - [ ] Estilo: tres palabras, colores que le gustan y que no, webs que le gustan
 
+## Cuentas del panel (creadas el 30 oct 2026)
+
+- Estética (`rashpont-estetica`): `kalisto1818+raquel@gmail.com`, provisional (alias de tu Gmail). Cambiar por el de Raquel.
+- Barbería (`rashpont-barberia`): `reyserramirez8@gmail.com` (Andrés).
+- Preguntas para la reunión: `rashpont-preguntas.md`.
+
 ## La web (primera versión, 30 oct 2026)
 
 - Portada: `/rashpont` (con la intro «Oro líquido»; se repite con `/rashpont?intro=1`).
