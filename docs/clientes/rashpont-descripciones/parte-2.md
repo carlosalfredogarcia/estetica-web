@@ -1,14 +1,24 @@
 # Rash Pont · Descripciones completas de Booksy · Parte 2 (servicios 18 al 29)
 
 Copia literal sacada con la extensión de Chrome el 30 oct 2026. Sigue después de «PACK STOP SEBO & GLOW».
-Falta la parte 3: BIENESTAR HOLÍSTICO Y TERAP. ALTERNATIVAS (13 servicios) y BARBERÍA.
+Escote y Cleopatra corregidos con la parte 3 de la extensión (la primera lectura de Cleopatra tenía un error).
 
 ### EXPERIENCIA “ESCOTE EFECTO Y JUVENTUD EN 360º”
 - Categoría: TRATAMIENTOS CORPORALES
 - Variantes:
   - Tratamientos combinados RF + Mesoterapia Virtual · desde 199,95 € · 90 min
   - “Efecto FLASH” de luminosidad y textura inmediata / RF + DERMAPEN + MESOTERAPIA + LED · 299,95 € · 120 min
-- Descripción completa: no se pudo leer (la ficha abre directamente las variantes).
+- Descripción completa (corregida en la parte 3 de la extensión):
+"""
+EXPERIENCIA “ ESCOTE EFECTO Y JUVENTUD EN 360º”
+
+Nuestro Protocolo con enfoque intensivo está diseñado para combatir la flacidez, manchas y arrugas de la zona del escote y cuello.
+Para lucir una piel tersa , luminosa y “glowy” en tiempo record .
+
+En RashPont combinamos Técnicas modernas y enfocadas en la Regeneración Celular adaptamos cada protocolo de acuerdo a tus necesidades . Serás evaluado por nuestros profesionales los cuales prepararan tú diagnóstico ☝️
+
+Potenciamos tu bienestar utilizando la más Alta Tecnología y Activos Dermatológicos de Vanguardia en una sola sesión o de forma secuencial para resultados naturales e inmediatos .
+"""
 
 ### EXPERIENCIA DIOSA CLEOPATRA HIPOTÉRMICA DRENANTE
 - Categoría: TRATAMIENTOS CORPORALES
@@ -17,25 +27,45 @@ Falta la parte 3: BIENESTAR HOLÍSTICO Y TERAP. ALTERNATIVAS (13 servicios) y BA
   - Tratamiento Integral Completo de los Pies a Cabeza · 149,95 € · 90 min
 - Descripción completa:
 """
-EXPERIENCIA “DIOSA CLEOPATRA HIPOTÉRMICA Y DRENANTE”
+EXPERIENCIA “ DIOSA CLEOPATRA HIPOTERMICA Y DRENANTE “
+👸🏻 Inspirado en Rituales Egipcios de Belleza y Bienestar 🪔
 
-Pack “Método Cleopatra Femenino” (5 Sesiones - 60 min)
+NUESTRO PROTOCOLO PERSONALIZADO COMBINA:
+* Crio/Hipotermia + Sales del Mar Muerto y activos botánicos (Centella Asiática, Cafeína).
+* Combinación de técnicas manuales (Maderoterapia, drenaje) y tecnologías de alta gama seleccionadas según tu diagnóstico:
+  · Radiofrecuencia Corporal (PHOENIX) - Firmeza y colágeno.
+  · Masaje Fisioactivo (BELLACTION) - Masaje profundo y remodelación.
+  · Presoterapia 3 en 1.
+  · Cavitación u Ondas de Choque para tratar grasa localizada, celulitis o retención de líquidos.
 
-* Precio total: 499 €
-“Protocolo hormonal adaptado para mujeres con retención, flacidez y celulitis resistente.”
+MÉTODO CLEOPATRA MASCULINO:
+Protocolo adaptado para hombres, enfocado en definir abdomen/flancos y aliviar piernas cansadas tras el entrenamiento.
 
-Pack “Método Cleopatra Masculino” (5 Sesiones - 60 min)
+💎 Experiencia Diosa Cleopatra - Zona Localizada (60 min) · 119,95 € 💎
+“Enfocado en una zona a elegir (Piernas + Glúteos, Abdomen + Flancos, o Brazos). Combinación de aparatología de alta gama, maderoterapia y protocolo hipotérmico para un resultado intensivo en la zona deseada.”
+Las aparatologías e ingredientes activos se seleccionan de forma personalizada según la valoración de la zona.
 
-* Precio total: 499 €
+BONOS PARA ZONA LOCALIZADA (60')
+☝️ Ideal para clientes que quieren tratar un objetivo específico: Celulitis en piernas/glúteos, grasa en abdomen/flancos o flacidez en brazos.
+💎 Bono 5 Sesiones “Zona Rebelde & Drenaje” (60 min): 499 € (en lugar de 599,75 €, ahorro de 100 €). Incluye 5 sesiones de 60 min con protocolo personalizado + Regalo: 1 sesión de Presoterapia 3 en 1.
+💎 Bono 10 Sesiones “Transformación Localizada” (60 min): 899 € (en lugar de 1.199,50 €, queda en 89,90 € por sesión). Incluye 10 sesiones de 60 min + Regalo: Diagnóstico Corporal Avanzado + 2 sesiones de Presoterapia. Facilidad de pago: opción de pago en 2 cuotas (1ª sesión y 5ª sesión).
+
+💎 Experiencia Diosa Cleopatra - Full Body Ritual (90 min) · 149,95 € 💎
+“Tratamiento integral de pies a cabeza. Incluye drenaje corporal completo, crio/hipotermia, aparatología personalizada y envoltura con sales del Mar Muerto para una experiencia de renovación total.”
+
+BONOS PARA FULL BODY RITUAL (90 minutos)
+Diseñado para clientes que buscan una experiencia de renovación total de pies a cabeza, desintoxicación y máxima remodelación.
+Bono 3 Sesiones “Detox & Remodelación Express” (90 min): 389 € (en lugar de 449,85 €). Ideal para activar la circulación de retorno, eliminar retención de líquidos masiva y tonificar la piel en todo el cuerpo.
+Bono 6 Sesiones “Diosa Cleopatra Full Body” (90 min): 699 € (en lugar de 899,70 €, ahorro de 200 €). Incluye 6 tratamientos completos de 90 min + Regalo: 1 mantenimiento posterior. “Nuestro programa estrella de remodelación y firmeza integral. Combina crioterapia estética, principios activos del Mar Muerto y nuestras mejores tecnologías para esculpir tu silueta.”
+
+✨ PACKS ESPECIALES Y COMBO MASCULINO ✨
+Pack “Método Cleopatra Masculino” (5 Sesiones - 60 min): 499 €.
 “Protocolo de alto rendimiento para deportistas y hombres que buscan definir abdomen/flancos y aliviar piernas cargadas tras entrenar.”
-
-Pack Parejas / Regalo “Diosa & Apolo”
-
-* Precio: 249 € (Incluye 2 sesiones Full Body de 90 min para disfrutar juntos o regalar).
+Pack Parejas / Regalo “Diosa & Apolo”: 249 € (incluye 2 sesiones Full Body de 90 min para disfrutar juntos o regalar).
 
 TRATAMIENTOS ADAPTADOS SEGUN SU PATOLOGÍA:
-✨ Recuerda 👊 “ Un cuerpo libre de tóxinas absorbe un 80% mejor cualquier principio activo “
-📱 📞 !! RESERVA tú diagnóstico gratuito y vive una Experiencia única en RashPont !!
+✨ Recuerda ☝️ ” Un cuerpo libre de tóxinas absorbe un 80% mejor cualquier principio activo “
+➡️☎️ !! RESERVA tú diagnóstico gratuito y vive una Experiencia única en RashPont !!
 """
 
 ### REMODELA Y REDUCE “ VIENTRE PLANO EN MODO TURBO”

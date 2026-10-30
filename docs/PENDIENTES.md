@@ -6,10 +6,10 @@
       Con el plan gratis la base de datos se pausa si nadie entra en una semana y no hay copias diarias.
       Mantener **un solo proyecto** (todas las estéticas dentro): cada proyecto extra suma unos 10 $/mes.
       Dejar activado el **límite de gasto** (Spend Cap) para que nunca cobre de más sin avisar.
-- [ ] **Diseños base**: cuando haya más clientes, tener 2 o 3 diseños base (por ejemplo «Cine oscuro»,
-      «Crema elegante», «Moderno claro») y para cada cliente cambiar logo, colores, fotos y textos.
-      Hacer cada web desde cero no escala: cada arreglo hay que repetirlo en todas.
-      Rash Pont (`src/app/rashpont/`) puede ser el primero de esos diseños base.
+- [ ] **Plantilla única (después de enseñar Rash Pont)**: convertir la web de Rash Pont en una plantilla.
+      Todas las webs comparten el mismo código (catálogo, ficha, agenda, opiniones…) y cada cliente es solo una
+      carpeta con su ficha: nombre, colores, intro elegida, logo, fotos, textos y tratamientos.
+      Un arreglo o una mejora se hace una vez y llega a todas. Intros disponibles: sello, puertas y oro líquido.
 - [ ] **Extra «Bonos y cumpleaños»** (+10 €/mes, Fundadora pasa a 40 €): vender bonos desde el panel, contar
       sesiones y caducidad, y aviso de cumpleaños. Hace falta pedir el cumpleaños (día y mes, opcional y con
       permiso de la clienta) en la reserva o apuntarlo en su ficha.
@@ -21,7 +21,7 @@
 
 - [ ] Ejecutar `supabase/migrations/006_rashpont.sql` y crear las cuentas de Raquel y Andrés
       (guía: `docs/clientes/rashpont-supabase-paso-a-paso.md`).
-- [ ] Descripciones de Booksy, parte 3: Bienestar holístico (13 servicios) y Barbería.
+- [x] Descripciones de Booksy completas (partes 1, 2 y 3). Opcional: repasar la parte 1 leyendo el código de la página.
 - [ ] Fotos: las de Gemini (`docs/clientes/rashpont-imagenes.md`) o fotos reales del local, de Raquel y de Andrés.
 - [ ] Logo en buena calidad (PNG o SVG).
 - [ ] Dominio a nombre de la tienda (datos en `docs/clientes/rashpont.md`) y hacer que abra directamente la portada.
