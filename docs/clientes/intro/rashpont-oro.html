@@ -32,6 +32,18 @@ body { background: var(--ink); color: var(--cream); font-family: var(--label); o
 .screen.wide .bar.top { transform: translateY(-62%); }
 .screen.wide .bar.bottom { transform: translateY(62%); }
 
+/* Acto 1 · el cuentagotas de sérum */
+.pipette { position: absolute; left: 50%; top: 12vh; height: 31vh; width: auto; transform: translateX(-50%) translateY(-30px); opacity: 0; z-index: 5; overflow: visible; transition: opacity .9s ease, transform 1.2s cubic-bezier(.2,.7,.2,1); filter: drop-shadow(0 0 8px rgba(201,169,110,.4)); pointer-events: none; }
+.pipette.on { opacity: 1; transform: translateX(-50%); }
+.pipette.away { opacity: 0; transform: translateX(-50%) translateY(-40px); }
+.pipette .glass { fill: none; stroke: var(--gold); stroke-width: 1.1; stroke-linejoin: round; stroke-linecap: round; stroke-dasharray: 600; stroke-dashoffset: 600; transition: stroke-dashoffset 1.6s ease; }
+.pipette.on .glass { stroke-dashoffset: 0; }
+.pipette .serum { fill: url(#serumGrad); opacity: 0; transform-box: fill-box; transform-origin: 50% 100%; transition: opacity 1s ease .8s, transform .5s ease; }
+.pipette.on .serum { opacity: .9; }
+.pipette.squeeze .serum { transform: scaleY(.55); }
+.pipette .bulb { transform-box: fill-box; transform-origin: 50% 100%; transition: stroke-dashoffset 1.6s ease, transform .35s cubic-bezier(.5,0,.3,1); }
+.pipette.squeeze .bulb { transform: scaleX(.78) scaleY(.92); }
+
 /* Rótulos de cine */
 .credit { position: absolute; inset: 0; display: grid; place-content: center; justify-items: center; gap: 10px; z-index: 6; opacity: 0; transition: opacity 1.2s ease; pointer-events: none; text-align: center; }
 .credit.on { opacity: 1; }
@@ -132,6 +144,14 @@ body { background: var(--ink); color: var(--cream); font-family: var(--label); o
   <div class="flare" id="flare"></div><div class="glow"></div>
 
   <div class="credit" id="credit"><small>Rash Pont presenta</small><span>una historia de belleza y bienestar</span></div>
+  <svg class="pipette" id="pipette" viewBox="0 0 60 200" aria-hidden="true">
+    <defs><linearGradient id="serumGrad" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#F0DDB2"/><stop offset="1" stop-color="#A8874F"/></linearGradient></defs>
+    <path class="glass bulb" d="M18 50 V16 a12 12 0 0 1 24 0 V50 Z"/>
+    <rect class="glass" x="13" y="50" width="34" height="11" rx="2"/>
+    <path class="serum" d="M26.5 118 H33.5 V172 L30 186 L26.5 172 Z"/>
+    <path class="glass" d="M24 61 V172 L30 192 L36 172 V61"/>
+    <line class="glass" x1="27.5" y1="72" x2="27.5" y2="108" style="opacity:.45"/>
+  </svg>
   <p class="cap" id="capA">Para ellas.<small>Estética regenerativa</small></p>
   <p class="cap" id="capB">Para ellos.<small>Barbería</small></p>
 
@@ -211,7 +231,7 @@ body { background: var(--ink); color: var(--cream); font-family: var(--label); o
   const screen = $('#screen'), credit = $('#credit'), capA = $('#capA'), capB = $('#capB');
   const s1 = $('#s1'), s3 = $('#s3'), seal = $('#seal'), nameEl = $('#name'), rule = $('#rule'), tag = $('#tag'), motto = $('#motto'), flare = $('#flare');
   const head = $('#head'), doors = [...document.querySelectorAll('.door')];
-  const skip = $('#skip'), replay = $('#replay');
+  const skip = $('#skip'), replay = $('#replay'), pip = $('#pipette');
   const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
 
   'RASH PONT'.split('').forEach((ch, i) => {
@@ -224,13 +244,13 @@ body { background: var(--ink); color: var(--cream); font-family: var(--label); o
   // ================= Lienzo de efectos =================
   const cv = $('#fx'), ctx = cv.getContext('2d');
   const DPR = Math.min(devicePixelRatio || 1, 2);
-  let W = 0, H = 0, CX = 0, CY = 0;
+  let W = 0, H = 0, CX = 0, CY = 0, SY = 0;
   const GOLD = (a) => `rgba(201,169,110,${a})`, LIGHT = (a) => `rgba(246,231,196,${a})`;
   const ease = (t) => (t < .5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2);
   const S = { motes: [], drop: null, rings: [], splash: [], blades: null, flashes: [], slit: null, dust: [] };
 
   function size() {
-    W = cv.clientWidth; H = cv.clientHeight; CX = W / 2; CY = H * .46;
+    W = cv.clientWidth; H = cv.clientHeight; CX = W / 2; CY = H * .46; SY = H * .6;
     cv.width = W * DPR; cv.height = H * DPR; ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
     S.motes = Array.from({ length: Math.round(Math.min(90, W * H / 12000)) }, () => mote(true));
   }
@@ -241,12 +261,12 @@ body { background: var(--ink); color: var(--cream); font-family: var(--label); o
   function tween(obj, key, to, dur, fn = ease) { tweens.push({ obj, key, from: obj[key], to, dur, t0: performance.now(), fn }); }
 
   // Acto 1 · la gota
-  function dropGold() { S.drop = { x: CX, y: -20, vy: 0 }; }
-  function impact() {
+  function dropGold(x, y) { S.drop = { x, y, vy: 0, grow: 0 }; }
+  function impact(x, y) {
     const R = Math.min(W, H * 1.6) * .42;
-    for (let i = 0; i < 4; i++) S.rings.push({ r: 4, max: R * (1 - i * .18), life: 1, delay: i * 9 });
-    for (let i = 0; i < 26; i++) { const a = -Math.PI / 2 + (Math.random() - .5) * 1.6; const v = Math.random() * 5 + 2; S.splash.push({ x: CX, y: CY, vx: Math.cos(a) * v * .7, vy: Math.sin(a) * v, r: Math.random() * 2 + .6, life: 1 }); }
-    S.flashes.push({ x: CX, y: CY, r: 90, life: 1 });
+    for (let i = 0; i < 4; i++) S.rings.push({ cx: x, cy: y, r: 4, max: R * (1 - i * .18), life: 1, delay: i * 9 });
+    for (let i = 0; i < 26; i++) { const a = -Math.PI / 2 + (Math.random() - .5) * 1.6; const v = Math.random() * 5 + 2; S.splash.push({ x, y, floor: y, vx: Math.cos(a) * v * .7, vy: Math.sin(a) * v, r: Math.random() * 2 + .6, life: 1 }); }
+    S.flashes.push({ x, y, r: 90, life: 1 });
   }
   // Acto 2 · la tijera
   function bladesIn() { S.blades = { open: 0, alpha: 0 }; tween(S.blades, 'alpha', 1, 500); tween(S.blades, 'open', .75, 600); }
@@ -278,7 +298,7 @@ body { background: var(--ink); color: var(--cream); font-family: var(--label); o
     const pts = targets(), R = Math.min(W, H * 1.6) * .42, now = performance.now();
     S.dust = pts.map(([tx, ty], i) => {
       let sx, sy;
-      if (i % 2) { const a = Math.random() * Math.PI * 2; sx = CX + Math.cos(a) * R * (.6 + Math.random() * .5); sy = CY + Math.sin(a) * R * .35 * (.6 + Math.random() * .5); }
+      if (i % 2) { const a = Math.random() * Math.PI * 2; sx = CX + Math.cos(a) * R * (.6 + Math.random() * .5); sy = SY + Math.sin(a) * R * .3 * (.6 + Math.random() * .5); }
       else { const t = (Math.random() - .5) * Math.hypot(W, H) * .8, ang = -8 * Math.PI / 180; sx = CX + Math.cos(ang) * t; sy = CY + Math.sin(ang) * t + (Math.random() - .5) * 20; }
       return { sx, sy, tx, ty, x: sx, y: sy, t0: now + Math.random() * 500, dur: 1500 + Math.random() * 500, r: Math.random() * .9 + .7, a: 1 };
     });
@@ -300,13 +320,22 @@ body { background: var(--ink); color: var(--cream); font-family: var(--label); o
     ctx.globalCompositeOperation = 'lighter';
     // gota
     if (S.drop) {
-      const d = S.drop; d.vy += .55; d.y += d.vy;
-      const stretch = Math.min(26, 6 + d.vy * 1.1);
-      const g = ctx.createRadialGradient(d.x - 2, d.y - 2, 0, d.x, d.y, stretch);
-      g.addColorStop(0, LIGHT(1)); g.addColorStop(.5, GOLD(.95)); g.addColorStop(1, GOLD(0));
-      ctx.fillStyle = g; ctx.beginPath(); ctx.ellipse(d.x, d.y - stretch * .4, 6, stretch, 0, 0, 7); ctx.fill();
-      ctx.strokeStyle = GOLD(.25); ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(d.x, d.y - stretch * 3); ctx.lineTo(d.x, d.y - stretch); ctx.stroke();
-      if (d.y >= CY) { S.drop = null; impact(); }
+      const d = S.drop;
+      if (d.grow < 1) {
+        // la gota se forma en la punta del cuentagotas
+        d.grow = Math.min(1, d.grow + .022);
+        const rr = 5.5 * d.grow, g = ctx.createRadialGradient(d.x - 1, d.y + rr - 1, 0, d.x, d.y + rr, rr * 2);
+        g.addColorStop(0, LIGHT(1)); g.addColorStop(.5, GOLD(.9)); g.addColorStop(1, GOLD(0));
+        ctx.fillStyle = g; ctx.beginPath(); ctx.arc(d.x, d.y + rr, rr * 2, 0, 7); ctx.fill();
+        if (d.grow >= 1) d.y += 5.5;
+      } else {
+        d.vy += .55; d.y += d.vy;
+        const stretch = Math.min(26, 6 + d.vy * 1.1);
+        const g = ctx.createRadialGradient(d.x - 2, d.y - 2, 0, d.x, d.y, stretch);
+        g.addColorStop(0, LIGHT(1)); g.addColorStop(.5, GOLD(.95)); g.addColorStop(1, GOLD(0));
+        ctx.fillStyle = g; ctx.beginPath(); ctx.ellipse(d.x, d.y - stretch * .4, 6, stretch, 0, 0, 7); ctx.fill();
+        if (d.y >= SY) { S.drop = null; impact(d.x, SY); }
+      }
     }
     // ondas (superficie vista en perspectiva)
     S.rings = S.rings.filter((r) => r.life > 0);
@@ -314,12 +343,12 @@ body { background: var(--ink); color: var(--cream); font-family: var(--label); o
       if (r.delay > 0) { r.delay--; continue; }
       r.r += (r.max - r.r) * .028; r.life -= .0065;
       ctx.strokeStyle = GOLD(Math.max(0, r.life) * .9); ctx.lineWidth = 1.3;
-      ctx.beginPath(); ctx.ellipse(CX, CY, r.r, r.r * .3, 0, 0, 7); ctx.stroke();
+      ctx.beginPath(); ctx.ellipse(r.cx, r.cy, r.r, r.r * .3, 0, 0, 7); ctx.stroke();
     }
     S.splash = S.splash.filter((s) => s.life > 0);
     for (const s of S.splash) {
       s.vy += .22; s.x += s.vx; s.y += s.vy; s.life -= .018;
-      if (s.y > CY && s.vy > 0) s.life = 0;
+      if (s.y > s.floor && s.vy > 0) s.life = 0;
       ctx.fillStyle = LIGHT(Math.max(0, s.life)); ctx.beginPath(); ctx.arc(s.x, s.y, s.r, 0, 7); ctx.fill();
     }
     // tijera
@@ -381,7 +410,7 @@ body { background: var(--ink); color: var(--cream); font-family: var(--label); o
   function reset() {
     timers.splice(0).forEach(clearTimeout); clearFx();
     screen.classList.remove('wide');
-    seal.classList.remove('draw', 'mono-on'); nameEl.classList.remove('on', 'shine');
+    seal.classList.remove('draw', 'mono-on'); nameEl.classList.remove('on', 'shine'); pip.classList.remove('on', 'squeeze', 'away');
     [credit, capA, capB, s1, s3, rule, tag, motto, head, ...doors].forEach((e) => e.classList.remove('on'));
     flare.classList.remove('go');
   }
@@ -399,8 +428,11 @@ body { background: var(--ink); color: var(--cream); font-family: var(--label); o
       await wait(400, me); credit.classList.add('on');
       await wait(2000, me); credit.classList.remove('on');
       // Acto 1 · Para ellas
-      await wait(900, me); dropGold();
-      await wait(1100, me); capA.classList.add('on');
+      await wait(700, me); pip.classList.add('on');
+      await wait(1900, me); pip.classList.add('squeeze');
+      const tr = pip.getBoundingClientRect();
+      dropGold(tr.left + tr.width / 2, tr.top + tr.height * 192 / 200);
+      await wait(1300, me); capA.classList.add('on'); pip.classList.add('away');
       await wait(1700, me); capA.classList.remove('on');
       // Acto 2 · Para ellos
       await wait(500, me); bladesIn();

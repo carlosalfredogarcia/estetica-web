@@ -45,6 +45,10 @@ Quieren ver una primera versión de la web en la próxima visita.
 - **Estética:** Raquel · WhatsApp **643 044 577** (el de su Instagram, wa.link/plhu8o).
 - **Barbería:** Andrés (en Booksy sale como «ANDREE») · WhatsApp **600 220 380**. Por ahora solo él.
 - **Dirección:** C. José Moreno Carbonero, 2, 29640 Fuengirola. Razón social: Rash Pont S.L.
+- **Teléfono fijo:** 951 738 324 (sale en las descripciones de Booksy).
+- **Descripciones completas de Booksy:** `rashpont-descripciones/` (parte 1 de 3 recibida; son 70 servicios).
+  Booksy ha cambiado las categorías: Recuperación dérmica, Redensificación térmica, Corrección de textura…
+  Muchas descripciones traen bonos con precio: se enseñarán en la tarjeta como «Bonos».
 - **Horario provisional en la web:** lunes a sábado de 10:00 a 21:00, domingo cerrado.
 - **Booksy:** nota 5,0 con 14 reseñas. Servicios, precios y duraciones en `rashpont-catalogo.md`.
 - **Instagram:** @rashpont. Paleta: negro #0B0B0B, negro cálido #1A1712, dorado #C9A96E,
@@ -64,7 +68,8 @@ Quieren ver una primera versión de la web en la próxima visita.
 - [ ] **Servicios sin precio en Booksy** (packs y cabeceras: Pack Flash Lift Glow, Experiencia Escote,
       Diosa Cleopatra, Vientre plano, Bye Bye Michelines, Mamá Fit, Spa capilar, Piedras calientes…):
       ¿precio o «desde»?
-- [ ] **Bonos, cupones y tarjetas regalo** de Booksy: importes y sesiones.
+- [ ] **Bonos, cupones y tarjetas regalo** de Booksy: importes y sesiones. (Muchos bonos ya vienen en las descripciones; confirmar que siguen vigentes.)
+- [ ] **Precios que no cuadran** entre la variante y el texto: Microneedling Exosomas Supreme (299,95 € en la variante, 249,95 € en el texto), Exosomas rostro global (395,95 € frente a 389,95 €), Aclaramiento de axilas (89,95 € frente a 129,95 €), Lip Redensification (45 min frente a 30 min). ¿Cuál vale?
 - [ ] **Corte de puntas mujer y ondulación permanente** están en Barbería: ¿los hace Andrés?
 - [ ] **Señal o cancelación:** ¿cobran algo por no venir? ¿Las reservas se confirman al momento?
 - [ ] **Logo** en buena calidad (PNG o SVG) y **fotos reales** del local, de Raquel y de Andrés.
