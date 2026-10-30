@@ -91,25 +91,35 @@ export async function cargarSalonReal(slug: string): Promise<Salon & { id?: stri
 
 // Se carga una sola vez por página y lo comparten todos los componentes
 let cargando: Promise<Salon> | null = null;
+// Webs a medida (como /rashpont/estetica): llevan su negocio fijo. Si aún no está en la base
+// de datos, se enseña con sus datos de muestra y las reservas van al panel de muestra.
+let fijo: Salon | null = null;
+export function fijarSalon(slug: string, muestra: Omit<Salon, "modo" | "slug">) {
+  if (fijo?.slug === slug) return;
+  fijo = { ...muestra, modo: "demo", slug };
+  cargando = null;
+}
 function cargar(): Promise<Salon> {
   if (!cargando) {
     const q = new URLSearchParams(window.location.search);
     const slug = q.get("s")?.trim().toLowerCase();
-    cargando = slug ? cargarSalonReal(slug) : Promise.resolve(leerDemo(q));
+    const f = fijo;
+    if (f) cargando = cargarSalonReal(f.slug).then((r) => (r.modo === "real" ? r : f), () => f);
+    else cargando = slug ? cargarSalonReal(slug) : Promise.resolve(leerDemo(q));
   }
   return cargando;
 }
 
 export function useSalon(): Salon {
-  const [v, setV] = useState<Salon>(DEMO);
+  const [v, setV] = useState<Salon>(() => fijo ?? DEMO);
   useEffect(() => {
     let vivo = true;
     const q = new URLSearchParams(window.location.search);
-    if (q.get("s")) setTimeout(() => vivo && setV((x) => ({ ...x, modo: "cargando" })), 0);
+    if (q.get("s") && !fijo) setTimeout(() => vivo && setV((x) => ({ ...x, modo: "cargando" })), 0);
     cargar().then((s) => {
       if (!vivo) return;
       setV(s);
-      if (s.negocio.nombre !== NEGOCIO.nombre) document.title = `${s.negocio.nombre} · Estética en ${s.negocio.ciudad}`;
+      if (!fijo && s.negocio.nombre !== NEGOCIO.nombre) document.title = `${s.negocio.nombre} · Estética en ${s.negocio.ciudad}`;
     });
     return () => {
       vivo = false;

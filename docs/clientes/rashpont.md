@@ -35,10 +35,22 @@ Quieren ver una primera versión de la web en la próxima visita.
 - [ ] Fotos: local, equipo, máquinas; 3 mejores reseñas
 - [ ] Estilo: tres palabras, colores que le gustan y que no, webs que le gustan
 
+## La web (primera versión, 30 oct 2026)
+
+- Portada: `/rashpont` (con la intro «Oro líquido»; se repite con `/rashpont?intro=1`).
+- Estética: `/rashpont/estetica` · Barbería: `/rashpont/barberia`.
+- Código: `src/app/rashpont/`. Catálogo, precios, bonos y reseñas en `src/app/rashpont/_datos/catalogo.ts`.
+  Las descripciones completas se leen al construir desde `docs/clientes/rashpont-descripciones/*.md`.
+- Mientras los dos negocios no estén en Supabase, la agenda funciona en modo muestra
+  (las reservas van al panel de muestra `/admin`). Al ejecutar `supabase/migrations/006_rashpont.sql`
+  pasa sola a la agenda de verdad.
+- Fotos: las de siempre pasadas a negro y dorado (`public/images/rashpont/`); barbería lleva iconos dorados
+  hasta que lleguen sus fotos o las de Gemini (`rashpont-imagenes.md`).
+
 ## Pasos de montaje
 
-1. Crear su estética en Supabase (como `supabase/migrations/002_estetica_prueba.sql`, con su slug, horario y tratamientos).
-2. Crear la cuenta de la dueña con su correo (Authentication → Add user) y enlazarla en `salones`.
+1. Ejecutar `supabase/migrations/006_rashpont.sql` (crea `rashpont-estetica` y `rashpont-barberia` con sus tratamientos).
+2. Crear las cuentas de Raquel y Andrés (Authentication → Add user) y enlazarlas con las dos líneas del final de ese SQL.
 3. Subir sus fotos y ajustar textos y colores.
 4. Revisarla juntos (día 6) y entregarla en persona (día 7): instalar el panel en su móvil y enseñarle Agenda, Avisos y Clientas.
 5. Firmar el contrato de encargado del tratamiento (RGPD).
