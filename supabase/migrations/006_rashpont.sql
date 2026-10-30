@@ -127,6 +127,7 @@ where s.slug = 'rashpont-barberia';
 
 -- ── Cuentas del panel ──
 -- 1) En Supabase: Authentication → Add user, con el correo y la contraseña de Raquel y de Andrés.
--- 2) Cambia los correos y ejecuta estas dos líneas:
+-- 2) Cambia los correos y ejecuta estas dos líneas.
+--    Hecho el 30 oct 2026: estética = kalisto1818+raquel@gmail.com (provisional), barbería = reyserramirez8@gmail.com.
 -- update public.salones set owner_id = (select id from auth.users where email = 'CORREO_DE_RAQUEL') where slug = 'rashpont-estetica';
 -- update public.salones set owner_id = (select id from auth.users where email = 'CORREO_DE_ANDRES') where slug = 'rashpont-barberia';

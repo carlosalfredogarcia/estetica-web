@@ -19,13 +19,15 @@
 
 ## Rash Pont (Fuengirola)
 
-- [ ] Ejecutar `supabase/migrations/006_rashpont.sql` y crear las cuentas de Raquel y Andrés
-      (guía: `docs/clientes/rashpont-supabase-paso-a-paso.md`).
+- [x] Rash Pont en Supabase (30 oct): `006_rashpont.sql` ejecutado (79 opciones de estética y 19 de barbería)
+      y cuentas creadas. Estética: `kalisto1818+raquel@gmail.com` (provisional). Barbería: `reyserramirez8@gmail.com`.
+- [ ] Cambiar el correo de Raquel por el suyo (Supabase → Authentication → Users → su usuario → cambiar email;
+      no hay que tocar nada más).
+- [ ] Llevar a la reunión: `docs/clientes/rashpont-preguntas.md`. Todos los enlaces en `docs/ENLACES.md`.
 - [x] Descripciones de Booksy completas (partes 1, 2 y 3). Opcional: repasar la parte 1 leyendo el código de la página.
 - [ ] Fotos: las de Gemini (`docs/clientes/rashpont-imagenes.md`) o fotos reales del local, de Raquel y de Andrés.
 - [ ] Logo en buena calidad (PNG o SVG).
 - [ ] Dominio a nombre de la tienda (datos en `docs/clientes/rashpont.md`) y hacer que abra directamente la portada.
-- [ ] Preguntas para el cliente: horario, precios que no cuadran, «reyser», tienda… (en `docs/clientes/rashpont.md`).
 
 ## De la web de muestra
 
