@@ -5,7 +5,6 @@ import { Search, X } from "lucide-react";
 import { FotoIcono, IconoWhatsApp } from "./marca";
 import { nombreReserva, type Grupo, type Tratamiento, type Variante } from "../_datos/catalogo";
 
-const POR_GRUPO = 3; // tarjetas que se ven de cada grupo antes de «Ver todos»
 
 const normal = (s: string) => s.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase();
 const euros = (p: string) => parseFloat(p.replace(/[^\d,]/g, "").replace(",", ".")) || 0;
@@ -39,10 +38,10 @@ export function Catalogo({
   palabra: string; // «tratamientos» o «servicios»
 }) {
   const [q, setQ] = useState("");
-  const [grupo, setGrupo] = useState("todos");
-  const [abiertos, setAbiertos] = useState<string[]>([]);
+  const [abierto, setAbierto] = useState<string | null>(null); // grupo desplegado entero
   const [ficha, setFicha] = useState<Tratamiento | null>(null);
   const cerrarFicha = useCallback(() => setFicha(null), []);
+  const filas = useRef<Record<string, HTMLDivElement | null>>({});
   const nombreGrupo = (id: string) => grupos.find((g) => g.id === id)?.nombre ?? id;
 
   const encontrados = useMemo(() => {
@@ -58,6 +57,23 @@ export function Catalogo({
   const delGrupo = (id: string) => {
     const l = tratamientos.filter((t) => t.grupo === id);
     return [...l.filter((t) => t.destacado), ...l.filter((t) => !t.destacado)];
+  };
+
+  // Ir al principio de un grupo (después de recogerlo o desde los botones de arriba)
+  const irAlGrupo = (id: string) =>
+    setTimeout(() => document.getElementById(`g-${id}`)?.scrollIntoView({ behavior: "smooth", block: "start" }), 30);
+  const desplegar = (id: string) => {
+    setAbierto(id);
+    irAlGrupo(id);
+  };
+  const recoger = () => {
+    const id = abierto;
+    setAbierto(null);
+    if (id) irAlGrupo(id);
+  };
+  const deslizar = (id: string, lado: number) => {
+    const f = filas.current[id];
+    f?.scrollBy({ left: lado * f.clientWidth * 0.85, behavior: "smooth" });
   };
 
   const tarjeta = (t: Tratamiento, i: number) => {
@@ -92,8 +108,6 @@ export function Catalogo({
     );
   };
 
-  const visibles = grupo === "todos" ? grupos : grupos.filter((g) => g.id === grupo);
-
   return (
     <div style={{ display: "grid", gap: 28, gridTemplateColumns: "minmax(0, 1fr)" }}>
       <div style={{ display: "grid", gap: 16, gridTemplateColumns: "minmax(0, 1fr)" }}>
@@ -109,12 +123,15 @@ export function Catalogo({
           />
         </label>
         {!encontrados && (
-          <div className="rp-chips" role="group" aria-label="Grupos">
-            <button className="rp-chip" type="button" aria-pressed={grupo === "todos"} onClick={() => setGrupo("todos")}>
-              Todos<small>{tratamientos.length}</small>
-            </button>
+          <div className="rp-chips" role="group" aria-label="Ir a un grupo">
             {grupos.map((g) => (
-              <button key={g.id} className="rp-chip" type="button" aria-pressed={grupo === g.id} onClick={() => setGrupo(g.id)}>
+              <button
+                key={g.id}
+                className="rp-chip"
+                type="button"
+                aria-pressed={abierto === g.id}
+                onClick={() => (abierto && abierto !== g.id ? (setAbierto(null), irAlGrupo(g.id)) : irAlGrupo(g.id))}
+              >
                 {g.nombre}<small>{tratamientos.filter((t) => t.grupo === g.id).length}</small>
               </button>
             ))}
@@ -123,33 +140,67 @@ export function Catalogo({
       </div>
 
       {encontrados ? (
-        <div style={{ display: "grid", gap: 18 }}>
-          <p className="rp-nude" style={{ fontSize: 13 }}>
-            {encontrados.length
-              ? `${encontrados.length} ${encontrados.length === 1 ? "resultado" : "resultados"} para «${q.trim()}»`
-              : `No encontramos «${q.trim()}». Prueba con otra palabra o escríbenos por WhatsApp y te asesoramos.`}
-          </p>
+        <div style={{ display: "grid", gap: 18, gridTemplateColumns: "minmax(0, 1fr)" }}>
+          <div className="rp-barra-grupo">
+            <button className="rp-volver" type="button" onClick={() => setQ("")}>← Volver</button>
+            <p className="rp-nude" style={{ fontSize: 13, minWidth: 0 }}>
+              {encontrados.length
+                ? `${encontrados.length} ${encontrados.length === 1 ? "resultado" : "resultados"} para «${q.trim()}»`
+                : `No encontramos «${q.trim()}». Prueba con otra palabra o escríbenos por WhatsApp.`}
+            </p>
+          </div>
           <div className="rp-grid">{encontrados.map(tarjeta)}</div>
         </div>
       ) : (
-        visibles.map((g) => {
+        grupos.map((g) => {
           const lista = delGrupo(g.id);
-          const todo = grupo !== "todos" || abiertos.includes(g.id);
-          const ver = todo ? lista : lista.slice(0, POR_GRUPO);
+          const entero = abierto === g.id;
           return (
-            <section key={g.id} style={{ display: "grid", gap: 18, paddingTop: 12, gridTemplateColumns: "minmax(0, 1fr)" }} aria-labelledby={`g-${g.id}`}>
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", gap: 12, flexWrap: "wrap", borderBottom: "1px solid rgba(201,169,110,.16)", paddingBottom: 12 }}>
-                <h3 id={`g-${g.id}`} className="rp-titulo" style={{ fontSize: "clamp(26px, 4vw, 34px)" }}>{g.nombre}</h3>
-                <span className="rp-nude" style={{ fontSize: 13 }}>{g.frase} · {lista.length} {palabra}</span>
-              </div>
-              <div className="rp-grid">{ver.map(tarjeta)}</div>
-              {!todo && lista.length > POR_GRUPO && (
-                <div className="rp-mas">
-                  <button className="rp-btn" type="button" onClick={() => setAbiertos((a) => [...a, g.id])}>
-                    Ver los {lista.length} {palabra} de {g.nombre.toLowerCase()}
-                  </button>
+            <section key={g.id} id={`g-${g.id}`} className="rp-grupo" aria-labelledby={`t-${g.id}`}>
+              {entero ? (
+                <div className="rp-barra-grupo rp-barra-fija">
+                  <button className="rp-volver" type="button" onClick={recoger}>← Volver</button>
+                  <h3 id={`t-${g.id}`} className="rp-titulo" style={{ fontSize: "clamp(20px, 4vw, 28px)", minWidth: 0 }}>{g.nombre}</h3>
+                  <button className="rp-leer" type="button" onClick={recoger} style={{ color: "var(--rp-gold)" }}>Recoger ↑</button>
+                </div>
+              ) : (
+                <div className="rp-grupo-cab">
+                  <div style={{ minWidth: 0 }}>
+                    <h3 id={`t-${g.id}`} className="rp-titulo" style={{ fontSize: "clamp(24px, 4vw, 34px)" }}>{g.nombre}</h3>
+                    <p className="rp-nude" style={{ fontSize: 13, marginTop: 4 }}>{g.frase} · {lista.length} {palabra}</p>
+                  </div>
+                  <div className="rp-flechas">
+                    <button type="button" aria-label="Anteriores" onClick={() => deslizar(g.id, -1)}>‹</button>
+                    <button type="button" aria-label="Siguientes" onClick={() => deslizar(g.id, 1)}>›</button>
+                  </div>
                 </div>
               )}
+
+              {entero ? (
+                <>
+                  <div className="rp-grid">{lista.map(tarjeta)}</div>
+                  <div className="rp-mas">
+                    <button className="rp-btn" type="button" onClick={recoger}>Recoger {g.nombre.toLowerCase()} ↑</button>
+                  </div>
+                </>
+              ) : (
+                <div
+                  className="rp-fila"
+                  ref={(el) => {
+                    filas.current[g.id] = el;
+                  }}
+                >
+                  {lista.map(tarjeta)}
+                  {lista.length > 1 && (
+                    <button className="rp-ver-todos" type="button" onClick={() => desplegar(g.id)}>
+                      <span className="rp-precio" style={{ fontSize: 44 }}>{lista.length}</span>
+                      <span className="rp-eyebrow">Ver todos</span>
+                      <span className="rp-nude" style={{ fontSize: 12 }}>{g.nombre}</span>
+                    </button>
+                  )}
+                </div>
+              )}
+              {!entero && lista.length > 1 && <p className="rp-desliza">Desliza para ver más →</p>}
             </section>
           );
         })
@@ -181,6 +232,7 @@ function Ficha({ t, grupo, whatsapp, cerrar }: { t: Tratamiento; grupo: string; 
       <div className="rp-ficha" role="dialog" aria-modal="true" aria-labelledby="rp-ficha-titulo" onClick={(e) => e.stopPropagation()}>
         <div className="rp-ficha-foto">
           <Foto t={t} />
+          <button className="rp-volver rp-ficha-volver" type="button" onClick={cerrar}>← Volver</button>
           <button ref={boton} className="rp-ficha-cerrar" type="button" onClick={cerrar} aria-label="Cerrar">
             <X className="w-4 h-4" />
           </button>
@@ -245,9 +297,12 @@ function Ficha({ t, grupo, whatsapp, cerrar }: { t: Tratamiento; grupo: string; 
             </div>
           )}
 
-          <a className="rp-btn" href={wa} target="_blank" rel="noopener noreferrer" style={{ justifySelf: "start" }}>
-            <IconoWhatsApp className="w-4 h-4" /> Preguntar por WhatsApp
-          </a>
+          <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+            <a className="rp-btn" href={wa} target="_blank" rel="noopener noreferrer">
+              <IconoWhatsApp className="w-4 h-4" /> Preguntar por WhatsApp
+            </a>
+            <button className="rp-btn" type="button" onClick={cerrar}>← Volver</button>
+          </div>
         </div>
       </div>
     </div>
