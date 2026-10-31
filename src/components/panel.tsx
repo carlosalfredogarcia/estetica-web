@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Bell, CalendarDays, ChartColumn, Menu, Plus, Users } from "lucide-react";
+import { Bell, CalendarDays, ChartColumn, CircleUserRound, Menu, Plus, Users } from "lucide-react";
 import { SERVICES, type Service } from "@/lib/data";
 import { useNegocio, huecosLibres, duracion, type Horario } from "@/components/negocio";
 import { db } from "@/lib/supabase";
@@ -463,6 +463,7 @@ export function Panel({ real }: { real?: PanelReal }) {
               <p className="text-[17px] font-bold leading-tight truncate">{nombre}</p>
               <p className="text-[12px] text-[#8A7A70] leading-tight">Panel de gestión</p>
             </div>
+            <div className="flex items-center gap-2 flex-shrink-0">
             <button
               onClick={() => setVista("avisos")}
               className="relative w-11 h-11 rounded-full flex items-center justify-center bg-[#F6F1EC] active:scale-95"
@@ -475,6 +476,15 @@ export function Panel({ real }: { real?: PanelReal }) {
                 </span>
               )}
             </button>
+            {/* Mi cuenta (correo, contraseña, salir): siempre a la vista, también en el móvil */}
+            <button
+              onClick={() => setMas(true)}
+              className="w-11 h-11 rounded-full flex items-center justify-center bg-[#F6F1EC] active:scale-95"
+              aria-label="Mi cuenta"
+            >
+              <CircleUserRound className="w-[24px] h-[24px]" style={{ color: C.oro }} />
+            </button>
+            </div>
           </div>
         </header>
 
