@@ -1,7 +1,8 @@
 "use client";
 
 import { useContext, useEffect, useRef, useState } from "react";
-import { Ban, CalendarPlus, ChevronRight, ExternalLink, List, LogOut, MessageCircle, Phone, Plus, Star, Bell, Send } from "lucide-react";
+import { Ban, CalendarPlus, ChevronRight, ExternalLink, KeyRound, List, LogOut, MessageCircle, Phone, Plus, Star, Bell, Send } from "lucide-react";
+import { db } from "@/lib/supabase";
 import { PanelCtx } from "./ctx";
 import { cn } from "@/lib/utils";
 import { duracion, categorias } from "@/components/negocio";
@@ -480,11 +481,43 @@ function Item({ Icono, txt, sub, onClick, href, color }: { Icono: any; txt: stri
     );
   }
 
+// Webs a medida que no van en «/?s=slug»
+const WEB_PROPIA: Record<string, string> = {
+  "rashpont-estetica": "/rashpont/estetica",
+  "rashpont-barberia": "/rashpont/barberia",
+};
+
 export function HojaMas() {
   const P = useContext(PanelCtx);
+  const [correo, setCorreo] = useState("");
+  const [cambiando, setCambiando] = useState(false);
+  const [clave, setClave] = useState("");
+  const [estado, setEstado] = useState("");
+  useEffect(() => {
+    if (!P.real) return;
+    db().auth.getUser().then(({ data }) => setCorreo(data.user?.email ?? ""));
+  }, [P.real]);
+
+  async function guardarClave(e: React.FormEvent) {
+    e.preventDefault();
+    if (clave.length < 8) return setEstado("La contraseña tiene que tener al menos 8 caracteres.");
+    setEstado("Guardando…");
+    const { error } = await db().auth.updateUser({ password: clave });
+    if (error) return setEstado("No se pudo cambiar. Prueba con otra contraseña.");
+    setClave("");
+    setCambiando(false);
+    setEstado("Contraseña cambiada. La próxima vez entra con la nueva.");
+  }
+
   return (
-    <Hoja titulo="Más" onCerrar={() => P.setMas(false)}>
+    <Hoja titulo={P.real ? "Mi cuenta" : "Más"} onCerrar={() => P.setMas(false)}>
       <div className="space-y-2">
+        {P.real && (
+          <div className="p-4 bg-white rounded-2xl">
+            <p className="text-[13px] text-[#8A7A70]">Has entrado como</p>
+            <p className="text-[16px] font-bold break-all">{correo || "…"}</p>
+          </div>
+        )}
         <Item
           Icono={List}
           txt="Todas las citas"
@@ -495,8 +528,28 @@ export function HojaMas() {
             window.scrollTo(0, 0);
           }}
         />
-        {P.real && <Item Icono={ExternalLink} txt="Ver mi web" sub="La página donde reservan tus clientas" href={`/?s=${P.real.slug}`} />}
-        {P.real && <Item Icono={LogOut} txt="Salir" color={C.rojo} onClick={P.real.onSalir} />}
+        {P.real && (
+          <Item Icono={ExternalLink} txt="Ver mi web" sub="La página donde reservan tus clientas" href={WEB_PROPIA[P.real.slug] ?? `/?s=${P.real.slug}`} />
+        )}
+        {P.real && <Item Icono={KeyRound} txt="Cambiar contraseña" sub="Pon una que solo sepas tú" onClick={() => setCambiando((v) => !v)} />}
+        {P.real && cambiando && (
+          <form onSubmit={guardarClave} className="p-4 bg-white rounded-2xl space-y-3">
+            <label className="block">
+              <span className="text-[14px] font-medium">Nueva contraseña</span>
+              <input
+                id="nueva-clave"
+                type="password"
+                autoComplete="new-password"
+                value={clave}
+                onChange={(e) => setClave(e.target.value)}
+                className="mt-1 w-full h-12 px-4 rounded-xl border border-[#EAE1D8] text-[16px]"
+              />
+            </label>
+            <Boton>Guardar contraseña</Boton>
+          </form>
+        )}
+        {estado && <p className="px-2 text-[14px] text-[#8A7A70]">{estado}</p>}
+        {P.real && <Item Icono={LogOut} txt="Salir" sub="Cerrar sesión en este móvil" color={C.rojo} onClick={P.real.onSalir} />}
       </div>
     </Hoja>
   );

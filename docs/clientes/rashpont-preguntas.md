@@ -39,7 +39,7 @@ Marca cada una cuando tengas la respuesta y apúntala al lado.
       ¿Le parece bien el orden? ¿Quiere otro primero, cambiar algún nombre o mover algún tratamiento de grupo?
 - [ ] **Destacados.** De cada grupo se ven primero 3 tratamientos marcados como «Destacado». ¿Cuáles quiere destacar?
 - [ ] **Bonos.** En la web, cada bono tiene un botón «Lo quiero» que le escribe por WhatsApp; se paga en el centro.
-      ¿Le vale así? Cada bono enseña lo que se ahorra. (Vender y controlar bonos desde el panel es el extra «Bonos y fidelización», ver `rashpont-propuesta-extras.md`.)
+      ¿Le vale así? Cada bono enseña lo que se ahorra. (Vender y controlar bonos desde el panel es el extra «Bonos y cumpleaños», +10 €/mes, ver `rashpont-propuesta-extras.md`.)
 
 ### Tienda de productos
 

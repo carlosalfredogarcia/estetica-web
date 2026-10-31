@@ -10,12 +10,20 @@
       Todas las webs comparten el mismo código (catálogo, ficha, agenda, opiniones…) y cada cliente es solo una
       carpeta con su ficha: nombre, colores, intro elegida, logo, fotos, textos y tratamientos.
       Un arreglo o una mejora se hace una vez y llega a todas. Intros disponibles: sello, puertas y oro líquido.
-- [ ] **Extra «Bonos y fidelización»** (150 € de alta + 15 €/mes; ver `docs/clientes/rashpont-propuesta-extras.md`): vender bonos desde el panel, contar
+- [ ] **Extra «Bonos y cumpleaños»** (+10 €/mes sin alta; ver `docs/clientes/rashpont-propuesta-extras.md`): vender bonos desde el panel, contar
       sesiones y caducidad, y aviso de cumpleaños. Hace falta pedir el cumpleaños (día y mes, opcional y con
       permiso de la clienta) en la reserva o apuntarlo en su ficha.
 - [ ] **Campañas e informes**: para más adelante. Campaña sencilla = el panel saca una lista de clientas
       (por ejemplo, las que no vienen desde hace 2 meses) con un mensaje ya escrito y se envía uno a uno por WhatsApp.
-- [ ] **Tienda de productos** como extra (ver `docs/clientes/rashpont-tienda.md`).
+- [ ] **Tienda de productos**: escaparate +10 €/mes o tienda online +20 €/mes (+150 € de montaje); sin porcentaje
+      de las ventas (ver `docs/clientes/rashpont-propuesta-extras.md`).
+- [ ] **Avisos de reserva nueva en el móvil** (como una app):
+      1) Ya: con el panel abierto, aviso con sonido y vibración al entrar una reserva (tiempo real de Supabase).
+      2) Después: notificaciones aunque el panel esté cerrado (notificaciones push de la app instalada, con una
+         función de Supabase que las envía al crearse la cita), o un correo/Telegram a la dueña.
+- [ ] **Contraseñas de las dueñas**: dar una provisional y que la cambien en «Mi cuenta → Cambiar contraseña».
+      Tú no necesitas saberla: como administrador entras a sus datos desde Supabase si hace falta soporte.
+      Dejarlo por escrito en el contrato de encargado del tratamiento (RGPD).
 
 ## Rash Pont (Fuengirola)
 
