@@ -24,6 +24,11 @@
 - [ ] **Contraseñas de las dueñas**: dar una provisional y que la cambien en «Mi cuenta → Cambiar contraseña».
       Tú no necesitas saberla: como administrador entras a sus datos desde Supabase si hace falta soporte.
       Dejarlo por escrito en el contrato de encargado del tratamiento (RGPD).
+- [ ] **Modo soporte en el panel**: una cuenta de administrador tuya que, al entrar en `/panel`, elige el negocio
+      (Rash Pont Estética, Rash Pont Barbería u otro) y ve su panel igual que ellos, para probar y arreglar sin
+      pedir contraseñas. Hace falta: una tabla de administradores en la base de datos (migración 007), que las reglas
+      de seguridad dejen pasar a esa cuenta, y un selector de negocio en el panel. Mientras tanto: arreglos desde
+      Supabase → Table Editor. No usar «recuperar contraseña» para entrar en sus cuentas (se la cambiarías).
 
 ## Rash Pont (Fuengirola)
 
